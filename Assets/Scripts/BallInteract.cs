@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -15,11 +16,13 @@ public class BallInteract : MonoBehaviour
     private InputAction interactAction;
     private Transform playerTransform;
     private GameObject ball;
+    private Vector3 setLocation; // Where the ball will be set to after bumping
     
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         playerTransform = transform;
+        setLocation = new UnityEngine.Vector3(1f, 0, 0);
         
         ball = GameObject.FindGameObjectWithTag("Ball");
         
@@ -86,7 +89,9 @@ public class BallInteract : MonoBehaviour
             Rigidbody ballRb = ball.GetComponent<Rigidbody>();
             if (ballRb != null)
             {
-                ballRb.AddForce(Vector3.up * upwardForce);
+                // ballRb.AddForce(Vector3.up * upwardForce);
+
+                BumpBall(ballRb);
             }
             else
             {
@@ -105,9 +110,8 @@ public class BallInteract : MonoBehaviour
     
     void Update()
     {
-        if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+        if (interactAction != null && interactAction.IsPressed())
         {
-            Debug.Log("E key detected via Keyboard.current!");
             OnInteractFallback();
         }
     }
@@ -130,7 +134,9 @@ public class BallInteract : MonoBehaviour
             Rigidbody ballRb = ball.GetComponent<Rigidbody>();
             if (ballRb != null)
             {
-                ballRb.AddForce(Vector3.up * upwardForce);
+                // ballRb.AddForce(Vector3.up * upwardForce);
+
+                BumpBall(ballRb);
             }
             else
             {
@@ -138,4 +144,24 @@ public class BallInteract : MonoBehaviour
             }
         }
     }
+
+    private void BumpBall(Rigidbody ballRb)
+    {
+        // Calculate the velocity in the y direction for the ball to reach a height of 5 given its current y component
+        float gravity = MathF.Abs(Physics.gravity.y);
+        float vyInit = MathF.Sqrt(2 * gravity * (5f - ballRb.transform.position.y));
+
+        // Calculate time the ball will be in the air
+        float vyFinal = MathF.Sqrt(10 * gravity);
+        float t1 = vyInit / gravity;
+        float t2 = vyFinal / gravity;
+        float t = t1 + t2; 
+
+        // Calculate the x and z velocities of the ball
+        float vx = (setLocation.x - ballRb.transform.position.x) / t;
+        float vz = (setLocation.z - ballRb.transform.position.z) / t;
+
+        // Set the ball's intial velocity
+        ballRb.linearVelocity = new Vector3(vx, vyInit, vz);
+    }  
 }

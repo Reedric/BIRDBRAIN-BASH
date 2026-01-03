@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 
 public class CharacterMovement : MonoBehaviour
 {
+    [Header("Character Attributes")]
     public float maxGroundSpeed = 1.0f; // Max speed that the character can move on the ground
     public float maxAirSpeed = 1.0f; // Max speed that the character can move in the air
     public float jumpHeight = 1.0f; // Height the character can jump 
