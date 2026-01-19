@@ -750,7 +750,7 @@ Light:
   serializedVersion: 11
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 2
+  m_Intensity: 3
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -812,13 +812,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 410087039}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
-  m_LocalPosition: {x: 0, y: 3, z: 0}
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 4.99, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!114 &410087042
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1401,7 +1401,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4195014637503976788, guid: 69b2a6013c3713e42a0d1b7b7b929b47, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.23999977
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4195014637503976788, guid: 69b2a6013c3713e42a0d1b7b7b929b47, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1409,7 +1409,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4195014637503976788, guid: 69b2a6013c3713e42a0d1b7b7b929b47, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.14
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4195014637503976788, guid: 69b2a6013c3713e42a0d1b7b7b929b47, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1525,6 +1525,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6654810197390152556, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: -876546973899608171, guid: d94de8a83e7349944b19e34307f87f20, type: 3}
     - target: {fileID: 7342613359322326940, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
       propertyPath: m_Name
       value: Character1
