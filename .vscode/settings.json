@@ -67,5 +67,5 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "CK-BIRDBRAIN-BASH.slnx"
+    "dotnet.defaultSolution": "BIRDBRAIN-BASH.slnx"
 }

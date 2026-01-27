@@ -1276,6 +1276,7 @@ MonoBehaviour:
   onLeft: 0
   ballManager: {fileID: 18352594}
   interactionRadius: 2
+  inputActionAsset: {fileID: 0}
 --- !u!114 &1180581314
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1292,6 +1293,7 @@ MonoBehaviour:
   dashDuration: 0.5
   dashSpeed: 10
   rotationSpeed: 8
+  penguinHeight: 0
   isDashing: 0
 --- !u!1 &1184703061
 GameObject:
@@ -1796,6 +1798,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 474434965365313902, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
+      propertyPath: grounded
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 474434965365313902, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
       propertyPath: jumpForce
       value: 6

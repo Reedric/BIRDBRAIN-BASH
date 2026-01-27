@@ -30,7 +30,7 @@ public class PenguinScript : MonoBehaviour
     {
         
         // Handle dash input using Input System
-        InputAction dash = InputSystem.actions.FindAction("Dash");
+        InputAction dash = InputSystem.actions.FindAction("Defensive Ability");
         bool dashPressed = (dash != null && dash.WasPressedThisFrame()) || 
                           (dash == null && Keyboard.current?.spaceKey.wasPressedThisFrame == true);
         

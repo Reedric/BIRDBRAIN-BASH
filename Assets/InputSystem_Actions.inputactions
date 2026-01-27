@@ -70,7 +70,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Dash",
+                    "name": "Defensive Ability",
                     "type": "Button",
                     "id": "8b370c86-6b5b-442b-9f7f-98e2787ce230",
                     "expectedControlType": "",
@@ -378,11 +378,11 @@
                 {
                     "name": "",
                     "id": "50a8058b-0727-4068-928e-a3b806b77b22",
-                    "path": "<Gamepad>/buttonEast",
+                    "path": "<Gamepad>/leftShoulder",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Dash",
+                    "action": "Defensive Ability",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -393,7 +393,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard&Mouse;Gamepad",
-                    "action": "Dash",
+                    "action": "Defensive Ability",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
