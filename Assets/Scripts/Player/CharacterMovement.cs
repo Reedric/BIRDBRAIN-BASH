@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -109,5 +110,32 @@ public class CharacterMovement : MonoBehaviour
     {
         canJump = jumpEnabled;
         canMove = movementEnabled; 
+    }
+
+    public void BuffStats(int increase, int time)
+    {
+        StartCoroutine(BuffTimer(increase, time));
+    }
+
+    public IEnumerator BuffTimer(int increase, int time)
+    {
+        Debug.Log("BUFFING...");
+        Debug.Log("ORIGINAL = " + maxGroundSpeed);
+        
+        float originalMaxGroundSpeed = maxGroundSpeed;
+        float originalMaxAirSpeed = maxAirSpeed;
+        float originalJumpForce = jumpForce;
+
+        maxGroundSpeed += increase;
+        maxAirSpeed += increase;
+        jumpForce += increase;
+
+        Debug.Log("NEW = "+ maxGroundSpeed);
+
+        yield return new WaitForSeconds(time);
+
+        maxGroundSpeed = originalMaxGroundSpeed;
+        maxAirSpeed = originalMaxAirSpeed;
+        jumpForce = originalJumpForce;
     }
 }
