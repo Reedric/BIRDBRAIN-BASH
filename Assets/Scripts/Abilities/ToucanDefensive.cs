@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class ToucanDefensive : MonoBehaviour
 {
@@ -13,6 +14,15 @@ public class ToucanDefensive : MonoBehaviour
     public GameManager gameManager;
 
     private bool onCooldown = false;
+
+    void Update()
+    {
+        // If pressesd defensive ability button, activate ability
+        if (InputSystem.actions.FindAction("Defensive Ability").WasPressedThisFrame())
+        {
+            TouCanDoIt();
+        }
+    }
 
     public void TouCanDoIt()
     {

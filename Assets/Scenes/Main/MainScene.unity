@@ -1052,6 +1052,7 @@ MonoBehaviour:
   leftPlayer2: {fileID: 1319189939}
   rightPlayer1: {fileID: 7895200595781189983}
   rightPlayer2: {fileID: 1667581929}
+  scoreManager: {fileID: 0}
   gameState: 0
   lastHit: {fileID: 0}
   server: {fileID: 0}
@@ -1275,7 +1276,6 @@ MonoBehaviour:
   onLeft: 0
   ballManager: {fileID: 18352594}
   interactionRadius: 2
-  inputActionAsset: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!114 &1180581314
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1292,6 +1292,7 @@ MonoBehaviour:
   dashDuration: 0.5
   dashSpeed: 10
   rotationSpeed: 8
+  penguinHeight: 0
   isDashing: 0
 --- !u!1 &1184703061
 GameObject:
@@ -1459,7 +1460,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 146cb8e1752730b44a57a0e5eaab322c, type: 2}
+  - {fileID: 2100000, guid: 9e1523b09a65bd14e8a3ec8b0d85dbc4, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
