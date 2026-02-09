@@ -72,4 +72,23 @@ public class PauseMenu : MonoBehaviour
     {
         Debug.Log("Going to Main Menu.....");
     }
+
+    public void BackToPause()
+    {
+        Debug.Log("Going Back to Pause Menu.....");
+    }
+
+    public void LoadKeybinds()
+    {
+        Debug.Log("Going to Keybind Menu.....");
+    }
+
+    public void SFXValue(float value)
+    {
+        Debug.Log("SFX Volume: " + value);
+    }
+    public void MusicValue(float value)
+    {
+        Debug.Log("Music Volume: " + value);
+    }
 }
