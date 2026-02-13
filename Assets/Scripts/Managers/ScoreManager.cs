@@ -50,7 +50,6 @@ public class ScoreManager : MonoBehaviour
             inPlay = false;
             Debug.Log("side 2 scored! points: " + side2Score);
             LeftScored.Invoke();
-            CheckWin(true);
             CheckWinSet(true);
         } 
         // if it touches side 2, then side 1 scores
@@ -60,7 +59,6 @@ public class ScoreManager : MonoBehaviour
             inPlay = false;
             Debug.Log("side 1 scored! points: " + side1Score);
             RightScored.Invoke();
-            CheckWin(false);
             CheckWinSet(false);
         }
 

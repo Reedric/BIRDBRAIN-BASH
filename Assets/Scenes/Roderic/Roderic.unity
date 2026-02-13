@@ -272,6 +272,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   side1Score: 0
   side2Score: 0
+  side1SetsWon: 0
+  side2SetsWon: 0
   gameManager: {fileID: 614297107}
 --- !u!114 &18352594
 MonoBehaviour:
@@ -1276,7 +1278,6 @@ MonoBehaviour:
   onLeft: 0
   ballManager: {fileID: 18352594}
   interactionRadius: 2
-  inputActionAsset: {fileID: 0}
 --- !u!114 &1180581314
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1411,7 +1412,7 @@ GameObject:
   - component: {fileID: 1271317087}
   m_Layer: 0
   m_Name: OutsideOfCourt
-  m_TagString: Untagged
+  m_TagString: Out
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
