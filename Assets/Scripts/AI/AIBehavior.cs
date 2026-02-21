@@ -78,7 +78,7 @@ public class AIBehavior : MonoBehaviour
             switch (gameManager.gameState)
             {
                 // If the ball was just spiked or served
-                case GameManager.GameState.Spiked: case GameManager.GameState.Served:
+                case GameManager.GameState.Spiked: case GameManager.GameState.Served: case GameManager.GameState.Blocked:
                     // If the AI is near the ball and the ball is on its way down, bump the ball
                     if (IsAINearBall() && ballRb.linearVelocity.y < 0)
                     {

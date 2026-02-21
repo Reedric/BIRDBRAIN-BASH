@@ -16,10 +16,10 @@ public class FollowObject : MonoBehaviour
         initialRotation = transform.rotation;
         
         // If no fixed Y position is set, use current Y position
-        if (fixedYPosition == 0.0f)
-        {
-            fixedYPosition = transform.position.y;
-        }
+        // if (fixedYPosition == 0.0f)
+        // {
+        //     fixedYPosition = transform.position.y;
+        // }
     }
 
     // Update is called once per frame

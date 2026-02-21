@@ -93,7 +93,7 @@ public class BallInteract : MonoBehaviour
                     }
                     break;
 
-                case GameManager.GameState.Served:
+                case GameManager.GameState.Served: case GameManager.GameState.Blocked:
                     // If the player is close enough to the ball and is pressing the bump button, bump the ball
                     if (IsPlayerNearBall() && InputSystem.actions.FindAction("Bump").WasPressedThisFrame())
                     {
@@ -278,7 +278,7 @@ public class BallInteract : MonoBehaviour
         // sends ball back to attacker's side near the net
         blockToLocation = new Vector3(6f, 0f, 0f);
 
-        if (onLeft) blockToLocation *= -1;
+        if (!onLeft) blockToLocation *= -1;
 
         // directional control
         Vector2 dir = InputSystem.actions.FindAction("Direction").ReadValue<Vector2>();
@@ -291,7 +291,7 @@ public class BallInteract : MonoBehaviour
         ballManager.goingTo = blockToLocation;
 
         // Update game state
-        gameManager.gameState = GameManager.GameState.Spiked;
+        gameManager.gameState = GameManager.GameState.Blocked;
         gameManager.lastHit = gameObject;
         gameManager.leftAttack = onLeft;
     }
