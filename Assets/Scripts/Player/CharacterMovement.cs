@@ -10,6 +10,10 @@ public class CharacterMovement : MonoBehaviour
     public float jumpForce = 1.0f; // Force the character uses to jump 
     public float rotationSpeed = 10.0f; // How fast the character rotates to face movement direction
     private float directionChangeWeight = 15f; // How quickly the character can change direction
+    private Coroutine buffCoroutine; // Reference to the currently active buff coroutine
+    private float originalMaxGroundSpeed = 1.0f; // Original max ground speed before buff
+    private float originalMaxAirSpeed = 1.0f; // Original max air speed before buff
+    private float originalJumpForce = 1.0f; // Original jump force before buff
     private Rigidbody rb; // Rigid body of the character
     // christofort: changed grounded to public to allow PenguinScript to access it
     public bool grounded = false; // If the character is touching the ground
@@ -126,7 +130,19 @@ public class CharacterMovement : MonoBehaviour
 
     public void BuffStats(int increase, int time)
     {
-        StartCoroutine(BuffTimer(increase, time));
+        buffCoroutine = StartCoroutine(BuffTimer(increase, time));
+    }
+
+    public void CancelBuffs()
+    {
+        if (buffCoroutine != null)
+        {
+            StopCoroutine(buffCoroutine);
+            buffCoroutine = null;
+        }
+        maxGroundSpeed = originalMaxGroundSpeed;
+        maxAirSpeed = originalMaxAirSpeed;
+        jumpForce = originalJumpForce;
     }
 
     public IEnumerator BuffTimer(int increase, int time)
@@ -134,9 +150,9 @@ public class CharacterMovement : MonoBehaviour
         Debug.Log("BUFFING...");
         Debug.Log("ORIGINAL = " + maxGroundSpeed);
         
-        float originalMaxGroundSpeed = maxGroundSpeed;
-        float originalMaxAirSpeed = maxAirSpeed;
-        float originalJumpForce = jumpForce;
+        originalMaxGroundSpeed = maxGroundSpeed;
+        originalMaxAirSpeed = maxAirSpeed;
+        originalJumpForce = jumpForce;
 
         maxGroundSpeed += increase;
         maxAirSpeed += increase;

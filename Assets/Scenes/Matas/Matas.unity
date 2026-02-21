@@ -272,6 +272,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   side1Score: 0
   side2Score: 0
+  side1SetsWon: 0
+  side2SetsWon: 0
   gameManager: {fileID: 614297107}
 --- !u!114 &18352594
 MonoBehaviour:
@@ -1264,7 +1266,7 @@ MonoBehaviour:
   leftPlayer2: {fileID: 1319189939}
   rightPlayer1: {fileID: 7895200595781189983}
   rightPlayer2: {fileID: 1667581929}
-  scoreManager: {fileID: 0}
+  scoreManager: {fileID: 18352593}
   gameState: 0
   lastHit: {fileID: 0}
   server: {fileID: 0}
@@ -1488,24 +1490,6 @@ MonoBehaviour:
   onLeft: 0
   ballManager: {fileID: 18352594}
   interactionRadius: 2
---- !u!114 &1180581314
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7895200595781189983}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f8d4e2e6aff8b4245811c0e5020de2c2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  dashCooldown: 0
-  dashDuration: 0.5
-  dashSpeed: 10
-  rotationSpeed: 8
-  penguinHeight: 0
-  isDashing: 0
 --- !u!1 &1184703061
 GameObject:
   m_ObjectHideFlags: 0
@@ -2046,7 +2030,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1352260021
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2375,7 +2359,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4554026514862761383, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.01
+      value: 8.57
       objectReference: {fileID: 0}
     - target: {fileID: 4554026514862761383, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2383,7 +2367,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4554026514862761383, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2.78
+      value: 4.29
       objectReference: {fileID: 0}
     - target: {fileID: 4554026514862761383, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2576,6 +2560,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Character1
       objectReference: {fileID: 0}
+    - target: {fileID: 7342613359322326940, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
+      propertyPath: m_TagString
+      value: Untagged
+      objectReference: {fileID: 0}
     - target: {fileID: 8698467889352044536, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
       propertyPath: m_Mesh
       value: 
@@ -2595,7 +2583,7 @@ PrefabInstance:
       addedObject: {fileID: 1180581302}
     - targetCorrespondingSourceObject: {fileID: 7342613359322326940, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1180581314}
+      addedObject: {fileID: 7895200595781189989}
   m_SourcePrefab: {fileID: 100100000, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
 --- !u!4 &3982437791737217892 stripped
 Transform:
@@ -2607,6 +2595,25 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 7342613359322326940, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
   m_PrefabInstance: {fileID: 610045261700163267}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7895200595781189989
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7895200595781189983}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc7c8781ac91a374b9e6dca334643d11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cooldownTime: 10
+  cooldownTimer: 0
+  buffAmount: 3
+  buffLength: 7
+  coin: {fileID: 1090145823125685694, guid: 8f44a91b09bbe9847bec887c0f5b7f6d, type: 3}
+  player: {fileID: 7895200595781189983}
+  gameManager: {fileID: 614297107}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
