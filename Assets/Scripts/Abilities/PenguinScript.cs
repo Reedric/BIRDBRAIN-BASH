@@ -79,6 +79,9 @@ public class PenguinScript : MonoBehaviour
             characterMovement.overrideRotation = true;
             characterMovement.targetRotation = transform.rotation * Quaternion.Euler(90, 0, 0);
         }
+
+        // Play slide sound
+        AudioManager.PlayBirdSound(BirdType.PENGUIN, SoundType.DEFENSIVE, 1.0f);
     }
 
     void EndDash()

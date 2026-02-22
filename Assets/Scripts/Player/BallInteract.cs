@@ -12,6 +12,7 @@ public class BallInteract : MonoBehaviour
     public BallManager ballManager; // Manager of the ball
     public float interactionRadius = 5f; // How far the ball can be from the player to interact with it
     
+    [SerializeField] private BirdType birdType; // The type of bird the character is
     private GameObject ball; // Game object for the ball
     private Rigidbody ballRb; // Rigid body for the ball
     private Vector3 bumpToLocation; // Where the ball will go after bumping
@@ -170,6 +171,9 @@ public class BallInteract : MonoBehaviour
         SetBallInitVelocity(ballRb, bumpToLocation, 5.0f);
         ballManager.goingTo = bumpToLocation;
 
+        // Play bump sound
+        AudioManager.PlayBirdSound(birdType, SoundType.BUMP, 1.0f);
+
         // Update game manager fields
         gameManager.gameState = GameManager.GameState.Bumped;
         gameManager.lastHit = gameObject;
@@ -198,6 +202,9 @@ public class BallInteract : MonoBehaviour
         // Set the ball's initial velocity and destination
         SetBallInitVelocity(ballRb, setToLocation, 5.0f);
         ballManager.goingTo = setToLocation;
+
+        // Play set sound
+        AudioManager.PlayBirdSound(birdType, SoundType.SET, 1.0f);
 
         // Update game manager fields
         gameManager.gameState = GameManager.GameState.Set;
@@ -232,6 +239,9 @@ public class BallInteract : MonoBehaviour
         // Set the ball's initial velocity and destination
         SetBallInitVelocity(ballRb, spikeToLocation, -1.0f);
         ballManager.goingTo = spikeToLocation;
+
+        // Play spike sound
+        AudioManager.PlayBirdSound(birdType, SoundType.SPIKE, 1.0f);
 
         // Update game manager fields
         gameManager.gameState = GameManager.GameState.Spiked;

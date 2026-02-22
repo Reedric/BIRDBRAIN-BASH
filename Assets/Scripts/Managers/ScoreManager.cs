@@ -9,6 +9,9 @@ public class ScoreManager : MonoBehaviour
     public int side1SetsWon = 0;
     public int side2SetsWon = 0;
     public GameManager gameManager;
+
+    [Header("Bird Types")]
+    [SerializeField] private BirdType rightBirdType1;
     private bool leftLastScored;
     private bool inPlay;
     UnityEvent LeftScored;
@@ -50,6 +53,7 @@ public class ScoreManager : MonoBehaviour
             inPlay = false;
             Debug.Log("side 2 scored! points: " + side2Score);
             LeftScored.Invoke();
+            PlaySounds(true);
             CheckWinSet(true);
         } 
         // if it touches side 2, then side 1 scores
@@ -59,6 +63,7 @@ public class ScoreManager : MonoBehaviour
             inPlay = false;
             Debug.Log("side 1 scored! points: " + side1Score);
             RightScored.Invoke();
+            PlaySounds(false);
             CheckWinSet(false);
         }
 
@@ -83,6 +88,7 @@ public class ScoreManager : MonoBehaviour
                 side1Score += 1;
                 inPlay = false;
                 Debug.Log("Out! side 1 scored! points: " + side1Score);
+                PlaySounds(false);
                 CheckWinSet(false);
             }
 
@@ -92,6 +98,7 @@ public class ScoreManager : MonoBehaviour
                 side2Score += 1;
                 inPlay = false;
                 Debug.Log("Out! side 2 scored! points: " + side2Score);
+                PlaySounds(true);
                 CheckWinSet(true);
             }
         }
@@ -175,5 +182,19 @@ public class ScoreManager : MonoBehaviour
         side2SetsWon = 0;
         leftLastScored = false;
         inPlay = true;
+    }
+
+    // Play sounds once a point is scored
+    void PlaySounds(bool leftJustScored)
+    {
+        // Play the correct sounds depending on which team just scored
+        if (leftJustScored)
+        {
+            AudioManager.PlayBirdSound(rightBirdType1, SoundType.SAD, 1.0f);
+        }
+        else
+        {
+            AudioManager.PlayBirdSound(rightBirdType1, SoundType.HAPPY, 1.0f);
+        }
     }
 }
