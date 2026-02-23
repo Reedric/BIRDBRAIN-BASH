@@ -19,15 +19,19 @@ public class BallInteract : MonoBehaviour
     private Vector3 setToLocation; // Where the ball will go after setting
     private Vector3 spikeToLocation; // Where the ball will go after spiking
     private Vector3 serveToLocation; // Where the ball will go after spiking
+    private float baseSpikeSpeed; // Speed of the ball when spiked
+
+    [Header("Spike Stat")]
+    public float spikeStat; //Spiking power for the bird
+
     private Vector3 blockToLocation; // Where the ball will go after blocking
-    private float spikeSpeed; // Speed of the ball when spiked
     private CharacterMovement serverMovement; //Christofort: Track the server's movement from character movement script
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         serverMovement = GetComponent<CharacterMovement>(); // christofort: gets the character movement script
-        spikeSpeed = 10.0f;
+        baseSpikeSpeed = 1f;
         
         ball = GameObject.FindGameObjectWithTag("Ball");
         if (ball != null)
@@ -348,7 +352,7 @@ public class BallInteract : MonoBehaviour
 
             // Set speed of inital velocity
             initVel.Normalize();
-            initVel *= spikeSpeed;
+            initVel *= baseSpikeSpeed + (spikeStat * 0.1);
 
             // Set the ball's intial velocity
             ballRb.linearVelocity = initVel;
