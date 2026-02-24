@@ -21,6 +21,7 @@ public class CharacterMovement : MonoBehaviour
     private bool canJump = false; // christofort: defaulted to false, ability scripts must set this to true
     private bool canMove = false; // christofort: defaulted to false, ability scripts must set this to true
     private PenguinScript penguinScript; // Reference to penguin dash script
+    private ParticleSystem dustParticles; // Reference to particle system for ground dust
     
     [HideInInspector] public bool overrideRotation = false; // Allow other scripts to override rotation
     [HideInInspector] public Quaternion targetRotation; // Target rotation when overridden
@@ -31,6 +32,7 @@ public class CharacterMovement : MonoBehaviour
         // Get the Rigidbody of the character
         rb = GetComponent<Rigidbody>();
         penguinScript = GetComponent<PenguinScript>();
+        dustParticles = GetComponent<ParticleSystem>();
     }
 
     // Update is called once per frame
@@ -97,6 +99,11 @@ public class CharacterMovement : MonoBehaviour
         if (other.gameObject.layer == 6)
         {
             grounded = true;
+            // Resume particle emission when landing
+            if (dustParticles != null)
+            {
+                dustParticles.Play();
+            }
         }
     }
 
@@ -107,6 +114,11 @@ public class CharacterMovement : MonoBehaviour
         if (other.gameObject.layer == 6)
         {
             grounded = false;
+            // Stop particle emission when airborne
+            if (dustParticles != null)
+            {
+                dustParticles.Stop();
+            }
         }
     }
     // christofort: encapsulated variables to control player movement from other scripts

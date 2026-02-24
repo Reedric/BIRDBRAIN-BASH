@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using UnityEngine.Events;
 
 public class ScoreManager : MonoBehaviour
 {
@@ -10,9 +11,24 @@ public class ScoreManager : MonoBehaviour
     public GameManager gameManager;
     private bool leftLastScored;
     private bool inPlay;
+    UnityEvent LeftScored;
+    UnityEvent RightScored;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        // Set the scores to 0, right to serve, and the ball is in play
+        side1Score = 0;
+        side2Score = 0;
+        leftLastScored = false;
+        inPlay = true;
+        
+        // Initializes events for when the left or right side scores
+        LeftScored = new UnityEvent();
+        RightScored = new UnityEvent();
+
+        LeftScored.AddListener(EventManager.LeftScored);
+        RightScored.AddListener(EventManager.RightScored);
         // Set the scores to 0, the sets to 0, right to serve, and the ball is in play
         ResetMatch();
 
@@ -21,6 +37,7 @@ public class ScoreManager : MonoBehaviour
         {
             Debug.LogError("Game Manager was not set in inspector for Score Manager!");
         }
+        LeftScored.Invoke();
     }
 
     // Checking to see if the ball hits the court on either side
@@ -32,6 +49,7 @@ public class ScoreManager : MonoBehaviour
             side2Score += 1;
             inPlay = false;
             Debug.Log("side 2 scored! points: " + side2Score);
+            LeftScored.Invoke();
             CheckWinSet(true);
         } 
         // if it touches side 2, then side 1 scores
@@ -40,7 +58,42 @@ public class ScoreManager : MonoBehaviour
             side1Score += 1;
             inPlay = false;
             Debug.Log("side 1 scored! points: " + side1Score);
+            RightScored.Invoke();
             CheckWinSet(false);
+        }
+
+        // ducky: If ball goes out, run coroutine in case out collision was registered before court collision
+        else if (collision.gameObject.CompareTag("Out"))
+        {
+            StartCoroutine(outCheck());
+        }
+    }
+
+    // ducky: IEnumerator coroutine for collision order sorting (b/c out collision was sometimes coming through before court)
+    public IEnumerator outCheck()
+    {
+        yield return new WaitForSeconds(.2f);
+
+        // Checks if ball still in play
+        if (inPlay)
+        {
+            // Left side scores
+            if (gameManager.lastHit == gameManager.leftPlayer1 || gameManager.lastHit == gameManager.leftPlayer2)
+            {
+                side1Score += 1;
+                inPlay = false;
+                Debug.Log("Out! side 1 scored! points: " + side1Score);
+                CheckWinSet(false);
+            }
+
+            // Right side scores
+            else if (gameManager.lastHit == gameManager.rightPlayer1 || gameManager.lastHit == gameManager.rightPlayer2)
+            {
+                side2Score += 1;
+                inPlay = false;
+                Debug.Log("Out! side 2 scored! points: " + side2Score);
+                CheckWinSet(true);
+            }
         }
     }
 
