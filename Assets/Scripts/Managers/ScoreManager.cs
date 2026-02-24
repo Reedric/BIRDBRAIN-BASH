@@ -235,6 +235,7 @@ public class ScoreManager : MonoBehaviour
     // Play sounds once a point is scored
     void PlaySounds(bool leftJustScored)
     {
+        AudioManager.PlayScoringSound(1.0f);
         // Play the correct sounds depending on which team just scored
         if (leftJustScored)
         {

@@ -186,6 +186,7 @@ public class BallInteract : MonoBehaviour
 
         // Play the bump sound for the bird
         AudioManager.PlayBirdSound(birdType, SoundType.BUMP, 1.0f);
+        AudioManager.PlayBallPlayerInteractionSound();
 
         // Update game manager fields
         gameManager.gameState = GameManager.GameState.Bumped;
@@ -218,6 +219,7 @@ public class BallInteract : MonoBehaviour
 
         // Play the set sound for the bird
         AudioManager.PlayBirdSound(birdType, SoundType.SET, 1.0f);
+        AudioManager.PlayBallPlayerInteractionSound();
 
         // Update game manager fields
         gameManager.gameState = GameManager.GameState.Set;
@@ -264,6 +266,7 @@ public class BallInteract : MonoBehaviour
 
         // Play the spike sound for the bird
         AudioManager.PlayBirdSound(birdType, SoundType.SPIKE, 1.0f);
+        AudioManager.PlayBallPlayerInteractionSound();
 
         // Update game manager fields
         gameManager.gameState = GameManager.GameState.Spiked;
@@ -297,6 +300,9 @@ public class BallInteract : MonoBehaviour
         // Set the ball's initial velocity and destination
         SetBallInitVelocity(ballRb, serveToLocation, 6.0f);
         ballManager.goingTo = serveToLocation;
+
+        // Play sounds
+        AudioManager.PlayBallPlayerInteractionSound();
 
         // Update game manager fields
         gameManager.gameState = GameManager.GameState.Served;
