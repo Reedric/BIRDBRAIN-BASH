@@ -11,7 +11,11 @@ public class BallInteract : MonoBehaviour
     [Header("Ball Manager")]
     public BallManager ballManager; // Manager of the ball
     public float interactionRadius = 5f; // How far the ball can be from the player to interact with it
+
+    [Header("Spike Stat")]
+    public float spikeStat; //Spiking power for the bird
     
+    [SerializeField] private BirdType birdType;
     private GameObject ball; // Game object for the ball
     private Rigidbody ballRb; // Rigid body for the ball
     private Vector3 bumpToLocation; // Where the ball will go after bumping
@@ -19,14 +23,15 @@ public class BallInteract : MonoBehaviour
     private Vector3 spikeToLocation; // Where the ball will go after spiking
     private Vector3 serveToLocation; // Where the ball will go after spiking
     private Vector3 blockToLocation; // Where the ball will go after blocking
-    private float spikeSpeed; // Speed of the ball when spiked
     private CharacterMovement serverMovement; //Christofort: Track the server's movement from character movement script
+    private float baseSpikeSpeed; // Speed of the ball when spiked
+
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         serverMovement = GetComponent<CharacterMovement>(); // christofort: gets the character movement script
-        spikeSpeed = 10.0f;
+        baseSpikeSpeed = 10.0f;
         
         ball = GameObject.FindGameObjectWithTag("Ball");
         if (ball != null)
@@ -179,6 +184,9 @@ public class BallInteract : MonoBehaviour
         SetBallInitVelocity(ballRb, bumpToLocation, 5.0f);
         ballManager.goingTo = bumpToLocation;
 
+        // Play the bump sound for the bird
+        AudioManager.PlayBirdSound(birdType, SoundType.BUMP, 1.0f);
+
         // Update game manager fields
         gameManager.gameState = GameManager.GameState.Bumped;
         gameManager.lastHit = gameObject;
@@ -207,6 +215,9 @@ public class BallInteract : MonoBehaviour
         // Set the ball's initial velocity and destination
         SetBallInitVelocity(ballRb, setToLocation, 5.0f);
         ballManager.goingTo = setToLocation;
+
+        // Play the set sound for the bird
+        AudioManager.PlayBirdSound(birdType, SoundType.SET, 1.0f);
 
         // Update game manager fields
         gameManager.gameState = GameManager.GameState.Set;
@@ -250,6 +261,9 @@ public class BallInteract : MonoBehaviour
             toucan.abilityActive = false; // consume ability on spike
             Debug.Log("Spike marked unblockable by Toucan offensive ability.");
         }
+
+        // Play the spike sound for the bird
+        AudioManager.PlayBirdSound(birdType, SoundType.SPIKE, 1.0f);
 
         // Update game manager fields
         gameManager.gameState = GameManager.GameState.Spiked;
@@ -369,7 +383,7 @@ public class BallInteract : MonoBehaviour
 
             // Set speed of inital velocity
             initVel.Normalize();
-            initVel *= spikeSpeed;
+            initVel *= baseSpikeSpeed + (spikeStat * 0.1f);
 
             // Set the ball's intial velocity
             ballRb.linearVelocity = initVel;
