@@ -4,6 +4,7 @@ public class BallManager : MonoBehaviour
 {
     public Vector3 goingTo; // Where the ball is going to
     public GameManager gameManager; // Game manager object
+    public GameObject unblockableOwner; // If set, this player's spike cannot be blocked
     private Rigidbody rb; // Rigidbody of the ball
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -25,6 +26,13 @@ public class BallManager : MonoBehaviour
         if (!rb.useGravity && !gameManager.gameState.Equals(GameManager.GameState.PointStart))
         {
             rb.useGravity = true;
+        }
+
+        // Clear unblockable owner on any collision (spike has reached a target)
+        if (unblockableOwner != null)
+        {
+            unblockableOwner = null;
+            Debug.Log("BallManager: cleared unblockable spike owner after collision.");
         }
     }
 }

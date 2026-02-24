@@ -71,6 +71,15 @@ public class BallInteract : MonoBehaviour
     // Check the game state in relation to the player
     private void CheckState()
     {
+        // Offensive ability activation (Toucan): allow activation regardless of CanHit()
+        if (InputSystem.actions.FindAction("Offensive Ability").WasPressedThisFrame())
+        {
+            ToucanOffensive toucan = GetComponent<ToucanOffensive>();
+            if (toucan != null)
+            {
+                toucan.TouCanDoIt();
+            }
+        }
         // If the player can hit the ball
         if (CanHit())
         {
@@ -93,7 +102,7 @@ public class BallInteract : MonoBehaviour
                     }
                     break;
 
-                case GameManager.GameState.Served: case GameManager.GameState.Blocked:
+                case GameManager.GameState.Served:
                     // If the player is close enough to the ball and is pressing the bump button, bump the ball
                     if (IsPlayerNearBall() && InputSystem.actions.FindAction("Bump").WasPressedThisFrame())
                     {
@@ -233,6 +242,15 @@ public class BallInteract : MonoBehaviour
         SetBallInitVelocity(ballRb, spikeToLocation, -1.0f);
         ballManager.goingTo = spikeToLocation;
 
+        // If this player has an offensive Toucan ability active, mark this spike unblockable
+        ToucanOffensive toucan = GetComponent<ToucanOffensive>();
+        if (toucan != null && toucan.abilityActive)
+        {
+            if (ballManager != null) ballManager.unblockableOwner = gameObject;
+            toucan.abilityActive = false; // consume ability on spike
+            Debug.Log("Spike marked unblockable by Toucan offensive ability.");
+        }
+
         // Update game manager fields
         gameManager.gameState = GameManager.GameState.Spiked;
         gameManager.lastHit = gameObject;
@@ -275,10 +293,23 @@ public class BallInteract : MonoBehaviour
 
     private void BlockBall()
     {
+        // If the incoming spike is marked unblockable, only allow block
+        // when the spike was NOT from the unblockable owner.
+        if (ballManager != null && ballManager.unblockableOwner != null)
+        {
+            // If the last spiker matches the unblockable owner, prevent blocking
+            if (gameManager != null && gameManager.lastHit == ballManager.unblockableOwner)
+            {
+                Debug.Log("Block attempted but spike is unblockable.");
+                return;
+            }
+            // Otherwise fall through and allow the block
+        }
+        
         // sends ball back to attacker's side near the net
         blockToLocation = new Vector3(6f, 0f, 0f);
 
-        if (!onLeft) blockToLocation *= -1;
+        if (onLeft) blockToLocation *= -1;
 
         // directional control
         Vector2 dir = InputSystem.actions.FindAction("Direction").ReadValue<Vector2>();
@@ -291,7 +322,7 @@ public class BallInteract : MonoBehaviour
         ballManager.goingTo = blockToLocation;
 
         // Update game state
-        gameManager.gameState = GameManager.GameState.Blocked;
+        gameManager.gameState = GameManager.GameState.Spiked;
         gameManager.lastHit = gameObject;
         gameManager.leftAttack = onLeft;
     }
