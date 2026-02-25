@@ -15,7 +15,7 @@ public class AIBehavior : MonoBehaviour
     public float maxGroundSpeed = 1.0f; // Max speed that the character can move on the ground
     public float maxAirSpeed = 1.0f; // Max speed that the character can move in the air
     public float jumpForce = 1.0f; // Force the character uses to jump 
-
+    public float rotationSpeed = 10.0f; // How fast the AI rotates to movement direction
     private float directionChangeWeight = 15f; // How quickly the character can change direction
     private bool grounded = false; // If the character is touching the ground
     private GameObject ball; // The ball in the game
@@ -26,6 +26,9 @@ public class AIBehavior : MonoBehaviour
     private Vector3 serveToLocation; // Where the ball will go after serving
     private float spikeSpeed; // Speed of the ball when spiked
     private float timeTilServe; // Time remaining until AI can serve
+    private ParticleSystem dustParticles; // Particle system for ground dust
+    [HideInInspector] public bool overrideRotation = false; // Allow external override of rotation
+    [HideInInspector] public Quaternion targetRotation; // Target rotation when not overridden
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -56,6 +59,12 @@ public class AIBehavior : MonoBehaviour
         // Set the spike speed and the amount of time AI takes to serve
         spikeSpeed = 10f;
         timeTilServe = 2f;
+
+        // Initialize target rotation to current rotation
+        targetRotation = transform.rotation;
+
+        // Get particle system for ground dust
+        dustParticles = GetComponent<ParticleSystem>();
     }
 
     // Update is called once per frame
@@ -65,6 +74,15 @@ public class AIBehavior : MonoBehaviour
         if (ball != null && ballRb != null)
         {
             CheckState();
+        }
+    }
+
+    // Apply rotation smoothly
+    void FixedUpdate()
+    {
+        if (!overrideRotation || Vector3.Distance(transform.eulerAngles, targetRotation.eulerAngles) > 0.1f)
+        {
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
         }
     }
 
@@ -259,6 +277,16 @@ public class AIBehavior : MonoBehaviour
                 newVelocity *= maxAirSpeed;
             }
 
+            // Update target rotation to face the movement direction
+            if (!overrideRotation)
+            {
+                Vector3 movementDirection = new Vector3(newVelocity.x, 0, newVelocity.y);
+                if (movementDirection.magnitude > 0.1f)
+                {
+                    targetRotation = Quaternion.LookRotation(movementDirection);
+                }
+            }
+
             // Assign the AI's velocity to the new velocity
             rb.linearVelocity = new Vector3(newVelocity.x, rb.linearVelocity.y, newVelocity.y);
         }
@@ -277,6 +305,9 @@ public class AIBehavior : MonoBehaviour
         // Set the ball's intial velocity and destination
         SetBallInitVelocity(ballRb, bumpToLocation, 5.0f);
         ballManager.goingTo = bumpToLocation;
+
+        // Play sounds
+        AudioManager.PlayBallPlayerInteractionSound();
 
         // Update game manager fields
         gameManager.gameState = GameManager.GameState.Bumped;
@@ -304,6 +335,9 @@ public class AIBehavior : MonoBehaviour
         // Set the ball's initial velocity and destination
         SetBallInitVelocity(ballRb, setToLocation, 6.0f);
         ballManager.goingTo = setToLocation;
+
+        // Play sounds
+        AudioManager.PlayBallPlayerInteractionSound();
 
         // Update game manager fields
         gameManager.gameState = GameManager.GameState.Set;
@@ -336,6 +370,9 @@ public class AIBehavior : MonoBehaviour
         // Set the ball's initial velocity and destination
         SetBallInitVelocity(ballRb, spikeToLocation, -1.0f);
         ballManager.goingTo = spikeToLocation;
+
+        // Play sounds
+        AudioManager.PlayBallPlayerInteractionSound();
 
         // Update game manager fields
         gameManager.gameState = GameManager.GameState.Spiked;
@@ -373,6 +410,9 @@ public class AIBehavior : MonoBehaviour
         gameManager.gameState = GameManager.GameState.Served;
         gameManager.lastHit = gameObject;
         gameManager.leftAttack = onLeft;
+
+        // Play sounds
+        AudioManager.PlayBallPlayerInteractionSound();
         
         // Reset timer for serve
         timeTilServe = 2.0f;
@@ -434,7 +474,11 @@ public class AIBehavior : MonoBehaviour
         if (other.gameObject.layer == 6)
         {
             grounded = true;
-            // Debug.Log("AI has landed.");
+            // Resume particle emission when landing
+            if (dustParticles != null)
+            {
+                dustParticles.Play();
+            }
         }
     }
 
@@ -445,7 +489,11 @@ public class AIBehavior : MonoBehaviour
         if (other.gameObject.layer == 6)
         {
             grounded = false;
-            // Debug.Log("AI has jumped.");
+            // Stop particle emission when airborne
+            if (dustParticles != null)
+            {
+                dustParticles.Stop();
+            }
         }
     }
 }
