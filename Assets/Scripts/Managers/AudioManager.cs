@@ -3,6 +3,7 @@ using UnityEngine;
 public enum BirdType
 {
     PENGUIN,
+    CROW,
     SCISSORTAIL,
     LOVEBIRD,
     OTHER
@@ -25,6 +26,7 @@ public class AudioManager : MonoBehaviour
 {
     [Header("Sounds")]
     [SerializeField] private AudioClip[] penguinSounds;
+    [SerializeField] private AudioClip[] crowSounds;
     [SerializeField] private AudioClip[] scissortailSounds;
     [SerializeField] private AudioClip[] lovebirdSounds;
 
@@ -70,6 +72,9 @@ public class AudioManager : MonoBehaviour
         {
             case BirdType.PENGUIN:
                 birdSounds = instance.penguinSounds;
+                break;
+            case BirdType.CROW:
+                birdSounds = instance.crowSounds;
                 break;
             case BirdType.SCISSORTAIL:
                 birdSounds = instance.scissortailSounds;
