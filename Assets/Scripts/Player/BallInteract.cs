@@ -15,7 +15,8 @@ public class BallInteract : MonoBehaviour
     [Header("Spike Stat")]
     public float spikeStat; //Spiking power for the bird
     
-    [SerializeField] private BirdType birdType;
+    [SerializeField] private BirdType birdType; // Type of the bird for audio noises
+    private Transform contactPoint; // Reference for interaction radius
     private GameObject ball; // Game object for the ball
     private Rigidbody ballRb; // Rigid body for the ball
     private Vector3 bumpToLocation; // Where the ball will go after bumping
@@ -51,6 +52,17 @@ public class BallInteract : MonoBehaviour
         {
             Debug.LogError("Ball Manager was not set in inspector for BallInteract!");
         }
+
+        if (gameManager == null)
+        {
+            Debug.LogError("Game manager was not found in BallInteract!");
+        }
+
+        contactPoint = transform.Find("ContactPoint").transform;
+        if (contactPoint == null)
+        {
+            Debug.LogErrorFormat("Could not find contact point for {0}.", transform.name);
+        }
     }
 
     // If the player is near the ball
@@ -58,7 +70,7 @@ public class BallInteract : MonoBehaviour
     {
         if (ball == null) return false;
         
-        float distance = Vector3.Distance(transform.position, ball.transform.position);
+        float distance = Vector3.Distance(contactPoint.position, ball.transform.position);
         return distance <= interactionRadius;
     }
 
@@ -150,6 +162,9 @@ public class BallInteract : MonoBehaviour
     // Check if the player can hit the ball
     private bool CanHit()
     {
+        // If the point has ended, they cannot hit the ball
+        if (gameManager.gameState.Equals(GameManager.GameState.PointEnd)) return false;
+        
         // If this player just hit the ball, they cannot hit it again
         if (gameObject.Equals(gameManager.lastHit)) return false;
 
@@ -183,6 +198,7 @@ public class BallInteract : MonoBehaviour
         // Set the ball's intial velocity and destination
         SetBallInitVelocity(ballRb, bumpToLocation, 5.0f);
         ballManager.goingTo = bumpToLocation;
+        ballManager.offCourse = false;
 
         // Play the bump sound for the bird
         AudioManager.PlayBirdSound(birdType, SoundType.BUMP, 1.0f);
@@ -198,10 +214,15 @@ public class BallInteract : MonoBehaviour
     private void SetBall()
     {
         // Set the setting location to middle of court as default
-        setToLocation = bumpToLocation;
+        setToLocation = new Vector3(2f, 0f, 0f);
+        if (onLeft)
+        {
+            setToLocation *= -1;
+        }
 
         // Get the direction value
         Vector2 dir = InputSystem.actions.FindAction("Direction").ReadValue<Vector2>();
+        Debug.LogFormat("ServeToLocation before checking direction: {0}", setToLocation);
 
         // If player wants to set towards top or bottom, update set to location
         if (dir.y < -0.64f)
@@ -212,10 +233,12 @@ public class BallInteract : MonoBehaviour
         {
             setToLocation += new Vector3(0, 0, 4); // Upper side of the court
         }
+        Debug.LogFormat("ServeToLocation after checking direction: {0}", setToLocation);
 
         // Set the ball's initial velocity and destination
         SetBallInitVelocity(ballRb, setToLocation, 5.0f);
         ballManager.goingTo = setToLocation;
+        ballManager.offCourse = false;
 
         // Play the set sound for the bird
         AudioManager.PlayBirdSound(birdType, SoundType.SET, 1.0f);
@@ -254,6 +277,7 @@ public class BallInteract : MonoBehaviour
         // Set the ball's initial velocity and destination
         SetBallInitVelocity(ballRb, spikeToLocation, -1.0f);
         ballManager.goingTo = spikeToLocation;
+        ballManager.offCourse = false;
 
         // If this player has an offensive Toucan ability active, mark this spike unblockable
         ToucanOffensive toucan = GetComponent<ToucanOffensive>();
@@ -300,6 +324,7 @@ public class BallInteract : MonoBehaviour
         // Set the ball's initial velocity and destination
         SetBallInitVelocity(ballRb, serveToLocation, 6.0f);
         ballManager.goingTo = serveToLocation;
+        ballManager.offCourse = false;
 
         // Play sounds
         AudioManager.PlayBallPlayerInteractionSound();
@@ -327,7 +352,7 @@ public class BallInteract : MonoBehaviour
         }
         
         // sends ball back to attacker's side near the net
-        blockToLocation = new Vector3(6f, 0f, 0f);
+        blockToLocation = new Vector3(-6f, 0f, 0f);
 
         if (onLeft) blockToLocation *= -1;
 
@@ -340,9 +365,10 @@ public class BallInteract : MonoBehaviour
         // want fast and flat arc
         SetBallInitVelocity(ballRb, blockToLocation, -1.0f);
         ballManager.goingTo = blockToLocation;
+        ballManager.offCourse = false;
 
         // Update game state
-        gameManager.gameState = GameManager.GameState.Spiked;
+        gameManager.gameState = GameManager.GameState.Blocked;
         gameManager.lastHit = gameObject;
         gameManager.leftAttack = onLeft;
     }
@@ -389,7 +415,16 @@ public class BallInteract : MonoBehaviour
 
             // Set speed of inital velocity
             initVel.Normalize();
-            initVel *= baseSpikeSpeed + (spikeStat * 0.1f);
+
+            // If blocking, want half of the spike speed stuff
+            if (gameManager.gameState.Equals(GameManager.GameState.Blocked))
+            {
+                initVel *= baseSpikeSpeed * (1.0f + spikeStat * 0.1f) * 0.5f; 
+            }
+            else
+            {
+                initVel *= baseSpikeSpeed * (1.0f + spikeStat * 0.1f);  
+            }
 
             // Set the ball's intial velocity
             ballRb.linearVelocity = initVel;

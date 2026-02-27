@@ -13,7 +13,7 @@ public class CharacterMovement : MonoBehaviour
     private Coroutine buffCoroutine; // Reference to the currently active buff coroutine
     private float originalMaxGroundSpeed = 1.0f; // Original max ground speed before buff
     private float originalMaxAirSpeed = 1.0f; // Original max air speed before buff
-    private float originalJumpForce = 1.0f; // Original jump force before buff
+    // private float originalJumpForce = 1.0f; // Original jump force before buff
     private Rigidbody rb; // Rigid body of the character
     // christofort: changed grounded to public to allow PenguinScript to access it
     public bool grounded = false; // If the character is touching the ground
@@ -142,7 +142,7 @@ public class CharacterMovement : MonoBehaviour
         }
         maxGroundSpeed = originalMaxGroundSpeed;
         maxAirSpeed = originalMaxAirSpeed;
-        jumpForce = originalJumpForce;
+        // jumpForce = originalJumpForce;
     }
 
     public IEnumerator BuffTimer(int increase, int time)
@@ -152,11 +152,11 @@ public class CharacterMovement : MonoBehaviour
         
         originalMaxGroundSpeed = maxGroundSpeed;
         originalMaxAirSpeed = maxAirSpeed;
-        originalJumpForce = jumpForce;
+        // originalJumpForce = jumpForce;
 
         maxGroundSpeed += increase;
         maxAirSpeed += increase;
-        jumpForce += increase;
+        // jumpForce += increase;
 
         Debug.Log("NEW = "+ maxGroundSpeed);
 
@@ -164,6 +164,6 @@ public class CharacterMovement : MonoBehaviour
 
         maxGroundSpeed = originalMaxGroundSpeed;
         maxAirSpeed = originalMaxAirSpeed;
-        jumpForce = originalJumpForce;
+        // jumpForce = originalJumpForce;
     }
 }

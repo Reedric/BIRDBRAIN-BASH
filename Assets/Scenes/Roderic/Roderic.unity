@@ -275,6 +275,12 @@ MonoBehaviour:
   side1SetsWon: 0
   side2SetsWon: 0
   gameManager: {fileID: 614297107}
+  side1ScoreUI: {fileID: 0}
+  side1SetUI: {fileID: 0}
+  side2ScoreUI: {fileID: 0}
+  side2SetUI: {fileID: 0}
+  side1ServeIndicator: {fileID: 0}
+  side2ServeIndicator: {fileID: 0}
   rightBirdType1: 0
 --- !u!114 &18352594
 MonoBehaviour:
@@ -290,6 +296,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   goingTo: {x: 0, y: 0, z: 0}
   gameManager: {fileID: 614297107}
+  unblockableOwner: {fileID: 0}
 --- !u!1001 &115471591
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -383,6 +390,9 @@ MonoBehaviour:
   maxGroundSpeed: 4
   maxAirSpeed: 2
   jumpForce: 6
+  rotationSpeed: 10
+  overrideRotation: 0
+  targetRotation: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1 &189267997
 GameObject:
   m_ObjectHideFlags: 0
@@ -1283,6 +1293,7 @@ MonoBehaviour:
   onLeft: 0
   ballManager: {fileID: 18352594}
   interactionRadius: 2
+  spikeStat: 4
   birdType: 0
 --- !u!114 &1180581314
 MonoBehaviour:
@@ -1443,6 +1454,38 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 8300000, guid: ac5a0ff18126b13419c13d9dbd6720a7, type: 3}
   - {fileID: 0}
+  crowSounds:
+  - {fileID: 8300000, guid: 57292661603c0f04b9f9ecaf8761b58b, type: 3}
+  - {fileID: 8300000, guid: c914495ec8699664bbefef22cd9234da, type: 3}
+  - {fileID: 8300000, guid: 0e344c3677f3c6449940c9978fc2dd0c, type: 3}
+  - {fileID: 8300000, guid: 90206d16817eea3428b2961068e130dd, type: 3}
+  - {fileID: 8300000, guid: 9db36db339303c449beffa804ad38b1b, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  scissortailSounds:
+  - {fileID: 8300000, guid: 001d2edea88aff24e9a0daf7e187d76f, type: 3}
+  - {fileID: 8300000, guid: 874d0e4a212049e42af75050a79da7e7, type: 3}
+  - {fileID: 8300000, guid: bfcd36449fa8e954bb1c9e15f300dd9c, type: 3}
+  - {fileID: 8300000, guid: b3faf003d6a652648b14ac82348c726b, type: 3}
+  - {fileID: 8300000, guid: 49d96296e3e29e742a2632e5aa16c13d, type: 3}
+  - {fileID: 0}
+  - {fileID: 8300000, guid: 81912487c56a3e942b03b9cc6a3c9784, type: 3}
+  - {fileID: 8300000, guid: 8ce969f916eeae545bc560008a10d940, type: 3}
+  lovebirdSounds:
+  - {fileID: 8300000, guid: 93981666575f3e844aeec5432c1bde04, type: 3}
+  - {fileID: 8300000, guid: 3b025b89ed4cdc44988d1abc018c6c19, type: 3}
+  - {fileID: 8300000, guid: 29d4ab88c5fd0c74b84d18eb1ae87a74, type: 3}
+  - {fileID: 8300000, guid: 81ac9f7cfd2394243bde2459c83b096e, type: 3}
+  - {fileID: 8300000, guid: fa41255b7e6cfbe47a4b2b04e7c3f7bf, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 8300000, guid: 11c62da8e049ea545a35e2da331f8bbf, type: 3}
+  scoringSounds: []
+  ballPlayerInteractionSounds: []
+  ballNetHitSounds: []
+  ballGroundHitSounds: []
+  backgroundTracks: []
 --- !u!82 &1247072348
 AudioSource:
   m_ObjectHideFlags: 0
@@ -1797,6 +1840,9 @@ MonoBehaviour:
   maxGroundSpeed: 4
   maxAirSpeed: 2
   jumpForce: 6
+  rotationSpeed: 10
+  overrideRotation: 0
+  targetRotation: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1 &1667581929 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7342613359322326940, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
@@ -1821,6 +1867,9 @@ MonoBehaviour:
   maxGroundSpeed: 4
   maxAirSpeed: 2
   jumpForce: 6
+  rotationSpeed: 10
+  overrideRotation: 0
+  targetRotation: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1001 &2066573284
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1984,6 +2033,18 @@ PrefabInstance:
       propertyPath: m_Constraints
       value: 80
       objectReference: {fileID: 0}
+    - target: {fileID: 3021669331432449462, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
+      propertyPath: spikeStat
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 3021669331432449462, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
+      propertyPath: ballManager
+      value: 
+      objectReference: {fileID: 18352594}
+    - target: {fileID: 3021669331432449462, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
+      propertyPath: gameManager
+      value: 
+      objectReference: {fileID: 614297107}
     - target: {fileID: 4554026514862761383, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
       propertyPath: m_LocalScale.y
       value: 0.75
@@ -2032,6 +2093,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: -876546973899608171, guid: d94de8a83e7349944b19e34307f87f20, type: 3}
+    - target: {fileID: 6659745750350808300, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
+      propertyPath: dashCooldown
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: 7342613359322326940, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
       propertyPath: m_Name
       value: Character1
