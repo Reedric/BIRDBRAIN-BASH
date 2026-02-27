@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(BallInteract))]
 public class SeagullOffensive : MonoBehaviour
@@ -8,8 +10,6 @@ public class SeagullOffensive : MonoBehaviour
     public int debuffLength; // Length of debuff in seconds
     public int debuffAmount; // Amount the debuff will DECREASE stats
     public int debuffWindowLength; // Amount of time in seconds after a score the player can trigger the debuff
-    public AudioClip laughSound; // Laughing audio clip
-    public AudioSource laughPlayer; // Source to play the laugh sound effect
 
     public GameManager gameManager;
     private bool _debuffWindow = false;
@@ -21,32 +21,51 @@ public class SeagullOffensive : MonoBehaviour
         EventManager.SubscribeScore(OnScore);
     }
 
+    void Update()
+    {
+        if (_debuffWindow && InputSystem.actions.FindAction("Offensive Ability").WasPressedThisFrame())
+        {
+            DebuffEnemy();
+        }
+    }
+
     public void DebuffEnemy()
     {
-        if (_debuffWindow)
+        Debug.Log("Debuffing enemies...");
+        List<GameObject> opponents = new();
+        if (_onLeft)
         {
-            List<GameObject> opponents = new();
-            if (_onLeft)
-            {
-                opponents.Add(gameManager.rightPlayer1);
-                opponents.Add(gameManager.rightPlayer2);
-            } else
-            {
-                opponents.Add(gameManager.leftPlayer1);
-                opponents.Add(gameManager.leftPlayer2);
-            }
+            opponents.Add(gameManager.rightPlayer1);
+            opponents.Add(gameManager.rightPlayer2);
+        } else
+        {
+            opponents.Add(gameManager.leftPlayer1);
+            opponents.Add(gameManager.leftPlayer2);
+        }
 
-            foreach (GameObject opponent in opponents)
+        foreach (GameObject opponent in opponents)
+        {
+            // Try to debuff player opponent
+            try
             {
                 opponent.GetComponent<CharacterMovement>().BuffStats(-debuffAmount, debuffLength);
             }
-
-            if (laughPlayer != null && laughSound != null)
+            catch (NullReferenceException)
             {
-                laughPlayer.PlayOneShot(laughSound);
+                // Must be an AI opponent
+                opponent.GetComponent<AIBehavior>().BuffStats(-debuffAmount, debuffLength);
             }
-            _debuffWindow = false;
+            catch (Exception)
+            {
+                Debug.LogError("Something weird happened in DebuffEnemy for SeagullOffensive...");
+            }
         }
+
+    
+        _debuffWindow = false;
+
+        // Play laugh sound
+        AudioManager.PlayBirdSound(BirdType.PENGUIN, SoundType.DEFENSIVE, 1.0f);
     }
 
     public bool OnScore(bool leftScored)

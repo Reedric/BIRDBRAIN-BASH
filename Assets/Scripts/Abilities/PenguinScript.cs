@@ -10,6 +10,7 @@ public class PenguinScript : MonoBehaviour
     public float rotationSpeed = 8.0f; // How fast penguin rotates
 
     public float penguinHeight; // christofort: height of the penguin for ground check
+    public GameManager gameManager; // Game manager for volleyball
         
     [HideInInspector] public bool isDashing = false;
     private bool isReturningUpright = false; // Ensure penguin returns to upright after dash
@@ -33,10 +34,12 @@ public class PenguinScript : MonoBehaviour
         InputAction dash = InputSystem.actions.FindAction("Defensive Ability");
         bool dashPressed = (dash != null && dash.WasPressedThisFrame()) || 
                           (dash == null && Keyboard.current?.spaceKey.wasPressedThisFrame == true);
+        bool validGamestate = !gameManager.gameState.Equals(GameManager.GameState.PointStart)
+            && !gameManager.gameState.Equals(GameManager.GameState.PointStart);
         
         penguinHeight = transform.position.y; //christofort: grabs the Y value of the penguin
         // chrIStofort: added a check for the penguin's y value, to make sure it isn't higher than the ground
-        if (dashPressed && cooldownTimer <= 0 && !isDashing && penguinHeight < 0.76)
+        if (dashPressed && validGamestate && cooldownTimer <= 0 && !isDashing && penguinHeight < 0.76)
         {
             StartDash();
         }

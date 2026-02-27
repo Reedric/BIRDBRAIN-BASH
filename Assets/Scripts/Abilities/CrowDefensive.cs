@@ -13,7 +13,6 @@ public class CrowDefensiveAbility : MonoBehaviour
     private int oldScore = 0; // Score of the last round
     public GameObject coin; // Coin item
     private List<GameObject> coins = new List<GameObject>(); // List to keep track of spawned coins
-    public GameObject player; // Crow object
     private bool onCooldown = false; // If the ability is currently on cooldown
     private bool buffActive = false; // If the stat buff is currently active
     private Vector3 randomSpawnPosition1;
@@ -25,10 +24,12 @@ public class CrowDefensiveAbility : MonoBehaviour
     {
         //Check if conditions are met to activate ability
         InputAction statBuff = InputSystem.actions.FindAction("Defensive Ability");
-        if (!onCooldown && statBuff.WasPressedThisFrame())
+        if (!onCooldown && !gameManager.gameState.Equals(GameManager.GameState.PointStart)
+            && !gameManager.gameState.Equals(GameManager.GameState.PointEnd) && statBuff.WasPressedThisFrame())
         {
             CrowDefCall();
-        } else if (onCooldown && statBuff.WasPressedThisFrame())
+        } else if (onCooldown && !gameManager.gameState.Equals(GameManager.GameState.PointStart)
+            && !gameManager.gameState.Equals(GameManager.GameState.PointEnd) && statBuff.WasPressedThisFrame())
         {
             Debug.Log("Defensive ability on cooldown (" + cooldownTimer + " seconds remaining)");
         }
@@ -41,7 +42,7 @@ public class CrowDefensiveAbility : MonoBehaviour
             // Do not let the buff carry over into the next round (if active)
             if (buffActive) 
             {
-                this.GetComponent<CharacterMovement>().CancelBuffs();
+                GetComponent<CharacterMovement>().CancelBuffs();
                 buffActive = false;
             }
         }
@@ -97,7 +98,7 @@ public class CrowDefensiveAbility : MonoBehaviour
     void CrowDefBuff()
     {
         Debug.Log("Buff activated");
-        this.GetComponent<CharacterMovement>().BuffStats(buffAmount, buffLength);
+        GetComponent<CharacterMovement>().BuffStats(buffAmount, buffLength);
         buffActive = true;
         Cooldown();
     }

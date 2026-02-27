@@ -33,6 +33,7 @@ public class GameManager : MonoBehaviour
     public enum GameState
     {
         PointStart, // State right before a serve
+        PointEnd, // Start right after a point is over
         Served, // State when ball has been served
         Bumped, // State when ball has been bumped
         Set, // State when ball has been set
