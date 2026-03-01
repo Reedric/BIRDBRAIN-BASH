@@ -155,5 +155,6 @@ MonoBehaviour:
   maxAirSpeed: 1
   jumpForce: 1
   rotationSpeed: 10
+  grounded: 0
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}

@@ -157,7 +157,7 @@ public class BallInteract : MonoBehaviour
     }
 
     // Bump the ball
-    private void BumpBall()
+    public void BumpBall()
     {
         // Set bump to location to front middle of whatever side of the court is bumping
         bumpToLocation = new Vector3(2f, 0f, 0f);
