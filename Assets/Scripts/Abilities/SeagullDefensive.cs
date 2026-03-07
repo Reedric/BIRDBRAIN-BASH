@@ -13,10 +13,12 @@ public class NewMonoBehaviourScript : MonoBehaviour
     public float shoveRadius = 1.5f; //radius to shove objects around
     [HideInInspector] private bool isAbilityReady = true;
     private Rigidbody rb;
+    private PlayerInput playerInput; // Input for this specific player
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        playerInput = GetComponent<PlayerInput>();
         rb = GetComponent<Rigidbody>();
         if (gameManager == null)
         {
@@ -41,7 +43,21 @@ public class NewMonoBehaviourScript : MonoBehaviour
         {
             return;
         }
-        StartCoroutine(DashToBall());
+
+        if (playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame() && CanDashToBall())
+        {
+            StartCoroutine(DashToBall());
+        }
+    }
+
+    private bool CanDashToBall()
+    {
+        // If it's not on your side of the court, you cannot dash to the ball
+        bool onYourSide = GetComponent<BallInteract>().onLeft != gameManager.leftAttack;
+        if (!onYourSide) return false;
+
+        // If it has not been spiked or blockedby other team, you cannot dash to the ball. Otherwise, you can
+        return gameManager.gameState.Equals(GameManager.GameState.Spiked) || gameManager.gameState.Equals(GameManager.GameState.Blocked);
     }
     
     private IEnumerator DashToBall()

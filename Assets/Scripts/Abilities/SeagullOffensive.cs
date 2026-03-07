@@ -14,16 +14,18 @@ public class SeagullOffensive : MonoBehaviour
     public GameManager gameManager;
     private bool _debuffWindow = false;
     private bool _onLeft;
+    private PlayerInput playerInput; // Input for this specific player
 
     void Start()
     {
+        playerInput = GetComponent<PlayerInput>();
         _onLeft = GetComponent<BallInteract>().onLeft;
         EventManager.SubscribeScore(OnScore);
     }
 
     void Update()
     {
-        if (_debuffWindow && InputSystem.actions.FindAction("Offensive Ability").WasPressedThisFrame())
+        if (_debuffWindow && playerInput.actions.FindAction("Offensive Ability").WasPressedThisFrame())
         {
             DebuffEnemy();
         }

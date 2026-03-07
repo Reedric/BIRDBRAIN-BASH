@@ -101,7 +101,7 @@ public class GameManager : MonoBehaviour
         leftServeLocation = new Vector3(-10, 1, 0);
         rightServeLocation = new Vector3(10, 1, 0);
 
-        // Start the point
+        // Start the first point
         NextPoint();
     }
 

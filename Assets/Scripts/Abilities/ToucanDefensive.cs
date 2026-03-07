@@ -14,11 +14,12 @@ public class ToucanDefensive : MonoBehaviour
     private bool _onLeft;
 
     private bool onCooldown = false;
+    private PlayerInput playerInput; // Input for this specific player
 
     void Update()
     {
         // If pressesd defensive ability button, activate ability
-        if (InputSystem.actions.FindAction("Defensive Ability").WasPressedThisFrame())
+        if (playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame())
         {
             TouCanDoIt();
         }
@@ -26,6 +27,7 @@ public class ToucanDefensive : MonoBehaviour
     
     public void Start()
     {
+        playerInput = GetComponent<PlayerInput>();
         _onLeft = GetComponent<BallInteract>().onLeft;
     }
 

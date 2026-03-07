@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Analytics;
 using UnityEngine.InputSystem;
 
 public class PenguinScript : MonoBehaviour
@@ -18,20 +19,28 @@ public class PenguinScript : MonoBehaviour
     private float cooldownTimer = 0.0f;
     private CharacterMovement characterMovement; // Track movement from character movement script
     private Rigidbody rb;
+    private PlayerInput playerInput; // Input for this specific player
+    
 
     void Start()
     {
+        playerInput = GetComponent<PlayerInput>();
         rb = GetComponent<Rigidbody>();
         characterMovement = GetComponent<CharacterMovement>(); 
         // christofort: automatically sets canJump and canMove to True
-        characterMovement.controlMovement(true,true);
+        if (characterMovement != null) characterMovement.controlMovement(true,true);
+
+        // If not assigned in scene, try to find the game manager
+        if (gameManager == null)
+        {
+            gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
+        }
     }
 
     void Update()
     {
-        
         // Handle dash input using Input System
-        InputAction dash = InputSystem.actions.FindAction("Defensive Ability");
+        InputAction dash = playerInput.actions.FindAction("Defensive Ability");
         bool dashPressed = (dash != null && dash.WasPressedThisFrame()) || 
                           (dash == null && Keyboard.current?.spaceKey.wasPressedThisFrame == true);
         bool validGamestate = !gameManager.gameState.Equals(GameManager.GameState.PointStart)
@@ -39,7 +48,7 @@ public class PenguinScript : MonoBehaviour
         
         penguinHeight = transform.position.y; //christofort: grabs the Y value of the penguin
         // chrIStofort: added a check for the penguin's y value, to make sure it isn't higher than the ground
-        if (dashPressed && validGamestate && cooldownTimer <= 0 && !isDashing && penguinHeight < 0.76)
+        if (dashPressed && validGamestate && cooldownTimer <= 0 && !isDashing && characterMovement.grounded)
         {
             StartDash();
         }

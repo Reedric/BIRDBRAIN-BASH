@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class PlayerSelectMenu : MonoBehaviour
@@ -105,6 +106,11 @@ public class PlayerSelectMenu : MonoBehaviour
             // Hide the input select menu
             inputSelectMenu.SetActive(false);
             
+            // Share the input information with the multiplayer manager
+            DataTransferManager.isKBMInput = isKBMInput;
+
+            // Go to the game scene
+            SceneManager.LoadScene("RodericM2");
         }
         else
         {

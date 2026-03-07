@@ -18,12 +18,18 @@ public class CrowDefensiveAbility : MonoBehaviour
     private Vector3 randomSpawnPosition1;
     private Vector3 randomSpawnPosition2;
     private Vector3 randomSpawnPosition3;
+    private PlayerInput playerInput; // Input for this specific player
     public GameManager gameManager;
 
+    void Start()
+    {
+        playerInput = GetComponent<PlayerInput>();
+    }
+    
     void Update()
     {
         //Check if conditions are met to activate ability
-        InputAction statBuff = InputSystem.actions.FindAction("Defensive Ability");
+        InputAction statBuff = playerInput.actions.FindAction("Defensive Ability");
         if (!onCooldown && !gameManager.gameState.Equals(GameManager.GameState.PointStart)
             && !gameManager.gameState.Equals(GameManager.GameState.PointEnd) && statBuff.WasPressedThisFrame())
         {

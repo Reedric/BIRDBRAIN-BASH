@@ -59,7 +59,14 @@ public class AIBehavior : MonoBehaviour
         // Check to see the ball manager was set in the inspector
         if (ballManager == null)
         {
-            Debug.LogError("Ball Manager was not set in inspector for AIBehavior!");
+            ballManager = ball.GetComponent<BallManager>();
+
+        }
+        
+        // If not assigned in scene, try to find the game manager
+        if (gameManager == null)
+        {
+            gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
         }
 
         // Set the spike speed and the amount of time AI takes to serve
