@@ -272,6 +272,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   side1Score: 0
   side2Score: 0
+  side1SetsWon: 0
+  side2SetsWon: 0
   gameManager: {fileID: 614297107}
 --- !u!114 &18352594
 MonoBehaviour:
@@ -1387,9 +1389,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1271317090}
+  - component: {fileID: 1271317092}
   - component: {fileID: 1271317089}
   - component: {fileID: 1271317088}
   - component: {fileID: 1271317087}
+  - component: {fileID: 1271317091}
   m_Layer: 0
   m_Name: OutsideOfCourt
   m_TagString: Untagged
@@ -1487,6 +1491,39 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1271317091
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1271317086}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62a52fa449ea78c439b417bf12bbb9f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameManager: {fileID: 0}
+  onLeft: 0
+  ballManager: {fileID: 0}
+  interactionRadius: 5
+--- !u!114 &1271317092
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1271317086}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 593700650f8d8a043851550585a9d6f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DebuffLength: 2
+  cooldown: 20
+  walkSpeed: 5
+  hearts: {fileID: 0}
+  heartsOffset: 1.15
 --- !u!1 &1293153259
 GameObject:
   m_ObjectHideFlags: 0
@@ -1870,7 +1907,7 @@ PrefabInstance:
       addedObject: {fileID: 189267998}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 7342613359322326940, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
-      insertIndex: 3
+      insertIndex: 1
       addedObject: {fileID: 7895200595781189989}
     - targetCorrespondingSourceObject: {fileID: 7342613359322326940, guid: 4ba165af8099f0f41aaf098aa2996310, type: 3}
       insertIndex: -1
@@ -1895,13 +1932,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 7895200595781189983}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d7ce7393f3be4e14887b4f803a969e6a, type: 3}
+  m_Script: {fileID: 11500000, guid: 593700650f8d8a043851550585a9d6f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cooldown: 5
-  buffAmount: 2
-  buffLength: 2
-  gameManager: {fileID: 614297107}
+  DebuffLength: 4
+  cooldown: 20
+  walkSpeed: 2
+  hearts: {fileID: 2103532663826045379, guid: aa26f21b86994d044a963dfff8ce2292, type: 3}
+  heartsOffset: 1.15
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

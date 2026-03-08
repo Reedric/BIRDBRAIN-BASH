@@ -15,12 +15,14 @@ public class SeagullOffensive : MonoBehaviour
     private bool _debuffWindow = false;
     private bool _onLeft;
 
+    // Subscribes to listen to Score event
     void Start()
     {
         _onLeft = GetComponent<BallInteract>().onLeft;
         EventManager.SubscribeScore(OnScore);
     }
 
+    // Finds the opponents depending on the side the seagull is on, then debuffs them.
     public void DebuffEnemy()
     {
         if (_debuffWindow)
@@ -49,6 +51,7 @@ public class SeagullOffensive : MonoBehaviour
         }
     }
 
+    // If the seagull's side scores, opens the window for the debuff
     public bool OnScore(bool leftScored)
     {
         if ((leftScored && _onLeft) || (!leftScored && !_onLeft))

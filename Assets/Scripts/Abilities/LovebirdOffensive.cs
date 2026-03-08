@@ -1,16 +1,28 @@
-using System.Numerics;
-using System.Threading.Tasks.Dataflow;
 using UnityEngine;
+using System.Collections.Generic;
+using System.Collections;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(BallInteract))]
-public class LoveBirdOffensive() : MonoBehaviour
+public class LoveBirdOffensive : MonoBehaviour
 {
-    public float DebuffLength = 2.0f; // Time in seconds the debuff lasts
-    public float Cooldown = 20.0f; // Time in seconds the cooldown lasts
+    public float DebuffLength = 4.0f; // Time in seconds the debuff lasts
+    public int cooldown = 20; // Time in seconds the cooldown lasts
+    public float walkSpeed = 2.0f; // How fast the opponents walk towards you
+    public ParticleSystem hearts; // Hearts effect for opponents
+    public float heartsOffset = 1.15f; // How much the hearts will be offset above the opponent
     private bool _onCooldown = false;
     private bool _debuffActive = false;
-    private List<GameObject> opponents = [];
+    private bool _onLeft;
+    private List<GameObject> opponents = new();
+    private List<ParticleSystem> _hearts = new();
+    private GameManager gameManager;
+
+    void Start()
+    {
+        gameManager = FindFirstObjectByType<GameManager>();
+        _onLeft = GetComponent<BallInteract>().onLeft;
+    }
 
     void Update()
     {
@@ -22,8 +34,9 @@ public class LoveBirdOffensive() : MonoBehaviour
                 // Gets a normalized direction vector from the opponent to the Lovebird
                 Vector3 dir = this.transform.position - opponent.transform.position;
                 dir.Normalize();
+
                 // Moves opponent towards the Lovebird
-                opponent.transform.position += dir * opponent.speed;
+                opponent.transform.position += dir * walkSpeed / 300;
             }
         }
     }
@@ -31,6 +44,8 @@ public class LoveBirdOffensive() : MonoBehaviour
     public void DebuffEnemy()
     {
         if (!_onCooldown)
+            _onCooldown = true;
+            StartCoroutine(Cooldown());
 
             // Gets opponents
             if (_onLeft)
@@ -49,21 +64,28 @@ public class LoveBirdOffensive() : MonoBehaviour
                 if (opponent.GetComponent<CharacterMovement>())
                 {
                     opponent.GetComponent<CharacterMovement>().enabled = false;
+                    ParticleSystem heart = Instantiate(hearts, opponent.transform);
+                    heart.transform.position += new Vector3(0f, heartsOffset, 0f);
+                    heart.Play();
+                    _hearts.Add(heart);
                 }
                 if (opponent.GetComponent<AIBehavior>())
                 {
                     opponent.GetComponent<AIBehavior>().enabled = false;
+                    ParticleSystem heart = Instantiate(hearts, opponent.transform);
+                    heart.transform.position += new Vector3(0f, heartsOffset, 0f);
+                    heart.Play();
+                    _hearts.Add(heart);
                 }
             }
+            _debuffActive = true;
 
-            StartCoroutine(DebuffTimer);
+            StartCoroutine(DebuffTimer());
             
         }
 
-    public IEnumerator DebuffTimer()
+    private IEnumerator DebuffTimer()
     {
-        _debuffActive = true;
-        StartCoroutine(Cooldown);
         yield return new WaitForSeconds(DebuffLength);
         _debuffActive = false;
 
@@ -79,12 +101,16 @@ public class LoveBirdOffensive() : MonoBehaviour
                 opponent.GetComponent<AIBehavior>().enabled = true;
             }
         }
+
+        foreach (ParticleSystem heart in _hearts)
+        {
+            Destroy(heart);
+        }
     }
 
-    public IEnumerator Cooldown()
+    private IEnumerator Cooldown()
     {
-        _onCooldown = true;
-        yield return new WaitForSeconds(Cooldown);
+        yield return new WaitForSeconds(cooldown);
         _onCooldown = false;
     }
 }
