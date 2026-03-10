@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class ToucanOffensive : MonoBehaviour
+public class ToucanOffensive : EnemyAbility
 {
     [SerializeField]
     public float cooldown = 10f; // Cooldown in seconds (TBA)
@@ -16,6 +16,10 @@ public class ToucanOffensive : MonoBehaviour
     // Activate the ability: next spike becomes unblockable
     public void TouCanDoIt()
     {
+        if (!canUseAbilities()) {
+            Debug.Log("Ability has been disabled by the crow :(");
+            return;
+        }
         if (onCooldown)
         {
             Debug.Log("Toucan Offense on cooldown");

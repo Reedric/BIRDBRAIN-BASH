@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(BallInteract))]
-public class SeagullOffensive : MonoBehaviour
+public class SeagullOffensive : EnemyAbility
 {
     public int debuffLength; // Length of debuff in seconds
     public int debuffAmount; // Amount the debuff will DECREASE stats
@@ -25,6 +25,10 @@ public class SeagullOffensive : MonoBehaviour
 
     void Update()
     {
+        if (!canUseAbilities()) {
+            Debug.Log("Ability has been disabled by the crow :(");
+            return;
+        }
         if (_debuffWindow && playerInput.actions.FindAction("Offensive Ability").WasPressedThisFrame())
         {
             DebuffEnemy();
