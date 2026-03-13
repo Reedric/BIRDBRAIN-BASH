@@ -1,4 +1,4 @@
-    using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
@@ -62,6 +62,9 @@ public class CharacterSelectManager : MonoBehaviour
 
     // name of the scene to load once selections are done (MAKE SURE THIS MATCHES MULTIPLAYER MANAGER AND CHANGES WHEN NEEDED)
     private const string mainSceneName = "RodericM2";
+
+    // Name of the main menu scene (update as needed)
+    private const string mainMenuSceneName = "MainMenu";
 
     // Tracks important input info for each player
     private class PlayerInputState
@@ -295,6 +298,14 @@ public class CharacterSelectManager : MonoBehaviour
                 birdButton.OnPressed(playerIndex);
                 return;
             }
+
+            // Check if this is a standard Unity UI Button
+            Button uiButton = result.gameObject.GetComponent<Button>();
+            if (uiButton != null)
+            {
+                uiButton.onClick.Invoke();
+                return;
+            }
         }
     }
 
@@ -513,5 +524,13 @@ public class CharacterSelectManager : MonoBehaviour
     {
         if (playerIndex < 0 || playerIndex >= playerReady.Count) return;
         playerReady[playerIndex] = ready;
+    }
+
+    /// <summary>
+    /// Navigates back to the main menu scene.
+    /// </summary>
+    public void NavigateBackToMainMenu()
+    {
+        SceneManager.LoadScene(mainMenuSceneName);
     }
 }
