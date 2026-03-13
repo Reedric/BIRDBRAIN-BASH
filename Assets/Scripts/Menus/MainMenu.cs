@@ -1,7 +1,10 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
+    [SerializeField] private string characterSelectSceneName = "AlexaCharSelect";
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -12,5 +15,11 @@ public class MainMenu : MonoBehaviour
     void Update()
     {
         
+    }
+
+    public void PlayButton()
+    {
+        // Load the character select scene
+        SceneManager.LoadScene(characterSelectSceneName);
     }
 }

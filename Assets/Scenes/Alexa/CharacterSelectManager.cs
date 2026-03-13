@@ -4,11 +4,17 @@ using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using TMPro;
 
 // This script is used to manage the character select screen.
 // It will handle the character selection and transition to the next scene when the players are ready.
 public class CharacterSelectManager : MonoBehaviour
 {
+    [Header("Player Name Texts")]
+    public TMP_Text blue1Name;
+    public TMP_Text blue2Name;
+    public TMP_Text pink1Name;
+    public TMP_Text pink2Name;
     private static CharacterSelectManager instance; // Singleton reference
     public static CharacterSelectManager Instance => instance;
 
@@ -18,6 +24,34 @@ public class CharacterSelectManager : MonoBehaviour
     public Canvas mainCanvas;
     public Transform cursorPrefab; // Need cursor prefab(s) to show player cursors on the select screen
     public Button readyButton;
+
+    [Header("Player Icons")]
+    public RawImage blue1Icon; // Player 0 icon
+    public RawImage blue2Icon; // Player 1 icon
+    public RawImage pink1Icon; // Player 2 icon
+    public RawImage pink2Icon; // Player 3 icon
+
+    [Header("Bird Textures")]
+    public RawImage penguinTexture;
+    public RawImage crowTexture;
+    public RawImage scissortailTexture;
+    public RawImage lovebirdTexture;
+    public RawImage dodoTexture;
+    public RawImage pelicanTexture;
+    public RawImage seagullTexture;
+    public RawImage owlTexture;
+    public RawImage pukekoTexture;
+    public RawImage toucanTexture;
+    public RawImage kiwiTexture;
+
+    [Header("Ready Indicators")]
+    public RawImage p1Ready;
+    public RawImage p2Ready;
+    public RawImage p3Ready;
+    public RawImage p4Ready;
+
+    [Header("Go Button")]
+    public RawImage goButton;
 
     // per-player data maintained while on the select screen
     private List<int> chosenBirdIndices = new();
@@ -59,6 +93,12 @@ public class CharacterSelectManager : MonoBehaviour
         instance = this;
         DontDestroyOnLoad(gameObject);
 
+        // Auto-find icons if not assigned
+        if (blue1Icon == null) blue1Icon = System.Array.Find(FindObjectsByType<RawImage>(FindObjectsSortMode.None), img => img.gameObject.name == "Blue1Icon");
+        if (blue2Icon == null) blue2Icon = System.Array.Find(FindObjectsByType<RawImage>(FindObjectsSortMode.None), img => img.gameObject.name == "Blue2Icon");
+        if (pink1Icon == null) pink1Icon = System.Array.Find(FindObjectsByType<RawImage>(FindObjectsSortMode.None), img => img.gameObject.name == "Pink1Icon");
+        if (pink2Icon == null) pink2Icon = System.Array.Find(FindObjectsByType<RawImage>(FindObjectsSortMode.None), img => img.gameObject.name == "Pink2Icon");
+
         // If the previous menu passed player/input data use it; otherwise use defaults
         if (DataTransferManager.isKBMInput != null && DataTransferManager.isKBMInput.Count > 0)
         {
@@ -85,12 +125,14 @@ public class CharacterSelectManager : MonoBehaviour
         CreatePlayerCursors();
 
         // Wire up the ready button if available
-        /// <summary>
-        /// EJ: I know there's no ready button right now but I'm assuming there will be eventually
-        /// so I just want to code for what makes sense right now to make things easier on me.
-        /// Feel free to change if this doesn't match the vision.
-        /// </summary>
         if (readyButton != null) readyButton.onClick.AddListener(CheckAllPlayersReady);
+
+        // Hide all ready indicators and GO button initially
+        if (p1Ready != null) p1Ready.enabled = false;
+        if (p2Ready != null) p2Ready.enabled = false;
+        if (p3Ready != null) p3Ready.enabled = false;
+        if (p4Ready != null) p4Ready.enabled = false;
+        if (goButton != null) goButton.enabled = false;
     }
 
     // Update is called once per frame
@@ -299,8 +341,52 @@ public class CharacterSelectManager : MonoBehaviour
     {
         if (playerIndex < 0 || playerIndex >= chosenBirdIndices.Count) return;
         if (birdIndex < 0 || birdIndex >= availableBirds.Count) return;
+
         chosenBirdIndices[playerIndex] = birdIndex;
+        playerReady[playerIndex] = true; // ready when they pick a bird
+        UpdatePlayerReadyUI(playerIndex);
         UpdatePlayerBirdUI(playerIndex);
+        CheckAllPlayersReady(); // update go button visibility
+    }
+
+    private void CheckAllPlayersReady()
+    {
+        bool all = true;
+        for (int i = 0; i < playerReady.Count; ++i)
+        {
+            if (!playerReady[i])
+            {
+                all = false;
+                break;
+            }
+        }
+        if (goButton != null)
+            goButton.enabled = all;
+
+        if (!all)
+        {
+            for (int i = 0; i < playerReady.Count; ++i)
+                if (!playerReady[i])
+                    Debug.Log($"Player {i + 1} is not ready yet.");
+        }
+        else
+        {
+            Debug.Log("All players ready - GO button shown");
+        }
+    }
+
+    private void UpdatePlayerReadyUI(int playerIndex)
+    {
+        RawImage img = playerIndex switch
+        {
+            0 => p1Ready,
+            1 => p2Ready,
+            2 => p3Ready,
+            3 => p4Ready,
+            _ => null
+        };
+        if (img != null)
+            img.enabled = playerReady[playerIndex];
     }
 
     // Get the bird type that the specified player has chosen.
@@ -313,32 +399,92 @@ public class CharacterSelectManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Once again, this is just a placeholder for now since we don't have a lot of UI elements yet,
-    /// but this is where you would update any UI to reflect the player's current bird choice when they select a new one.
-    /// So in the future, override this method to update any UI elements that display the player's current bird.
+    /// Updates the player icon when a bird is selected.
     /// </summary>
     /// <param name="playerIndex"></param>
     protected virtual void UpdatePlayerBirdUI(int playerIndex)
-    {
-        // placeholder: add visual feedback here
-    }
 
-    // Check if all players are ready and get ready to start the match if they are
-    private void CheckAllPlayersReady()
     {
-        for (int i = 0; i < playerReady.Count; ++i)
+        if (playerIndex < 0 || playerIndex >= chosenBirdIndices.Count) return;
+
+        // Get the bird type for this player
+        BirdType selectedBird = availableBirds[chosenBirdIndices[playerIndex]];
+
+        // Play happy sound for selected bird
+        AudioManager.PlayBirdSound(selectedBird, SoundType.HAPPY);
+
+        // Get the RawImage for this bird
+        RawImage birdRawImage = GetBirdTexture(selectedBird);
+
+        // Get the icon for this player
+        RawImage playerIcon = GetPlayerIcon(playerIndex);
+
+        // Update the icon texture from the bird RawImage
+        if (playerIcon != null && birdRawImage != null)
         {
-            if (!playerReady[i])
+            playerIcon.texture = birdRawImage.texture;
+
+            // preserve the original RawImage scaling/size
+            RectTransform birdRect = birdRawImage.GetComponent<RectTransform>();
+            RectTransform iconRect = playerIcon.GetComponent<RectTransform>();
+            if (birdRect != null && iconRect != null)
             {
-                Debug.Log($"Player {i + 1} is not ready yet."); // Should prob be UI element later
-                return;
+                // double the original dimensions
+                iconRect.sizeDelta = birdRect.sizeDelta * 1.2f;
+                iconRect.localScale = birdRect.localScale * 1.2f;
             }
         }
 
-        // All players ready. Prep to start the match
-        BeginMatch();
+        // Update player name text
+        string birdName = selectedBird.ToString();
+        TMP_Text nameText = playerIndex switch
+        {
+            0 => blue1Name,
+            1 => blue2Name,
+            2 => pink1Name,
+            3 => pink2Name,
+            _ => null
+        };
+        if (nameText != null)
+            nameText.text = birdName;
     }
 
+    /// <summary>
+    /// Returns the RawImage icon for a given player.
+    /// </summary>
+    private RawImage GetPlayerIcon(int playerIndex)
+    {
+        return playerIndex switch
+        {
+            0 => blue1Icon,
+            1 => blue2Icon,
+            2 => pink1Icon,
+            3 => pink2Icon,
+            _ => null
+        };
+    }
+
+    /// <summary>
+    /// Returns the texture for a given bird type.
+    /// </summary>
+    private RawImage GetBirdTexture(BirdType birdType)
+    {
+        return birdType switch
+        {
+            BirdType.PENGUIN => penguinTexture,
+            BirdType.CROW => crowTexture,
+            BirdType.SCISSORTAIL => scissortailTexture,
+            BirdType.LOVEBIRD => lovebirdTexture,
+            BirdType.DODO => dodoTexture,
+            BirdType.PELICAN => pelicanTexture,
+            BirdType.SEAGULL => seagullTexture,
+            BirdType.OWL => owlTexture,
+            BirdType.TOUCAN => toucanTexture,
+            BirdType.PUKEKO => pukekoTexture,
+            BirdType.KIWI => kiwiTexture,
+            _ => null
+        };
+    }
 
     // This is pretty much just data transfer to the multiplayer manager
     public void BeginMatch()
