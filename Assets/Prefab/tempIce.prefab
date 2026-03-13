@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 4720112628680318689}
   - component: {fileID: 435958993797201218}
   - component: {fileID: 7568666750104084953}
+  - component: {fileID: -6356340046269418826}
   m_Layer: 0
   m_Name: tempIce
   m_TagString: Untagged
@@ -108,3 +109,15 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &-6356340046269418826
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 176422398747366568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5d04ba3278a9354794348c813c69286, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
