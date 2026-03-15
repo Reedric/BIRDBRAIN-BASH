@@ -73,7 +73,7 @@ public class SeagullOffensive : BirdAbility
         _debuffWindow = false;
 
         // Play laugh sound
-        AudioManager.PlayBirdSound(BirdType.PENGUIN, SoundType.DEFENSIVE, 1.0f);
+        AudioManager.PlayBirdSound(BirdType.SEAGULL, SoundType.DEFENSIVE, 1.0f);
     }
 
     public bool OnScore(bool leftScored)

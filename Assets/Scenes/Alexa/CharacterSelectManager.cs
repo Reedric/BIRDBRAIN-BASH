@@ -22,7 +22,10 @@ public class CharacterSelectManager : MonoBehaviour
     public List<BirdType> availableBirds = new();
     public int numberOfPlayers = 4;
     public Canvas mainCanvas;
-    public Transform cursorPrefab; // Need cursor prefab(s) to show player cursors on the select screen
+    public Transform cursor1Prefab; // Need cursor prefab(s) to show player cursors on the select screen
+    public Transform cursor2Prefab; // Need cursor prefab(s) to show player cursors on the select screen
+    public Transform cursor3Prefab; // Need cursor prefab(s) to show player cursors on the select screen
+    public Transform cursor4Prefab; // Need cursor prefab(s) to show player cursors on the select screen
     public Button readyButton;
 
     [Header("Player Icons")]
@@ -203,17 +206,20 @@ public class CharacterSelectManager : MonoBehaviour
     // Create a cursor for each player. (CURSOR PREFABS ARE NEEEDED)
     private void CreatePlayerCursors()
     {
-        if (cursorPrefab == null)
-        {
-            Debug.LogWarning("Cursor prefab not assigned in CharacterSelectManager!");
-            return;
-        }
+        // Array of cursor prefabs for each player
+        Transform[] cursorPrefabs = new Transform[] { cursor1Prefab, cursor2Prefab, cursor3Prefab, cursor4Prefab };
 
         playerCursors.Clear();
 
         for (int i = 0; i < numberOfPlayers; ++i)
         {
-            Transform cursor = Instantiate(cursorPrefab, mainCanvas.transform);
+            Transform prefab = (i < cursorPrefabs.Length) ? cursorPrefabs[i] : null;
+            if (prefab == null)
+            {
+                Debug.LogWarning($"Cursor prefab for player {i + 1} not assigned in CharacterSelectManager!");
+                continue;
+            }
+            Transform cursor = Instantiate(prefab, mainCanvas.transform);
             cursor.name = $"Cursor_Player{i}";
 
             // Color cursors per player

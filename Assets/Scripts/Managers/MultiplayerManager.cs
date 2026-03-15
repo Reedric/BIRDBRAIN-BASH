@@ -158,6 +158,24 @@ public class MultiplayerManager : MonoBehaviour
             case BirdType.SEAGULL:
                 if (!isPlayer) return cManager.SeagullAI;
                 return isKBM ? cManager.SeagullKBM : cManager.SeagullC;
+            case BirdType.LOVEBIRD:
+                if (!isPlayer) return cManager.LovebirdAI;
+                return isKBM ? cManager.LovebirdKBM : cManager.LovebirdC;
+            case BirdType.TOUCAN:
+                if (!isPlayer) return cManager.ToucanAI;
+                return isKBM ? cManager.ToucanKBM : cManager.ToucanC;
+            case BirdType.PUKEKO:
+                if (!isPlayer) return cManager.PukekoAI;
+                return isKBM ? cManager.PukekoKBM : cManager.PukekoC;
+            case BirdType.SCISSORTAIL:
+                if (!isPlayer) return cManager.ScissortailAI;
+                return isKBM ? cManager.ScissortailKBM : cManager.ScissortailC;
+            case BirdType.DODO:
+                if (!isPlayer) return cManager.DodoAI;
+                return isKBM ? cManager.DodoKBM : cManager.DodoC;
+            case BirdType.PELICAN:
+                if (!isPlayer) return cManager.PelicanAI;
+                return isKBM ? cManager.PelicanKBM : cManager.PelicanC;
             default:
                 if (!isPlayer) return cManager.PenguinAI;
                 return isKBM ? cManager.PenguinKBM : cManager.PenguinC;

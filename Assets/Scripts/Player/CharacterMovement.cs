@@ -25,8 +25,8 @@ public class CharacterMovement : MonoBehaviour
     // christofort: changed grounded to public to allow PenguinScript to access it
     public bool grounded = false; // If the character is touching the ground
 
-    private bool canJump = false; // christofort: defaulted to false, ability scripts must set this to true
-    private bool canMove = false; // christofort: defaulted to false, ability scripts must set this to true
+    private bool canJump = true; // christofort: defaulted to false, ability scripts must set this to true
+    private bool canMove = true; // christofort: defaulted to false, ability scripts must set this to true
     private PenguinScript penguinScript; // Reference to penguin dash script
     private ParticleSystem dustParticles; // Reference to particle system for ground dust
     private PlayerInput playerInput; // Input for the player
