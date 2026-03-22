@@ -37,6 +37,16 @@ public class PelicanOffensive : BirdAbility
     {
         if (onCooldown) return;
 
+        // Play offensive sound
+        AudioManager.PlayBirdSound(BirdType.PELICAN, SoundType.OFFENSIVE, 1.0f);
+
+        // Trigger offensive ability animation if animator exists
+        var myBallInteract = GetComponent<BallInteract>();
+        if (myBallInteract != null && myBallInteract.animator != null)
+        {
+            myBallInteract.animator.SetTrigger("OffensiveAbility");
+        }
+
         // Instantiate at the pelican's position and rotation
         GameObject fish = Instantiate(fishPrefab, transform.position + transform.forward, transform.rotation);
 
@@ -57,9 +67,6 @@ public class PelicanOffensive : BirdAbility
 
         onCooldown = true;
         StartCoroutine(Cooldown());
-
-        // Play sound effect for spitting fish (TO BE IMPLEMENTED)
-        // AudioSource.PlayClipAtPoint(spitSound, transform.position);
     }
 
     private System.Collections.IEnumerator Cooldown()
