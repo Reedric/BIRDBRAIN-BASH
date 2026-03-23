@@ -9453,6 +9453,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8296885351573907038, guid: 3f7449f589a7f9741a7114ac6f5b616d, type: 3}
+      propertyPath: birdType
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8296885351573907038, guid: 3f7449f589a7f9741a7114ac6f5b616d, type: 3}
       propertyPath: ballManager
       value: 
       objectReference: {fileID: 18352594}
