@@ -3,7 +3,14 @@ using System;
 using System.Collections;
 
 public class AIBehavior : MonoBehaviour
+
 {
+    [Header("Bird Selection")]
+    [SerializeField] private BirdType birdType = BirdType.PENGUIN; // Type of the bird for audio noises; default to penguin
+
+    // Change the birdType from other managers
+    public void SetBirdType(BirdType type) { birdType = type; }
+    public BirdType GetBirdType() => birdType;
     [Header("Game Manager")]
     public bool onLeft; // Whether this AI is on the left side of the net or not
 
@@ -33,6 +40,8 @@ public class AIBehavior : MonoBehaviour
     private ParticleSystem dustParticles; // Particle system for ground dust
     [HideInInspector] public bool overrideRotation = false; // Allow external override of rotation
     [HideInInspector] public Quaternion targetRotation; // Target rotation when not overridden
+    [Tooltip("Euler offset applied to facing rotation. Use this if the model's forward axis isn't aligned with world +Z.")]
+    public Vector3 rotationOffsetEuler = Vector3.zero; // local rotation adjustment for the prefab
     private bool isWalking = false; // Whether the AI is currently walking
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -115,8 +124,14 @@ public class AIBehavior : MonoBehaviour
     void FixedUpdate()
     {
         if (!overrideRotation || Vector3.Distance(transform.eulerAngles, targetRotation.eulerAngles) > 0.1f)
+        // Apply rotation (either from movement or override)
         {
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
+            Quaternion baseRotation = targetRotation;
+            if (rotationOffsetEuler != Vector3.zero)
+            {
+                baseRotation *= Quaternion.Euler(rotationOffsetEuler);
+            }
+            transform.rotation = Quaternion.Slerp(transform.rotation, baseRotation, rotationSpeed * Time.fixedDeltaTime);
         }
 
         // Check if AI is moving
@@ -427,7 +442,8 @@ public class AIBehavior : MonoBehaviour
         ballManager.goingTo = bumpToLocation;
         ballManager.offCourse = false;
 
-        // Play sounds
+        // Play the bump sound for the bird
+        AudioManager.PlayBirdSound(birdType, SoundType.BUMP, 1.0f);
         AudioManager.PlayBallPlayerInteractionSound();
 
         // Update game manager fields
@@ -539,7 +555,8 @@ public class AIBehavior : MonoBehaviour
         ballManager.goingTo = spikeToLocation;
         ballManager.offCourse = false;
 
-        // Play sounds
+        // Play the spike sound for the bird
+        AudioManager.PlayBirdSound(birdType, SoundType.SPIKE, 1.0f);
         AudioManager.PlayBallPlayerInteractionSound();
 
         // Update game manager fields
@@ -600,7 +617,8 @@ public class AIBehavior : MonoBehaviour
         GameManager.Instance.lastHit = gameObject;
         GameManager.Instance.leftAttack = onLeft;
 
-        // Play sounds
+        // Play the block sound for the bird
+        AudioManager.PlayBirdSound(birdType, SoundType.BLOCK, 1.0f);
         AudioManager.PlayBallPlayerInteractionSound();
 
         // Trigger serve animation
