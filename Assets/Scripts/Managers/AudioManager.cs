@@ -31,6 +31,9 @@ public enum SoundType
 [RequireComponent(typeof(AudioSource))]
 public class AudioManager : MonoBehaviour
 {
+    [Header("Testing")]
+    [Tooltip("Mute background music for testing.")]
+    public bool muteBackgroundMusic = false;
     [Header("Sounds")]
     [SerializeField] private AudioClip[] penguinSounds;
     [SerializeField] private AudioClip[] crowSounds;
@@ -72,6 +75,15 @@ public class AudioManager : MonoBehaviour
     {
         // Assign audio source
         audioSource = instance.GetComponent<AudioSource>();
+    }
+
+    void Update()
+    {
+        // Mute/unmute background music based on inspector toggle
+        if (backgroundAudioSource != null)
+        {
+            backgroundAudioSource.volume = muteBackgroundMusic ? 0f : 1.0f;
+        }
     }
 
     public static void PlayBirdSound(BirdType birdType, SoundType soundType, float volume = 1.0f)

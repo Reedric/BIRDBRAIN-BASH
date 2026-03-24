@@ -6530,6 +6530,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d065839964517b2409df10ae8693a29c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  muteBackgroundMusic: 1
   penguinSounds:
   - {fileID: 8300000, guid: 8af3d13ded60b634e8b576b1f92a2a56, type: 3}
   - {fileID: 8300000, guid: 4209d1a8e38a3334cb586e8ac04a80e1, type: 3}
