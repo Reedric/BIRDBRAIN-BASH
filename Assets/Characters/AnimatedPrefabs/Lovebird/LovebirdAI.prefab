@@ -5643,10 +5643,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6dca93e819a6fc47a03b72b82e10caf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManager: {fileID: 0}
+  birdType: 0
   onLeft: 0
-  ballManager: {fileID: 0}
-  interactionRadius: 5
+  interactionRadius: 2.5
   animator: {fileID: 3174459180659872943}
   maxGroundSpeed: 4
   maxAirSpeed: 3
@@ -5654,6 +5653,7 @@ MonoBehaviour:
   rotationSpeed: 10
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
+  rotationOffsetEuler: {x: 0, y: 0, z: 0}
 --- !u!1 &3200729595258612101
 GameObject:
   m_ObjectHideFlags: 0

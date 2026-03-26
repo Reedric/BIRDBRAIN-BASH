@@ -5141,8 +5141,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   birdType: 6
   onLeft: 0
-  ballManager: {fileID: 0}
-  interactionRadius: 3
+  interactionRadius: 2.5
   animator: {fileID: 0}
   maxGroundSpeed: 6
   maxAirSpeed: 3

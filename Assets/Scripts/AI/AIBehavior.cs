@@ -150,7 +150,7 @@ public class AIBehavior : MonoBehaviour
             // Check the game state
             switch (GameManager.Instance.gameState)
             {
-                // If the ball was just spiked or served
+                // If the ball was just spiked, served, or blocked
                 case GameManager.GameState.Spiked: case GameManager.GameState.Served: case GameManager.GameState.Blocked:
                     // If the AI is near the ball and the ball is on its way down, bump the ball
                     if (IsAINearBall() && ballRb.linearVelocity.y < 0)
@@ -162,6 +162,18 @@ public class AIBehavior : MonoBehaviour
                         MoveAI(true);
                     }
                     break;
+                // If the ball was just blocked
+                // case GameManager.GameState.Blocked:
+                //     // If the AI is near the ball and the ball is on its way down, bump the ball
+                //     if (IsAINearBall())
+                //     {
+                //         BumpBall();
+                //     }
+                //     else // Just move the AI to get into a position to hit the ball
+                //     {
+                //         MoveAI(true);
+                //     }
+                //     break;
                 // If the ball was just bumped
                 case GameManager.GameState.Bumped:
                     // If the AI is near the ball and the ball is on its way down, bump the ball
@@ -260,7 +272,8 @@ public class AIBehavior : MonoBehaviour
         if (gameManager.leftAttack.Equals(onLeft) && !gameManager.gameState.Equals(GameManager.GameState.Spiked)) return true;
 
         // If the ball is on the other side of the court and has been spiked, they can hit, else they cannot
-        return !gameManager.leftAttack.Equals(onLeft) && gameManager.gameState.Equals(GameManager.GameState.Spiked);
+        return !gameManager.leftAttack.Equals(onLeft)
+            && (gameManager.gameState.Equals(GameManager.GameState.Spiked) || gameManager.gameState.Equals(GameManager.GameState.Blocked));
     }
 
     // Check if the AI is near the ball
@@ -413,9 +426,12 @@ public class AIBehavior : MonoBehaviour
         {
             bumpToLocation *= -1;
         }
+
+        // The ball will be bumped a minimum of five units
+        float height = MathF.Max(5.0f, ballRb.transform.position.y + 3.0f);
         
         // Set the ball's intial velocity and destination
-        SetBallInitVelocity(ballRb, bumpToLocation, 5.0f);
+        SetBallInitVelocity(ballRb, bumpToLocation, height);
         BallManager.Instance.goingTo = bumpToLocation;
         BallManager.Instance.offCourse = false;
 
@@ -471,8 +487,11 @@ public class AIBehavior : MonoBehaviour
             setToLocation -= new Vector3(0, 0, 4); // Sets to the lower side of the court
         }
 
+        // The ball will be set a minimum of five units
+        float height = MathF.Max(5.0f, ballRb.transform.position.y + 3.0f);
+
         // Set the ball's initial velocity and destination
-        SetBallInitVelocity(ballRb, setToLocation, 6.0f);
+        SetBallInitVelocity(ballRb, setToLocation, height);
         BallManager.Instance.goingTo = setToLocation;
         BallManager.Instance.offCourse = false;
 
