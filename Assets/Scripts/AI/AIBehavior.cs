@@ -549,6 +549,8 @@ public class AIBehavior : MonoBehaviour
 
         // Set the ball's initial velocity and destination
         SetBallInitVelocity(ballRb, spikeToLocation, -1.0f);
+        BallManager.Instance.addSpikeSpeed(); // ducky: Add additional spike speed to ball velocity
+        BallManager.Instance.incSpikeSpeed(); // ducky: Increment additional spike speed after ball velocity has been increased
         BallManager.Instance.goingTo = spikeToLocation;
         BallManager.Instance.offCourse = false;
 
@@ -676,7 +678,6 @@ public class AIBehavior : MonoBehaviour
             ballRb.linearVelocity = initVel;
         }
     }
-
     public void BuffStats(int increase, int time)
     {
         StartCoroutine(BuffTimer(increase, time));

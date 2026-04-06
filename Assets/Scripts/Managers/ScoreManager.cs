@@ -112,7 +112,7 @@ public class ScoreManager : MonoBehaviour
         if (inPlay)
         {
             // Left side scores
-            if (gameManager.lastHit == gameManager.leftPlayer1 || gameManager.lastHit == gameManager.leftPlayer2)
+            if (gameManager.lastHit == gameManager.rightPlayer1 || gameManager.lastHit == gameManager.rightPlayer2)
             {
                 side1Score += 1;
                 side1ScoreUI.text = side1Score.ToString();
@@ -123,7 +123,7 @@ public class ScoreManager : MonoBehaviour
             }
 
             // Right side scores
-            else if (gameManager.lastHit == gameManager.rightPlayer1 || gameManager.lastHit == gameManager.rightPlayer2)
+            else if (gameManager.lastHit == gameManager.leftPlayer1 || gameManager.lastHit == gameManager.leftPlayer2)
             {
                 side2Score += 1;
                 side2ScoreUI.text = side2Score.ToString();
@@ -184,6 +184,9 @@ public class ScoreManager : MonoBehaviour
     // Start next point if nobody has won yet
     private IEnumerator StartNextPoint(bool leftJustScored)
     {
+        // ducky: Reset additional spike speed to 0.0f
+        BallManager.Instance.resetSpikeSpeed();
+
         // Check for rotation of server
         if (leftJustScored != leftLastScored)
         {
