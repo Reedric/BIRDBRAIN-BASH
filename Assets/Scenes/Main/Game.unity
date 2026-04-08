@@ -249,7 +249,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: b3ab5e2311f51cc40a46064a5d86c382, type: 2}
-  - {fileID: 2100000, guid: fa18a3de483d16d49990c2123e869752, type: 2}
+  - {fileID: 2100000, guid: b3ab5e2311f51cc40a46064a5d86c382, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1260,7 +1260,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92b6aaa596e052f41ae0fe005f45898f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ball: {fileID: 18352587}
 --- !u!1 &355874976
 GameObject:
   m_ObjectHideFlags: 0
@@ -2114,12 +2113,10 @@ MonoBehaviour:
   leftPlayer2: {fileID: 0}
   rightPlayer1: {fileID: 0}
   rightPlayer2: {fileID: 0}
-  scoreManager: {fileID: 18352593}
   gameState: 0
   lastHit: {fileID: 0}
   server: {fileID: 0}
   leftAttack: 0
-  ball: {fileID: 18352587}
 --- !u!4 &614297108
 Transform:
   m_ObjectHideFlags: 0
@@ -3446,6 +3443,56 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 924741815}
   m_CullTransparentMesh: 1
+--- !u!1 &968887284
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 968887286}
+  - component: {fileID: 968887285}
+  m_Layer: 0
+  m_Name: FresnelManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &968887285
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 968887284}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4bc8685b3495c1d489984946f3ba84ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerFresnelMaterials:
+  - {fileID: 2100000, guid: 9332563b1952b4912b267ff4648c496b, type: 2}
+  - {fileID: 2100000, guid: 322ee312df53da24cb584be9bcef3db3, type: 2}
+  - {fileID: 2100000, guid: e777c37df29f4cf46b8137865fa71e99, type: 2}
+  - {fileID: 2100000, guid: e0e6aa9e1005fa94fada9ebd742cc0db, type: 2}
+  defaultBallMaterial: {fileID: 2100000, guid: b3ab5e2311f51cc40a46064a5d86c382, type: 2}
+--- !u!4 &968887286
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 968887284}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &989237554
 GameObject:
   m_ObjectHideFlags: 0
@@ -10475,3 +10522,4 @@ SceneRoots:
   - {fileID: 3210689194313243851}
   - {fileID: 3304075346227614731}
   - {fileID: 1668259258}
+  - {fileID: 968887286}
