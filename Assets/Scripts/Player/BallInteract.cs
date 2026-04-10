@@ -334,6 +334,8 @@ public class BallInteract : MonoBehaviour
 
         // Set the ball's initial velocity and destination
         SetBallInitVelocity(ballRb, spikeToLocation, -1.0f);
+        BallManager.Instance.addSpikeSpeed(); // ducky: Add additional spike speed to ball velocity
+        BallManager.Instance.incSpikeSpeed(); // ducky: Increment additional spike speed after ball velocity has been increased
         BallManager.Instance.goingTo = spikeToLocation;
         BallManager.Instance.offCourse = false;
 
@@ -496,7 +498,7 @@ public class BallInteract : MonoBehaviour
             float vx = (endLocation.x - ballRb.transform.position.x) / t;
             float vz = (endLocation.z - ballRb.transform.position.z) / t;
 
-            // Set the ball's intial velocity
+            // Set the ball's initial velocity
             ballRb.linearVelocity = new Vector3(vx, vyInit, vz);
         }
         else // Spiking or full blocking
@@ -510,7 +512,7 @@ public class BallInteract : MonoBehaviour
             // Calculate the direction the ball will go in
             Vector3 initVel = endLocation - ballRb.transform.position;
 
-            // Set speed of inital velocity
+            // Set speed of initial velocity
             initVel.Normalize();
 
             // If blocking, want half of the spike speed stuff (game state has not changed yet)
@@ -524,7 +526,7 @@ public class BallInteract : MonoBehaviour
                 initVel *= baseSpikeSpeed * (1.0f + spikeStat * 0.1f);
             }
 
-            // Set the ball's intial velocity
+            // Set the ball's initial velocity
             ballRb.linearVelocity = initVel;
         }
     }
