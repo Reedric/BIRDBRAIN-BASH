@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -10,9 +11,18 @@ using UnityEngine;
 [ExecuteAlways] // Let's script run in edit mode so you can see trajectory in the editor.
 public class BallLauncher : MonoBehaviour
 {
+    public enum BallLaunchType
+    {
+        None,
+        Serve,
+        Spike,
+        Block
+    }
+
     [SerializeField] private Rigidbody ballPrefab;
 
     [Header("Launch Parameters")]
+    [SerializeField] private BallLaunchType ballType = BallLaunchType.None;
     [SerializeField] private Vector3 launchVelocity;
     private Vector3 launchPosition => transform.position;
 
@@ -22,10 +32,7 @@ public class BallLauncher : MonoBehaviour
 
     private void Start()
     {
-        if (Application.isPlaying)
-        {
-            LaunchBall();
-        }
+        if (Application.isPlaying) LaunchBall();
     }
 
     private void LaunchBall()
@@ -40,12 +47,36 @@ public class BallLauncher : MonoBehaviour
         ballPrefab.angularVelocity = Vector3.zero;
         ballPrefab.transform.position = launchPosition;
 
+        ApplyLaunchTypeToGameState();
         ballPrefab.linearVelocity = launchVelocity;
     }
 
     private void OnDrawGizmos()
     {
         CalculateTrajectory();
+    }
+
+    private void ApplyLaunchTypeToGameState()
+    {
+        GameManager gameManager = FindAnyObjectByType<GameManager>();
+        if (gameManager == null) return;
+
+
+        switch (ballType)
+        {
+            case BallLaunchType.Serve:
+                gameManager.gameState = GameManager.GameState.Served;
+                break;
+            case BallLaunchType.Spike:
+                gameManager.gameState = GameManager.GameState.Spiked;
+                break;
+            case BallLaunchType.Block:
+                gameManager.gameState = GameManager.GameState.Blocked;
+                break;
+            case BallLaunchType.None:
+            default:
+                break;
+        }
     }
 
     private void CalculateTrajectory()

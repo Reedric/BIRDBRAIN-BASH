@@ -14,14 +14,17 @@ public class PukekoDefensive : BirdAbility
     [SerializeField] private float dashSpeed = 10f;
 
     private bool onCooldown = false;
+    private bool isDashing = false;
     private Rigidbody rb;
     private CharacterMovement characterMovement;
+    private BallInteract ballInteract;
     private readonly WaitForSeconds dashDuration = new(0.5f); // arbitrarily chosen value to turn off movement for during dash
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
         characterMovement = GetComponent<CharacterMovement>();
+        ballInteract = GetComponent<BallInteract>();
     }
 
     public void OnDefensiveAbility()
@@ -36,6 +39,7 @@ public class PukekoDefensive : BirdAbility
 
     private IEnumerator PlayingDirty()
     {
+        isDashing = true;
         characterMovement.controlMovement(false, false);
 
         // Dash towards the net
@@ -43,10 +47,17 @@ public class PukekoDefensive : BirdAbility
         else rb.AddForce(new Vector3(1, 0, 0) * dashSpeed, ForceMode.Impulse);
         yield return dashDuration; // Short dash duration
 
+        isDashing = false;
         characterMovement.controlMovement(true, true);
 
-        // Cooldown logic
         yield return new WaitForSeconds(cooldown);
         onCooldown = false;
+    }
+
+    // Detect collision with the ball during the dash
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (isDashing && collision.gameObject == BallManager.Instance.gameObject)
+            ballInteract.BlockBall();
     }
 }
