@@ -1,20 +1,18 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
 
 [RequireComponent(typeof(BallInteract))]
 [RequireComponent(typeof(PlayerInput))]
-public class NewMonoBehaviourScript : MonoBehaviour
+public class ChickenOffensive : BirdAbility
 {
     [Header("Scrambled Eggs Ability")]
 
     public GameObject eggSplashPrefab;   //Assign egg splat UI prefab
     public Canvas mainCanvas;            //Single canvas that covers whole screen
-    public Key keyToUse = Key.E;         //*will probably be changed*
     public float displayTime = 4f;       //How long the splat stays
     public float cooldown = 15f;         //Cooldown for ability
-    [HideInInspector] private bool isAbilityReady = true;
+    private bool isAbilityReady = true;
     private BallInteract ballInteract;
     private PlayerInput playerInput;
 
@@ -29,7 +27,8 @@ public class NewMonoBehaviourScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-         if (Keyboard.current[keyToUse].wasPressedThisFrame && isAbilityReady)
+        if (playerInput.actions.FindAction("Offensive Ability").WasCompletedThisFrame() && isAbilityReady
+            && CanUseAbilities() && PointInProgress())
         {
             ActivateAbility();
         }

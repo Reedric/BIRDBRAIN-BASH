@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -7,7 +6,7 @@ using UnityEngine.InputSystem;
 /// Sketches a line in the sand using her quill across the middle of the enemy court, 
 /// preventing enemies from crossing it.
 /// </summary>
-public class OwlOffensive : MonoBehaviour
+public class OwlOffensive : BirdAbility
 {
     [SerializeField] private float cooldown = 25f + 8f; // 8s line duration + 25s cooldown
     private bool onCooldown = false;
@@ -22,7 +21,7 @@ public class OwlOffensive : MonoBehaviour
 
     private void CaptureCure()
     {
-        if (onCooldown) return;
+        if (onCooldown || !CanUseAbilities() || !PointInProgress()) return;
 
         // Draw line in enemy court for lineDuration seconds, then remove line and start cooldown
         if (transform.position.x > 0) // Facing right, so line goes in right court
@@ -57,7 +56,19 @@ public class OwlOffensive : MonoBehaviour
         lineCollider.center = new Vector3(end.x / 2, 10f, 0f); // moves the collider up so its not underground
 
         onCooldown = true;
-        yield return new WaitForSeconds(lineDuration);
+        float time = 0f;
+        while (time < lineDuration)
+        {
+            time += Time.deltaTime;
+            yield return null; // this waits for one frame, so essentually unity update but in a coroutine
+            
+            // If point ended, destroy line
+            if (GameManager.Instance.gameState == GameManager.GameState.PointEnd)
+            {
+                time = lineDuration;
+            }
+        }
+        
         // EJ: For anyone happening to be editing this code make sure the line is destroyed
         // EJ :Its a procedural asset and wont be automatically destroyed creating a memory leak
         Destroy(line);
