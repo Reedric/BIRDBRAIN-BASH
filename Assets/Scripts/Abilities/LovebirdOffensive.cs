@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
@@ -5,7 +6,7 @@ using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(BallInteract))]
 [RequireComponent(typeof(PlayerInput))]
-public class LoveBirdOffensive : BirdAbility
+public class LovebirdOffensive : BirdAbility
 {
     public float DebuffLength = 4.0f; // Time in seconds the debuff lasts
     public int cooldown = 20; // Time in seconds the cooldown lasts
@@ -14,8 +15,6 @@ public class LoveBirdOffensive : BirdAbility
     public float heartsOffset = 1.15f; // How much the hearts will be offset above the opponent
     private bool _onCooldown = false;
     private bool _debuffActive = false;
-    private bool _onLeft;
-    private List<GameObject> opponents = new();
     private List<ParticleSystem> _hearts = new();
     private PlayerInput playerInput;
 
@@ -39,12 +38,26 @@ public class LoveBirdOffensive : BirdAbility
         {
             foreach (GameObject opponent in opponents)
             {
-                // Gets a normalized direction vector from the opponent to the Lovebird
-                Vector3 dir = this.transform.position - opponent.transform.position;
-                dir.Normalize();
+                // ducky: copied over from SeagullOffensive, again what in the hell
+                BallInteract birdPlayer = opponent.GetComponent<BallInteract>();
+                BirdType birdType;
+                if (birdPlayer == null)
+                {
+                    birdType = opponent.GetComponent<AIBehavior>().GetBirdType();
+                }
+                else
+                {
+                    birdType = opponent.GetComponent<BallInteract>().GetBirdType();
+                }
+                if (birdType != BirdType.OSTRICH)
+                {
+                    // Gets a normalized direction vector from the opponent to the Lovebird
+                    Vector3 dir = this.transform.position - opponent.transform.position;
+                    dir.Normalize();
 
-                // Moves opponent towards the Lovebird
-                opponent.transform.position += dir * walkSpeed / 300;
+                    // Moves opponent towards the Lovebird
+                    opponent.transform.position += dir * walkSpeed / 300;
+                }
             }
         }
     }
@@ -79,21 +92,27 @@ public class LoveBirdOffensive : BirdAbility
         // Disables manual movement for AI and Players
         foreach (GameObject opponent in opponents)
         {
-            if (opponent.GetComponent<CharacterMovement>())
+            try
             {
-                opponent.GetComponent<CharacterMovement>().enabled = false;
-                ParticleSystem heart = Instantiate(hearts, opponent.transform);
-                heart.transform.position += new Vector3(0f, heartsOffset, 0f);
-                heart.Play();
-                _hearts.Add(heart);
+                if (opponent.GetComponent<BallInteract>().GetBirdType() != BirdType.OSTRICH) 
+                {
+                    opponent.GetComponent<CharacterMovement>().enabled = false;
+                    ParticleSystem heart = Instantiate(hearts, opponent.transform);
+                    heart.transform.position += new Vector3(0f, heartsOffset, 0f);
+                    heart.Play();
+                    _hearts.Add(heart);
+                }
             }
-            if (opponent.GetComponent<AIBehavior>())
+            catch (NullReferenceException)
             {
-                opponent.GetComponent<AIBehavior>().enabled = false;
-                ParticleSystem heart = Instantiate(hearts, opponent.transform);
-                heart.transform.position += new Vector3(0f, heartsOffset, 0f);
-                heart.Play();
-                _hearts.Add(heart);
+                if (opponent.GetComponent<AIBehavior>().GetBirdType() != BirdType.OSTRICH)
+                {
+                    opponent.GetComponent<AIBehavior>().enabled = false;
+                    ParticleSystem heart = Instantiate(hearts, opponent.transform);
+                    heart.transform.position += new Vector3(0f, heartsOffset, 0f);
+                    heart.Play();
+                    _hearts.Add(heart);
+                }
             }
         }
         _debuffActive = true;

@@ -29,7 +29,6 @@ public class SeagullDefensive : BirdAbility
         {
             return;
         }
-        GameManager gameManager = GameManager.Instance;
         if (gameManager.gameState == GameManager.GameState.PointStart && gameManager.server == gameObject)
         {
             return;

@@ -52,11 +52,35 @@ public class CrowOffensive : BirdAbility {
             enemyAbilities.AddRange(gameManager.leftPlayer2.GetComponents<BirdAbility>());
         }
 
-        // Disable all the enemies abilities
-        foreach (BirdAbility enemy in enemyAbilities) 
+        if (_onLeft)
         {
-            enemy.DisableAbilities(true);
-            Debug.Log(enemy);
+            opponents.Add(gameManager.rightPlayer1);
+            opponents.Add(gameManager.rightPlayer2);
+        } else
+        {
+            opponents.Add(gameManager.leftPlayer1);
+            opponents.Add(gameManager.leftPlayer2);
+        }
+
+        // Disable all the enemies abilities
+        for (int i = 0; i < enemyAbilities.Count; i++)
+        {
+            // ducky: what the hell did I just make for this ostrich check
+            BallInteract birdPlayer = opponents[i].GetComponent<BallInteract>();
+            BirdType birdType;
+            if (birdPlayer == null)
+            {
+                birdType = opponents[i].GetComponent<AIBehavior>().GetBirdType();
+            }
+            else
+            {
+                birdType = opponents[i].GetComponent<BallInteract>().GetBirdType();
+            }
+            if (birdType != BirdType.OSTRICH)
+            {
+                enemyAbilities[i].DisableAbilities(true);
+                Debug.Log(enemyAbilities[i]);
+            }
         }
 
         // Wait for ability to end

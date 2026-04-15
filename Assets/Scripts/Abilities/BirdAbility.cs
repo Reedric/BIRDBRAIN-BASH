@@ -1,7 +1,12 @@
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 
 public class BirdAbility : MonoBehaviour {
     private bool abilitiesDisabled = false;
+    protected GameManager gameManager = GameManager.Instance; // ducky: GameManager instance for all abilities in case anyone needs it
+    protected List<GameObject> opponents = new(); // ducky: opponents list for all abilities in case anyone needs it
+    protected bool _onLeft; // ducky: for opponents if needed
 
     public void DisableAbilities(bool disabledOrNot)
     {

@@ -11,7 +11,6 @@ public class ToucanDefensive : BirdAbility
     public float cooldown; // Cooldown in seconds
     public int buffAmount; // Amount the ability increases ally's stats
     public int buffLength; // Amount of time in seconds the buff lasts
-    private bool _onLeft;
 
     private bool onCooldown = false;
     private PlayerInput playerInput; // Input for this specific player

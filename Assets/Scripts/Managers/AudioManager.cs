@@ -13,6 +13,7 @@ public enum BirdType
     KIWI,
     TOUCAN,
     PUKEKO,
+    OSTRICH,
     OTHER
 }
 

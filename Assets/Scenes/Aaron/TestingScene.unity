@@ -438,6 +438,69 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7259487236874072258, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
   m_PrefabInstance: {fileID: 691580858}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &122827227
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 122827203}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06dd2ca91fa327948af6da71c34e2622, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cooldown: 6
+  dashSpeed: 18
+  dashToDistance: 2
+--- !u!114 &122827228
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 122827203}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 593700650f8d8a043851550585a9d6f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DebuffLength: 4
+  cooldown: 20
+  walkSpeed: 2
+  hearts: {fileID: 2103532663826045379, guid: aa26f21b86994d044a963dfff8ce2292, type: 3}
+  heartsOffset: 1.15
+--- !u!114 &122827229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 122827203}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb7edfc66bc6f9043adb8e366d30220c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dashSpeed: 100
+  cooldown: 15
+  shoveForce: 18
+  shoveRadius: 1.5
+--- !u!114 &122827230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 122827203}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 086e35687ed9668449053553276ca739, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  debuffLength: 5
+  debuffAmount: 1
+  debuffWindowLength: 20
 --- !u!1 &136761180
 GameObject:
   m_ObjectHideFlags: 0
@@ -941,6 +1004,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2439993319741574366, guid: 28879bb1223b8d24781e5c885e5d59e1, type: 3}
+      propertyPath: birdType
+      value: 11
+      objectReference: {fileID: 0}
     - target: {fileID: 2439993319741574366, guid: 28879bb1223b8d24781e5c885e5d59e1, type: 3}
       propertyPath: rotationOffsetEuler.y
       value: 90
@@ -2244,6 +2311,10 @@ PrefabInstance:
       propertyPath: onLeft
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4939323027736895164, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
+      propertyPath: birdType
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 7259487236874072258, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
       propertyPath: m_LocalPosition.x
       value: -4.7800865
@@ -2288,10 +2359,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 8587256584720762441, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8067408739502402168, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
+      insertIndex: 11
+      addedObject: {fileID: 122827230}
+    - targetCorrespondingSourceObject: {fileID: 8067408739502402168, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
+      insertIndex: 12
+      addedObject: {fileID: 122827229}
+    - targetCorrespondingSourceObject: {fileID: 8067408739502402168, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 122827228}
+    - targetCorrespondingSourceObject: {fileID: 8067408739502402168, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 122827227}
   m_SourcePrefab: {fileID: 100100000, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
 --- !u!1 &699571215
 GameObject:
