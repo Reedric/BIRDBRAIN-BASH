@@ -64,7 +64,7 @@ public class CharacterSelectManager : MonoBehaviour
     private List<PlayerInputState> playerInputStates = new();
 
     // name of the scene to load once selections are done (MAKE SURE THIS MATCHES MULTIPLAYER MANAGER AND CHANGES WHEN NEEDED)
-    private const string mainSceneName = "Game";
+    private const string mainSceneName = "HowToPlay";
 
     // Name of the main menu scene (update as needed)
     private const string mainMenuSceneName = "MainMenu";

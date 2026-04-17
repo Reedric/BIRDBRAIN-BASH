@@ -5,18 +5,6 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: Assets/Scenes/Roderic/RodericM2.unity
-    guid: 7e668f44728ccb540b18371b40460043
-  - enabled: 0
-    path: Assets/Scenes/Alexa/MainMenu.unity
-    guid: 86dccc7369db946499a800a607df72f6
-  - enabled: 0
-    path: Assets/Scenes/Alexa/AlexaCharSelect.unity
-    guid: 5b1cfbb0191e1044791bd416130dac2e
-  - enabled: 0
-    path: Assets/Scenes/Alexa/PlayerSelectAlexa.unity
-    guid: ecfe0c88740a1fb428f623b4a49d8679
   - enabled: 1
     path: Assets/Scenes/Main/MainMenu.unity
     guid: b0b1bc74d298e5c43accfb94963121e4
@@ -26,6 +14,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Main/Game.unity
     guid: 588580040eb08644888e9e11ba574aef
+  - enabled: 1
+    path: Assets/Scenes/Main/HowToPlay.unity
+    guid: eb5a04b682e42ed4b9f9b10c3b871776
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

@@ -5769,13 +5769,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62a52fa449ea78c439b417bf12bbb9f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManager: {fileID: 0}
   onLeft: 0
-  ballManager: {fileID: 0}
-  interactionRadius: 5
+  interactionRadius: 2.5
   animator: {fileID: 0}
   spikeStat: 4
   birdType: 3
+  playerID: 0
 --- !u!114 &5469645505749822664
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5788,7 +5787,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06dd2ca91fa327948af6da71c34e2622, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManager: {fileID: 0}
   cooldown: 6
   dashSpeed: 60
   dashToDistance: 2
