@@ -439,6 +439,9 @@ public class AIBehavior : MonoBehaviour
         AudioManager.PlayBirdSound(birdType, SoundType.BUMP, 1.0f);
         AudioManager.PlayBallPlayerInteractionSound();
 
+        // handle vfx
+        HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, onLeft);
+
         // Update game manager fields
         GameManager.Instance.gameState = GameManager.GameState.Bumped;
         GameManager.Instance.lastHit = gameObject;
@@ -499,6 +502,9 @@ public class AIBehavior : MonoBehaviour
         AudioManager.PlayBirdSound(birdType, SoundType.SET, 1.0f);
         AudioManager.PlayBallPlayerInteractionSound();
 
+        // handle vfx
+        HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, onLeft);
+
         // Update game manager fields
         GameManager.Instance.gameState = GameManager.GameState.Set;
         GameManager.Instance.lastHit = gameObject;
@@ -557,6 +563,9 @@ public class AIBehavior : MonoBehaviour
         // Play the spike sound for the bird
         AudioManager.PlayBirdSound(birdType, SoundType.SPIKE, 1.0f);
         AudioManager.PlayBallPlayerInteractionSound();
+
+        // handle vfx
+        HitEffects.Instance.PlayEffect(HitEffects.HitType.Spike, onLeft);
 
         // Update game manager fields
         GameManager.Instance.gameState = GameManager.GameState.Spiked;
@@ -619,6 +628,10 @@ public class AIBehavior : MonoBehaviour
         // Play the block sound for the bird
         AudioManager.PlayBirdSound(birdType, SoundType.BLOCK, 1.0f);
         AudioManager.PlayBallPlayerInteractionSound();
+
+        // handle vfx
+        HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, onLeft);
+
 
         // Trigger serve animation
         if (animator != null)

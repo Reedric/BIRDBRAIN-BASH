@@ -1,5 +1,4 @@
 using UnityEngine;
-
 using System.Collections.Generic;
 
 public class FresnelManager : MonoBehaviour
@@ -21,10 +20,22 @@ public class FresnelManager : MonoBehaviour
         var ballObj = BallManager.Instance.gameObject;
         ballRenderers = ballObj.GetComponentsInChildren<Renderer>();
         ballRb = ballObj.GetComponent<Rigidbody>();
-        // Find all BallInteract scripts (players)
+
+        // Find all BallInteract scripts (players) and sort by position
         allPlayers = FindObjectsOfType<BallInteract>();
-        // Find all AIBehavior scripts (AIs)
+        System.Array.Sort(allPlayers, (a, b) =>
+        {
+            int xCompare = a.transform.position.x.CompareTo(b.transform.position.x);
+            return xCompare != 0 ? xCompare : a.transform.position.z.CompareTo(b.transform.position.z);
+        });
+
+        // Find all AIBehavior scripts (AIs) and apply the same sort.
         allAIs = FindObjectsOfType<AIBehavior>();
+        System.Array.Sort(allAIs, (a, b) =>
+        {
+            int xCompare = a.transform.position.x.CompareTo(b.transform.position.x);
+            return xCompare != 0 ? xCompare : a.transform.position.z.CompareTo(b.transform.position.z);
+        });
     }
 
     void Update()

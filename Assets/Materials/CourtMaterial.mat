@@ -83,7 +83,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Texture2D:
-        m_Texture: {fileID: 2800000, guid: 0d74d3bac6db59346be74ea48c989242, type: 3}
+        m_Texture: {fileID: 2800000, guid: b04974e2d9454c74e8d92b1bdfcd7b8f, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Texture3D:
@@ -123,9 +123,9 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _Max: 5.35
+    - _Max: 1.58
     - _Metallic: 0
-    - _Min: 0.32
+    - _Min: 0.64
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _QueueControl: 0
@@ -141,7 +141,7 @@ Material:
     - _ZTest: 4
     - _ZWrite: 1
     - _ZWriteControl: 0
-    - _shades: 0.47
+    - _shades: 0.78
     - _use3DTexture: 0
     m_Colors:
     - _BaseColor: {r: 1, g: 0.91523194, b: 0.64465404, a: 1}
