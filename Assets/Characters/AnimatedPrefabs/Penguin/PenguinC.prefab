@@ -2661,6 +2661,7 @@ GameObject:
   - component: {fileID: 6342948131313454296}
   - component: {fileID: 5875539000078385458}
   - component: {fileID: 6784181990874536643}
+  - component: {fileID: 6458781572301610545}
   m_Layer: 0
   m_Name: PenguinC
   m_TagString: Player
@@ -7707,13 +7708,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62a52fa449ea78c439b417bf12bbb9f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManager: {fileID: 0}
   onLeft: 0
-  ballManager: {fileID: 0}
   interactionRadius: 2.5
   animator: {fileID: 0}
   spikeStat: 3
   birdType: 0
+  playerID: 0
 --- !u!114 &6784181990874536643
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7732,14 +7732,25 @@ MonoBehaviour:
   rotationSpeed: 8
   tempIce: {fileID: 176422398747366568, guid: ba7e377640dc02e4a81648792971a0d4, type: 3}
   penguinHeight: 0
-  gameManager: {fileID: 0}
   isDashing: 0
-  dodgeBall: {fileID: 0}
   ballCollider: {fileID: 0}
   iceCollider: {fileID: 7568666750104084953, guid: ba7e377640dc02e4a81648792971a0d4, type: 3}
   usingSnowBall: 0
   normalBallMaterial: {fileID: 2100000, guid: b3ab5e2311f51cc40a46064a5d86c382, type: 2}
   snowballMaterial: {fileID: 2100000, guid: fa18a3de483d16d49990c2123e869752, type: 2}
+--- !u!114 &6458781572301610545
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8379060495865577183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec76d694d46da7644b8e5a279786627f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  readyIndicator: {fileID: 0}
 --- !u!1 &8547242871783633184
 GameObject:
   m_ObjectHideFlags: 0

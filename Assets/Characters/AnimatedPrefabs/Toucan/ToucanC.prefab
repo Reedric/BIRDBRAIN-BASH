@@ -2754,6 +2754,7 @@ GameObject:
   - component: {fileID: 266125352731579418}
   - component: {fileID: 4336799827627786668}
   - component: {fileID: 2075862330278724219}
+  - component: {fileID: 6188390117574024430}
   m_Layer: 0
   m_Name: ToucanC
   m_TagString: Player
@@ -7794,13 +7795,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62a52fa449ea78c439b417bf12bbb9f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManager: {fileID: 0}
   onLeft: 0
-  ballManager: {fileID: 0}
   interactionRadius: 5
   animator: {fileID: 8027817181727711834}
   spikeStat: 8
   birdType: 9
+  playerID: 0
 --- !u!114 &4336799827627786668
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7816,7 +7816,6 @@ MonoBehaviour:
   cooldown: 10
   buffAmount: 2
   buffLength: 10
-  gameManager: {fileID: 0}
 --- !u!114 &2075862330278724219
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7830,8 +7829,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cooldown: 10
-  abilityActive: 0
-  ballManager: {fileID: 0}
+--- !u!114 &6188390117574024430
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8653898586001143564}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec76d694d46da7644b8e5a279786627f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  readyIndicator: {fileID: 0}
 --- !u!1 &8706728290729586316
 GameObject:
   m_ObjectHideFlags: 0

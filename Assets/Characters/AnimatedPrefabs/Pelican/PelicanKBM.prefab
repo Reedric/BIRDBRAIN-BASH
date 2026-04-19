@@ -663,6 +663,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b46d13d2bff2efb45aa33256c23387eb, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6855771741842933283}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b46d13d2bff2efb45aa33256c23387eb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4180440105711159998}
   m_SourcePrefab: {fileID: 100100000, guid: b46d13d2bff2efb45aa33256c23387eb, type: 3}
 --- !u!4 &5027722345375699737 stripped
 Transform:
@@ -5592,13 +5595,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62a52fa449ea78c439b417bf12bbb9f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManager: {fileID: 0}
   onLeft: 0
-  ballManager: {fileID: 0}
   interactionRadius: 3
   animator: {fileID: 448866694192973940}
   spikeStat: 7
   birdType: 5
+  playerID: 0
 --- !u!114 &6565360105057745276
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5614,8 +5616,6 @@ MonoBehaviour:
   cooldown: 20
   holdLength: 2
   ballInteract: {fileID: 8140622713308913368}
-  ball: {fileID: 0}
-  gameManager: {fileID: 0}
 --- !u!114 &3375155812262255240
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5658,6 +5658,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e58d1fda243bd24a98cb7db7ac6a026, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mouthForwardOffset: 1
+  mouthUpOffset: 1.5
   cooldown: 30
   slipFishSpeed: 10
   fishLifetime: 15
@@ -5712,3 +5714,16 @@ CapsuleCollider:
   m_Height: 2.62
   m_Direction: 1
   m_Center: {x: 0, y: 1.29, z: 0}
+--- !u!114 &4180440105711159998
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5660424919353772451}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec76d694d46da7644b8e5a279786627f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  readyIndicator: {fileID: 0}

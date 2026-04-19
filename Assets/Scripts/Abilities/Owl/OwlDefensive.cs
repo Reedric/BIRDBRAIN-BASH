@@ -34,7 +34,7 @@ public class OwlDefensive : BirdAbility
 
     public void OnDefensiveAbility(InputValue value)
     {
-        if (onCooldown) return;
+        if (onCooldown || !CanUseAbilities() || !PointInProgress()) return;
         StartCoroutine(Investigation());
     }
 
@@ -51,6 +51,12 @@ public class OwlDefensive : BirdAbility
             UpdateLine(lineRenderer);
             time += Time.deltaTime;
             yield return null; // this waits for one frame, so essentually unity update but in a coroutine
+            
+            // If point ended, destroy line
+            if (GameManager.Instance.gameState == GameManager.GameState.PointEnd)
+            {
+                time = lineDuration;
+            }
         }
         Destroy(line);
 

@@ -663,6 +663,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b46d13d2bff2efb45aa33256c23387eb, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5458230980359897744}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b46d13d2bff2efb45aa33256c23387eb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5204621729347928699}
   m_SourcePrefab: {fileID: 100100000, guid: b46d13d2bff2efb45aa33256c23387eb, type: 3}
 --- !u!1 &6998144753495222642 stripped
 GameObject:
@@ -5587,13 +5590,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62a52fa449ea78c439b417bf12bbb9f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManager: {fileID: 0}
   onLeft: 0
-  ballManager: {fileID: 0}
   interactionRadius: 5
   animator: {fileID: 529589777352754616}
   spikeStat: 7
   birdType: 5
+  playerID: 0
 --- !u!114 &2488521229854801172
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5609,8 +5611,6 @@ MonoBehaviour:
   cooldown: 20
   holdLength: 2
   ballInteract: {fileID: 6458219553106997611}
-  ball: {fileID: 0}
-  gameManager: {fileID: 0}
 --- !u!114 &7627097619209320294
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5653,6 +5653,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e58d1fda243bd24a98cb7db7ac6a026, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mouthForwardOffset: 1
+  mouthUpOffset: 1.5
   cooldown: 30
   slipFishSpeed: 10
   fishLifetime: 15
@@ -5707,6 +5709,19 @@ CapsuleCollider:
   m_Height: 2.62
   m_Direction: 1
   m_Center: {x: 0, y: 1.29, z: 0}
+--- !u!114 &5204621729347928699
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6998144753495222642}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec76d694d46da7644b8e5a279786627f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  readyIndicator: {fileID: 0}
 --- !u!4 &7662231825681019848 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: b46d13d2bff2efb45aa33256c23387eb, type: 3}

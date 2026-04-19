@@ -45,7 +45,8 @@ public class GameManager : MonoBehaviour
         Bumped, // State when ball has been bumped
         Set, // State when ball has been set
         Spiked, // State when ball has been spiked
-        Blocked // State when ball has been blocked
+        Blocked, // State when ball has been blocked
+        GameOver // State when the game is over
     }
 
     void Awake()
@@ -135,20 +136,6 @@ public class GameManager : MonoBehaviour
             instance.leftAttack = false;
         }
     }
-
-    // Resets the game to the beginning, deprecated for the time being
-    // void OnReset()
-    // {
-    //     // Set the server to the first player on the right team
-    //     server = rightPlayer1;
-    //     leftAttack = false;
-
-    //     // Set the score to 0-0
-    //     scoreManager.ResetScore();
-
-    //     // Start the point
-    //     NextPoint();
-    // }
 
     public static void NextPoint()
     {

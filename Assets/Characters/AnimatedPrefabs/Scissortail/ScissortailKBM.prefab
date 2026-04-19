@@ -1456,6 +1456,7 @@ GameObject:
   - component: {fileID: 7837281105736501977}
   - component: {fileID: 8846676146865175057}
   - component: {fileID: 580795107138055432}
+  - component: {fileID: 2718628229098616371}
   m_Layer: 0
   m_Name: ScissortailKBM
   m_TagString: Player
@@ -1622,13 +1623,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62a52fa449ea78c439b417bf12bbb9f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManager: {fileID: 0}
   onLeft: 0
-  ballManager: {fileID: 0}
   interactionRadius: 5
   animator: {fileID: 1850106970080740182}
   spikeStat: 4
   birdType: 2
+  playerID: 0
 --- !u!95 &1850106970080740182
 Animator:
   serializedVersion: 7
@@ -6502,6 +6502,19 @@ ParticleSystemRenderer:
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
   m_MaskInteraction: 0
+--- !u!114 &2718628229098616371
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6123965182965053573}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec76d694d46da7644b8e5a279786627f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  readyIndicator: {fileID: 0}
 --- !u!1 &6259548495254628767
 GameObject:
   m_ObjectHideFlags: 0

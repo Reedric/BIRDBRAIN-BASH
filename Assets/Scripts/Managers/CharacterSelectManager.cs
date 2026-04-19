@@ -64,7 +64,7 @@ public class CharacterSelectManager : MonoBehaviour
     private List<PlayerInputState> playerInputStates = new();
 
     // name of the scene to load once selections are done (MAKE SURE THIS MATCHES MULTIPLAYER MANAGER AND CHANGES WHEN NEEDED)
-    private const string mainSceneName = "Game";
+    private const string mainSceneName = "HowToPlay";
 
     // Name of the main menu scene (update as needed)
     private const string mainMenuSceneName = "MainMenu";
@@ -97,7 +97,7 @@ public class CharacterSelectManager : MonoBehaviour
             return;
         }
         instance = this;
-        DontDestroyOnLoad(gameObject);
+        // DontDestroyOnLoad(gameObject);
 
         // Auto-find icons if not assigned
         if (blue1Icon == null) blue1Icon = System.Array.Find(FindObjectsByType<RawImage>(FindObjectsSortMode.None), img => img.gameObject.name == "Blue1Icon");
@@ -178,19 +178,6 @@ public class CharacterSelectManager : MonoBehaviour
         }
         else
         {
-            // // Default: first player KBM, others gamepads if present
-            // playerInputStates.Add(new PlayerInputState(0, true, Keyboard.current));
-
-            // int gamepadIndex = 0;
-            // for (int i = 1; i < numberOfPlayers; ++i)
-            // {
-            //     InputDevice dev = gamepadIndex < Gamepad.all.Count ? (InputDevice)Gamepad.all[gamepadIndex++] : null;
-            //     playerInputStates.Add(new PlayerInputState(i, false, dev));
-            // }
-
-            // isKBMInput.Clear();
-            // foreach (var state in playerInputStates) isKBMInput.Add(state.isKBM);
-
             // All players are gamepades
             for (int i = 0; i < numberOfPlayers; ++i)
             {
@@ -552,4 +539,12 @@ public class CharacterSelectManager : MonoBehaviour
     {
         SceneManager.LoadScene(mainMenuSceneName);
     }
+
+    // void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    // {
+    //     if (scene.name == "CharSelect")
+    //     {
+    //         Start();
+    //     }
+    // }
 }

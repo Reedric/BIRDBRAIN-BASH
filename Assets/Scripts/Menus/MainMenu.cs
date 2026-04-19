@@ -22,4 +22,10 @@ public class MainMenu : MonoBehaviour
         // Load the character select scene
         SceneManager.LoadScene(characterSelectSceneName);
     }
+
+    public void Quit()
+    {
+        // Quit the game
+        Application.Quit();
+    }
 }

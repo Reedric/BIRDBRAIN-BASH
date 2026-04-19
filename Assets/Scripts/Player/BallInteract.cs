@@ -1,6 +1,9 @@
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
 
 public class BallInteract : MonoBehaviour
 {
@@ -18,6 +21,7 @@ public class BallInteract : MonoBehaviour
     
     [Header("Bird Selection")]
     [SerializeField] private BirdType birdType = BirdType.SEAGULL; // Type of the bird for audio noises; default to penguin
+    public int playerID;
 
     // Change the birdType from other managers
     public void SetBirdType(BirdType type) { birdType = type; }
@@ -131,7 +135,7 @@ public class BallInteract : MonoBehaviour
                     }
                     
                     // If the player is close enough to the ball and is pressing the bump button, bump the ball
-                    else if (IsPlayerNearBall() && playerInput.actions.FindAction("Bump").WasPressedThisFrame())
+                    else if (IsPlayerNearBall() && playerInput.actions.FindAction("Defensive Action").WasPressedThisFrame())
                     {
                         BumpBall();
                     }
@@ -139,7 +143,7 @@ public class BallInteract : MonoBehaviour
 
                 case GameManager.GameState.Served:
                     // If the player is close enough to the ball and is pressing the bump button, bump the ball
-                    if (IsPlayerNearBall() && playerInput.actions.FindAction("Bump").WasPressedThisFrame())
+                    if (IsPlayerNearBall() && playerInput.actions.FindAction("Defensive Action").WasPressedThisFrame())
                     {
                         BumpBall();
                     }
@@ -147,7 +151,7 @@ public class BallInteract : MonoBehaviour
                 // Ball has just been bumped
                 case GameManager.GameState.Bumped:
                     // If the player is close enough to the ball and is pressing the set button, set the ball
-                    if (IsPlayerNearBall() && playerInput.actions.FindAction("Set").WasPressedThisFrame())
+                    if (IsPlayerNearBall() && playerInput.actions.FindAction("Defensive Action").WasPressedThisFrame())
                     {
                         SetBall();
                     }
@@ -155,7 +159,7 @@ public class BallInteract : MonoBehaviour
                 // Ball has just been set
                 case GameManager.GameState.Set:
                     // If the player is close enough to the ball and is pressing the spike button, spike the ball
-                    if (IsPlayerNearBall() && playerInput.actions.FindAction("Spike").WasPressedThisFrame())
+                    if (IsPlayerNearBall() && playerInput.actions.FindAction("Offensive Action").WasPressedThisFrame())
                     {
                         SpikeBall();
                     }
@@ -184,12 +188,25 @@ public class BallInteract : MonoBehaviour
                         serverMovement.controlMovement(true, true);
                     }
                     // If this player is the one serving and they press the serve button, serve the ball
-                    if (GameManager.Instance.server == gameObject && playerInput.actions.FindAction("Serve").WasPressedThisFrame())
+                    if (GameManager.Instance.server == gameObject && playerInput.actions.FindAction("Offensive Action").WasPressedThisFrame())
                     {
                         ServeBall();
                     }
                     break;
             }
+        }
+
+        // Check if the player is trying to pause or resume the game
+        if (!PauseMenu.Instance.GameIsPaused && playerInput.actions.FindAction("Pause").WasPressedThisFrame())
+        {
+            PauseMenu.Instance.pausedPlayerID = playerID;
+            PauseMenu.Instance.inputModule.actionsAsset = playerInput.actions;
+            PauseMenu.Instance.Pause();
+        }
+        else if (PauseMenu.Instance.GameIsPaused && PauseMenu.Instance.pausedPlayerID == playerID
+            && playerInput.actions.FindAction("Pause").WasPressedThisFrame())
+        {
+            PauseMenu.Instance.Resume();
         }
     }
 
@@ -248,6 +265,9 @@ public class BallInteract : MonoBehaviour
         AudioManager.PlayBirdSound(birdType, SoundType.BUMP, 1.0f);
         AudioManager.PlayBallPlayerInteractionSound();
 
+        // handle vfx
+        HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, onLeft);
+
         // Update game manager fields
         GameManager.Instance.gameState = GameManager.GameState.Bumped;
         GameManager.Instance.lastHit = gameObject;
@@ -262,6 +282,9 @@ public class BallInteract : MonoBehaviour
     // Set the ball
     private void SetBall()
     {
+        // If the ball's velocity is not coming down, then you can't set the ball
+        if (BallManager.Instance.gameObject.GetComponent<Rigidbody>().linearVelocity.y >= 0) return;
+        
         // Set the setting location to middle of court as default
         setToLocation = new Vector3(2f, 0f, 0f);
         if (onLeft)
@@ -296,6 +319,9 @@ public class BallInteract : MonoBehaviour
         // Play the set sound for the bird
         AudioManager.PlayBirdSound(birdType, SoundType.SET, 1.0f);
         AudioManager.PlayBallPlayerInteractionSound();
+
+        // handle vfx
+        HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, onLeft);
 
         // Update game manager fields
         GameManager.Instance.gameState = GameManager.GameState.Set;
@@ -343,6 +369,9 @@ public class BallInteract : MonoBehaviour
         AudioManager.PlayBirdSound(birdType, SoundType.SPIKE, 1.0f);
         AudioManager.PlayBallPlayerInteractionSound();
 
+        // handle vfx
+        HitEffects.Instance.PlayEffect(HitEffects.HitType.Spike, onLeft);
+
         // Update game manager fields
         GameManager.Instance.gameState = GameManager.GameState.Spiked;
         GameManager.Instance.lastHit = gameObject;
@@ -384,6 +413,9 @@ public class BallInteract : MonoBehaviour
 
         // Play serve sound
         AudioManager.PlayBallPlayerInteractionSound();
+
+        // handle vfx
+        HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, onLeft);
         
 
         // Update game manager fields
@@ -398,11 +430,15 @@ public class BallInteract : MonoBehaviour
         }
     }
 
-    private void BlockBall()
+    public void BlockBall()
         // Play the block sound for the bird
     {
         AudioManager.PlayBirdSound(birdType, SoundType.BLOCK, 1.0f);
         AudioManager.PlayBallPlayerInteractionSound();
+
+        // handle vfx
+        HitEffects.Instance.PlayEffect(HitEffects.HitType.Block, onLeft);
+        
         // If the incoming spike is marked unblockable, only allow block
         // when the spike was NOT from the unblockable owner.
         if (BallManager.Instance.unblockableOwner != null)

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class MultiplayerManager : MonoBehaviour
 {
@@ -11,13 +11,12 @@ public class MultiplayerManager : MonoBehaviour
     public Transform[] playerSpawnpoints; // Spawnpoints that the players and AI will use
 
     [SerializeField] private GameObject aiPrefab; // Prefab for an AI player
+    [SerializeField] private RawImage[] playerIndicators; // Ready up indicators for post-game
 
     private CharacterManager cManager; // Instance of character manager
-    private HashSet<InputDevice> inputDevices = new HashSet<InputDevice>(); // Unique input devices currently being used
     private static MultiplayerManager instance; // Singleton reference to the manager
     private List<bool> isKBMInput; // List of inputs for players (true is KBM, false is Controller) [Only ONE KBM allowed]
     private List<BirdType> selectedBirds; // List of birds each player selected
-    private String mainScene = "Game"; // Name of the scene that will be where the main part of the game is
 
     void Awake()
     {
@@ -29,12 +28,22 @@ public class MultiplayerManager : MonoBehaviour
         else
         {
             instance = this;
-            DontDestroyOnLoad(gameObject);
+            // DontDestroyOnLoad(gameObject);
         }
 
         cManager = GetComponent<CharacterManager>();
         instance.isKBMInput = DataTransferManager.isKBMInput;
         instance.selectedBirds = DataTransferManager.selectedBirds;
+        InitializePlayers();
+    }
+
+    void Start()
+    {
+        // Hide player ready indicators
+        foreach (RawImage indicator in playerIndicators)
+        {
+            indicator.enabled = false;
+        }
     }
 
     void InitializePlayers()
@@ -67,12 +76,16 @@ public class MultiplayerManager : MonoBehaviour
             // Give the player the necessary scripts to move and interact with the ball
             MakePlayer(player.gameObject, playerCount);
             player.actions.FindActionMap("Player").Enable();
+            player.actions.FindActionMap("UI").Enable();
 
             // Increment player count
             playerCount++;
 
             Debug.Log("Made player");
         }
+
+        // Instantiate readied up for score manager
+        ScoreManager.Instance.readiedUp = new bool[playerCount];
 
         // Now add AI players, if necessary
         while (playerCount < 4)
@@ -183,6 +196,7 @@ public class MultiplayerManager : MonoBehaviour
         // Set side of court for player
         BallInteract ballInteract = player.GetComponent<BallInteract>();
         ballInteract.onLeft = playerCount < 2 ? true : false;
+        ballInteract.playerID = playerCount;
         
         // Assign the transform of the player
         player.transform.position = playerSpawnpoints[playerCount].position;
@@ -215,6 +229,9 @@ public class MultiplayerManager : MonoBehaviour
 
         // Set the follow object to this player
         fo.target = player.transform;
+
+        // Set the ready up icon for this bird
+        player.GetComponent<EndScreen>().readyIndicator = playerIndicators[playerCount];
     }
 
     void MakeAI(int playerCount)
@@ -263,23 +280,5 @@ public class MultiplayerManager : MonoBehaviour
             fo = GameObject.Find("PlayerOneFollow").GetComponent<FollowObject>();
         }
         fo.target = ai.transform;
-    }
-
-    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        if (scene.name == mainScene)
-        {
-            InitializePlayers();
-        }
-    }
-
-    void OnEnable()
-    {
-        SceneManager.sceneLoaded += OnSceneLoaded;
-    }
-
-    void OsDisable()
-    {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 }
