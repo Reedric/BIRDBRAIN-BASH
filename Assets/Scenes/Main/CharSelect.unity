@@ -4993,7 +4993,7 @@ MonoBehaviour:
   pink1Name: {fileID: 1718734310}
   pink2Name: {fileID: 1389631583}
   availableBirds: 00000000070000000500000009000000030000000600000008000000040000000a00000001000000020000000c0000000b0000000d000000
-  numberOfPlayers: 4
+  numberOfPlayers: 1
   mainCanvas: {fileID: 1933689300}
   cursor1Prefab: {fileID: 1592670345}
   cursor2Prefab: {fileID: 40164903}
