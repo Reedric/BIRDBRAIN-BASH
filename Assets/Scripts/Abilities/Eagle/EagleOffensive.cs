@@ -9,6 +9,7 @@ public class EagleOffensive : BirdAbility
     [Header("Ability Settings")]
     public float stunDuration = 2f;
     public float cooldown = 10f;
+    public Animator animator; // Assign in inspector
 
     private bool onCooldown = false;
     private PlayerInput input;
@@ -38,6 +39,15 @@ public class EagleOffensive : BirdAbility
 
         opponents.Clear();
 
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+
+        // Play animation
+        if (animator != null)
+            animator.SetTrigger("OffensiveAbility"); // Make sure to have a trigger
+
+        // Play sound effect using AudioManager
+        // AudioManager.PlayBirdSound(BirdType.EAGLE, SoundType.OFFENSIVE, 1.0f);
        
         if (_onLeft)
         {

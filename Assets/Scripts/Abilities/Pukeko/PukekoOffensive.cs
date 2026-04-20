@@ -18,6 +18,8 @@ public class PukekoOffensiveAbility : BirdAbility
     [SerializeField] private float coneRange = 5f;
     [SerializeField] private int coneRayCount = 10; // Number of rays to cast within the cone (adjust for performance and feel)
 
+    public Animator animator; // Assign in inspector
+    
     private bool onCooldown = false;
     private RaycastHit[] hits; // Pre-allocate to avoid garbage collection as long as possible
 
@@ -38,6 +40,15 @@ public class PukekoOffensiveAbility : BirdAbility
 
     private IEnumerator SonicSquawk()
     {
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+
+        if (animator != null)
+            animator.SetTrigger("OffensiveAbility");
+
+        // Play sound effect using AudioManager
+        AudioManager.PlayBirdSound(BirdType.PUKEKO, SoundType.OFFENSIVE, 1.0f);
+
         // Find all birds in the cone area with raycast
         for (int i = 0; i < coneRayCount; i++)
         {

@@ -75,6 +75,12 @@ public class ToucanDefensive : BirdAbility
         {
             Debug.LogError("Something went wrong when buffing teammate stats for Toucan Defensive...");
         }
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
+
+        // Play defensive sound
+        AudioManager.PlayBirdSound(BirdType.TOUCAN, SoundType.DEFENSIVE, 1.0f);
         
         StartCoroutine(Cooldown());
     }

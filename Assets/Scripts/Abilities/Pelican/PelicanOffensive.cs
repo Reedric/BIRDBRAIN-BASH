@@ -39,6 +39,9 @@ public class PelicanOffensive : BirdAbility
     {
         if (onCooldown) return;
 
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+
         // Play offensive sound
         AudioManager.PlayBirdSound(BirdType.PELICAN, SoundType.OFFENSIVE, 1.0f);
 

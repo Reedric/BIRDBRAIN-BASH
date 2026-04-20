@@ -188,10 +188,21 @@ public class HUDManager : MonoBehaviour
         if (instance != null && instance != this) { Destroy(gameObject); return; }
         instance = this;
     }
-
+    
     private void Start()
     {
+        ResetAllCooldownIcons();
         PopulatePlayerCards();
+    }
+
+    private void ResetAllCooldownIcons()
+    {
+        foreach (PlayerCardUI card in GetOrderedCards())
+        {
+            if (card == null) continue;
+            card.offensiveAbility?.ResetImmediately();
+            card.defensiveAbility?.ResetImmediately();
+        }
     }
 
     public void RegisterAICard(int playerIndex, BirdType birdType)

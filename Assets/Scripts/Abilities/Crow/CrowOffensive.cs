@@ -7,6 +7,7 @@ using UnityEngine.InputSystem;
 public class CrowOffensive : BirdAbility {
     public float cooldown = 10f;
     public float timeEnemiesAreImpacted = 3f;
+    public Animator animator; // Assign in inspector
 
     private bool onCooldown = false;
     private PlayerInput input; // Input for the player
@@ -31,6 +32,16 @@ public class CrowOffensive : BirdAbility {
         {
             Debug.Log("The crow is on cooldown and cannot activate its ability");
         }
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+
+        // Play animation
+        if (animator != null)
+            animator.SetTrigger("OffensiveAbility"); // Make sure to have a trigger
+
+        // Play sound effect using AudioManager
+        AudioManager.PlayBirdSound(BirdType.CROW, SoundType.OFFENSIVE, 1.0f);
 
         StartCoroutine(DisableEnemies());
         StartCoroutine(Cooldown());

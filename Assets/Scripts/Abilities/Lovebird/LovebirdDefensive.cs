@@ -56,6 +56,9 @@ public class LovebirdDefensive : BirdAbility
             yield break;
         }
 
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
+
         // Play defensive sound
         AudioManager.PlayBirdSound(BirdType.LOVEBIRD, SoundType.DEFENSIVE, 1.0f);
 

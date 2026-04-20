@@ -15,6 +15,7 @@ public class ChickenOffensive : BirdAbility
     private bool isAbilityReady = true;
     private BallInteract ballInteract;
     private PlayerInput playerInput;
+    public Animator animator; // Assign in inspector
 
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -55,6 +56,16 @@ public class ChickenOffensive : BirdAbility
 
         // Random rotation
         rt.localRotation = Quaternion.Euler(0, 0, Random.Range(0f, 360f));
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+
+        // Play animation
+        if (animator != null)
+            animator.SetTrigger("OffensiveAbility"); // Make sure to have a trigger
+
+        // Play sound effect using AudioManager
+        AudioManager.PlayBirdSound(BirdType.CHICKEN, SoundType.OFFENSIVE, 1.0f);
 
         //Destroy splash after displayTime
         Destroy(splash, displayTime);

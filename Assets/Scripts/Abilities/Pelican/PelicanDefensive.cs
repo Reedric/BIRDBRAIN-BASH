@@ -44,6 +44,9 @@ public class PelicanDefensive : BirdAbility
 
     public void EatTheBall()
     {
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
+        
         GameManager gameManager = GameManager.Instance;
         bool validState = gameManager.gameState == GameManager.GameState.PointStart;
         if (validState && gameManager.server == gameObject)

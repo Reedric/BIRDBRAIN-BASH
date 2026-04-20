@@ -76,6 +76,9 @@ public class SeagullDefensive : BirdAbility
         // Play defensive sound
         AudioManager.PlayBirdSound(BirdType.SEAGULL, SoundType.DEFENSIVE, 1.0f);
 
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
+
         // Trigger defensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract.animator != null)

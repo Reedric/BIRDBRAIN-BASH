@@ -23,6 +23,13 @@ public class ToucanOffensive : BirdAbility
     // Activate the ability: next spike becomes unblockable
     public void TacoTocoToca()
     {
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+
+        // Play defensive sound
+        AudioManager.PlayBirdSound(BirdType.TOUCAN, SoundType.OFFENSIVE, 1.0f);
+
         // Set the unblockable owner of the ball to this player
         BallManager.Instance.unblockableOwner = gameObject;
 

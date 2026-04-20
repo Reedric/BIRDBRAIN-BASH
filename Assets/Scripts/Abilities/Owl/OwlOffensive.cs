@@ -21,6 +21,9 @@ public class OwlOffensive : BirdAbility
 
     private void CaptureCure()
     {
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+
         if (onCooldown || !CanUseAbilities() || !PointInProgress()) return;
 
         // Draw line in enemy court for lineDuration seconds, then remove line and start cooldown

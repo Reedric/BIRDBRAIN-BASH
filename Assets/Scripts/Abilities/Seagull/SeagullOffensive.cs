@@ -91,6 +91,9 @@ public class SeagullOffensive : BirdAbility
 
         // Play offensive sound
         AudioManager.PlayBirdSound(BirdType.SEAGULL, SoundType.OFFENSIVE, 1.0f);
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, 2);
     }
 
     public bool OnScore(bool leftScored)

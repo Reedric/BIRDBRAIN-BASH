@@ -160,6 +160,9 @@ public class PenguinScript : BirdAbility
         // Override CharacterMovement rotation to do belly slide
         characterMovement.overrideRotation = true;
 
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, dashCooldown);
+
         // Play slide sound
         AudioManager.PlayBirdSound(BirdType.PENGUIN, SoundType.DEFENSIVE, 1.0f);
     }
@@ -190,6 +193,9 @@ public class PenguinScript : BirdAbility
         stateCheck = GameManager.Instance.gameState;
 
         ballInteraction.SpikeBall();
+        
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, snowBallCooldown);
 
         // New: stop any old coroutine before starting a new one
         if (spawnIceCoroutine != null)

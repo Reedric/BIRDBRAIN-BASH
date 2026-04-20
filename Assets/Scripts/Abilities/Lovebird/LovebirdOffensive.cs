@@ -67,6 +67,9 @@ public class LovebirdOffensive : BirdAbility
         _onCooldown = true;
         StartCoroutine(Cooldown());
 
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+
         // Play offensive sound
         AudioManager.PlayBirdSound(BirdType.LOVEBIRD, SoundType.OFFENSIVE, 1.0f);
 
