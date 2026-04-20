@@ -436,6 +436,11 @@ public class BallInteract : MonoBehaviour
         AudioManager.PlayBirdSound(birdType, SoundType.BLOCK, 1.0f);
         AudioManager.PlayBallPlayerInteractionSound();
 
+        if (animator != null)
+        {
+            animator.SetTrigger("Block");
+        }
+
         // handle vfx
         HitEffects.Instance.PlayEffect(HitEffects.HitType.Block, onLeft);
         
