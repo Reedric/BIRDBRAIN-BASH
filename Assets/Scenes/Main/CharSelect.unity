@@ -231,6 +231,10 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
   - {fileID: 8300000, guid: c4a20388ea9da164e943affae112abe9, type: 3}
   - {fileID: 8300000, guid: 6be0e182bd4d4ce409972ae9ddc44ca0, type: 3}
+  chickenSounds:
+  - {fileID: 8300000, guid: 2d8aa020e10dd29418acd5430665a2a6, type: 3}
+  ostrichSounds:
+  - {fileID: 8300000, guid: 957f65cb92519db4384612c170814eb9, type: 3}
   scoringSounds:
   - {fileID: 8300000, guid: eb33c0f9c80807641add146b4c6d0873, type: 3}
   ballPlayerInteractionSounds:
