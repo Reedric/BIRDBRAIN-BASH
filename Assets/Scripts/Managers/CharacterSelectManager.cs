@@ -46,6 +46,8 @@ public class CharacterSelectManager : MonoBehaviour
     public RawImage pukekoTexture;
     public RawImage toucanTexture;
     public RawImage kiwiTexture;
+    public RawImage chickenTexture;
+    public RawImage ostrichTexture;
 
     [Header("Ready Indicators")]
     public RawImage p1Ready;
@@ -496,6 +498,8 @@ public class CharacterSelectManager : MonoBehaviour
             BirdType.TOUCAN => toucanTexture,
             BirdType.PUKEKO => pukekoTexture,
             BirdType.KIWI => kiwiTexture,
+            BirdType.CHICKEN => chickenTexture,
+            BirdType.OSTRICH => ostrichTexture,
             _ => null
         };
     }

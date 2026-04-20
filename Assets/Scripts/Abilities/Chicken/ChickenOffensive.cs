@@ -22,6 +22,7 @@ public class ChickenOffensive : BirdAbility
     {
         ballInteract = GetComponent<BallInteract>();
         playerInput = GetComponent<PlayerInput>();
+        mainCanvas = GameObject.Find("Canvas").GetComponent<Canvas>();
     }
 
     // Update is called once per frame

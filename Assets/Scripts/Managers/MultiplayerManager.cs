@@ -185,6 +185,12 @@ public class MultiplayerManager : MonoBehaviour
             case BirdType.PELICAN:
                 if (!isPlayer) return cManager.PelicanAI;
                 return isKBM ? cManager.PelicanKBM : cManager.PelicanC;
+            case BirdType.CHICKEN:
+                if (!isPlayer) return cManager.ChickenAI;
+                return isKBM ? cManager.ChickenKBM : cManager.ChickenC;
+            case BirdType.OSTRICH:
+                if (!isPlayer) return cManager.OstrichAI;
+                return isKBM ? cManager.OstrichKBM : cManager.OstrichC;
             default:
                 if (!isPlayer) return cManager.PenguinAI;
                 return isKBM ? cManager.PenguinKBM : cManager.PenguinC;
