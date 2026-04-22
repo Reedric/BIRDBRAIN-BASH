@@ -280,7 +280,7 @@ public class BallInteract : MonoBehaviour
     }
 
     // Set the ball
-    private void SetBall()
+    public void SetBall()
     {
         // If the ball's velocity is not coming down, then you can't set the ball
         if (BallManager.Instance.gameObject.GetComponent<Rigidbody>().linearVelocity.y >= 0) return;

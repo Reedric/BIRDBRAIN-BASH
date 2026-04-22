@@ -51,7 +51,7 @@ public class KiwiDefensive : BirdAbility
 
         meshRenderer.enabled = true;
         rb.useGravity = true;
-        transform.Translate(Vector3.up * 3f);
+        transform.Translate(Vector3.up * 5f);
         characterMovement.maxAirSpeed -= speedBoost;
 
         yield return new WaitForSeconds(cooldown);
