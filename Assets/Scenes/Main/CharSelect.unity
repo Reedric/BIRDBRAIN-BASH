@@ -236,7 +236,14 @@ MonoBehaviour:
   ostrichSounds:
   - {fileID: 8300000, guid: 957f65cb92519db4384612c170814eb9, type: 3}
   eagleSounds:
-  - {fileID: 8300000, guid: 5a77b3bd343d2a14395420e4c1a4fdfb, type: 3}
+  - {fileID: 8300000, guid: 45627535dccdf814f8587143e36b4828, type: 3}
+  - {fileID: 8300000, guid: 363ce08614dcc534dbe1eda592f39b4a, type: 3}
+  - {fileID: 8300000, guid: fb11fc51ffa986f4db2cb8812e66602c, type: 3}
+  - {fileID: 8300000, guid: 2f14e99dbcbf39b4a93cc069d51dc53d, type: 3}
+  - {fileID: 8300000, guid: 07d8c6e7a08b30c4180563f11d92aec8, type: 3}
+  - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
+  - {fileID: 0}
+  - {fileID: 8300000, guid: b7ebdebd261c316428e4d77cac87a1c5, type: 3}
   kiwiSounds:
   - {fileID: 8300000, guid: 2b642a7f1184e9f4d86fb27196940707, type: 3}
   macawSounds:

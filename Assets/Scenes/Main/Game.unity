@@ -26279,6 +26279,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 957f65cb92519db4384612c170814eb9, type: 3}
   eagleSounds:
   - {fileID: 8300000, guid: 5a77b3bd343d2a14395420e4c1a4fdfb, type: 3}
+  kiwiSounds:
   - {fileID: 8300000, guid: 5a77b3bd343d2a14395420e4c1a4fdfb, type: 3}
   - {fileID: 8300000, guid: 5a77b3bd343d2a14395420e4c1a4fdfb, type: 3}
   - {fileID: 8300000, guid: 5a77b3bd343d2a14395420e4c1a4fdfb, type: 3}
