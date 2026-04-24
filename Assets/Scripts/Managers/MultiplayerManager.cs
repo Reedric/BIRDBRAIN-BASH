@@ -60,6 +60,12 @@ public class MultiplayerManager : MonoBehaviour
                 type = selectedBirds[playerCount];
             }
 
+            // If still other, must've opted for random bird, give them a random bird
+            if (type == BirdType.OTHER)
+            {
+                type = (BirdType) UnityEngine.Random.Range(0, (int) type);
+            }
+
             // Get the prefab for this player
             GameObject birdPrefab = GetBirdModel(type, true, isKBMInput[playerCount]);
 
