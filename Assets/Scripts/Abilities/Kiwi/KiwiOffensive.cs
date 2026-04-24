@@ -52,21 +52,25 @@ public class KiwiOffensive : BirdAbility
         switch (gameManager.gameState)
         {
             case GameManager.GameState.Served:
-                ballInteract.BumpBall();
+                if (HasPossesion()) ballInteract.BumpBall(); // technically you han hit over on the serve, but whatevs
                 break;
 
             case GameManager.GameState.Bumped:
-                ballInteract.SetBall();
+                if (HasPossesion()) ballInteract.SetBall();
                 break;
 
             case GameManager.GameState.Set:
-                BallManager.Instance.incSpikeSpeed();
-                ballInteract.SpikeBall();
+                if (HasPossesion()) {
+                    BallManager.Instance.incSpikeSpeed();
+                    ballInteract.SpikeBall();
+                }
                 break;
 
             case GameManager.GameState.Spiked:
-                BallManager.Instance.incSpikeSpeed();
-                ballInteract.BlockBall();
+                if (HasPossesion()) {
+                    BallManager.Instance.incSpikeSpeed();
+                    ballInteract.BlockBall();
+                }
                 break;
                 
             default: // We're on defense
@@ -93,5 +97,12 @@ public class KiwiOffensive : BirdAbility
         lineRenderer.SetPosition(0, eyePosition);
         lineRenderer.SetPosition(1, ballPosition);
         return temp;
+    }
+
+    private bool HasPossesion()
+    {
+        bool onLeft = transform.position.x < 0;
+        Vector3 ballPosition = BallManager.Instance.gameObject.GetComponent<Transform>().position;
+        return onLeft == (ballPosition.x < 0);
     }
 }
