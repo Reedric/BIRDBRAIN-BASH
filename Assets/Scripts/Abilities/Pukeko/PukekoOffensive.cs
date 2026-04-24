@@ -1,10 +1,10 @@
-using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using System.Collections;
 
 /// <summary>
-/// Sonic Squawk- sound wave that goes in has a cone effect that silences birds 
-/// (making them unable to use abilities for 3 seconds) and pushes them back roughly 2m 
-/// (40s cooldown)
+/// Sonic Squawk — sound wave with a cone effect that silences birds
+/// (unable to use abilities for silenceDuration) and pushes them back (40s cooldown)
 /// </summary>
 public class PukekoOffensiveAbility : BirdAbility
 {
@@ -16,23 +16,23 @@ public class PukekoOffensiveAbility : BirdAbility
     [Header("Cone Settings")]
     [SerializeField] private float coneAngle = 45f;
     [SerializeField] private float coneRange = 5f;
-    [SerializeField] private int coneRayCount = 10; // Number of rays to cast within the cone (adjust for performance and feel)
+    [SerializeField] private int coneRayCount = 10;
 
     public Animator animator; // Assign in inspector
-    
+
     private bool onCooldown = false;
-    private RaycastHit[] hits; // Pre-allocate to avoid garbage collection as long as possible
+    private RaycastHit[] hits;
 
     void Awake()
     {
         hits = new RaycastHit[coneRayCount];
+        _onLeft = GetComponent<BallInteract>().onLeft;
     }
 
     public void OnOffensiveAbility()
     {
         if (!onCooldown)
         {
-            // Debug.Log("Pukeko Offensive Ability Activated: Sonic Squawk");
             onCooldown = true;
             StartCoroutine(SonicSquawk());
         }
@@ -46,24 +46,22 @@ public class PukekoOffensiveAbility : BirdAbility
         // Trigger offensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
-        {
             myBallInteract.animator.SetTrigger("OffensiveAbility");
-        }
 
-        // Play sound effect using AudioManager
+        // Play sound effect
         AudioManager.PlayBirdSound(BirdType.PUKEKO, SoundType.OFFENSIVE, 1.0f);
 
-        // Find all birds in the cone area with raycast
+        // Find all birds in the cone area via raycast
         for (int i = 0; i < coneRayCount; i++)
         {
-            float angle = -coneAngle / 2 + coneAngle / (coneRayCount - 1) * i; // Split into equal segments
-            Vector3 direction = Quaternion.Euler(0, angle, 0) * transform.forward; // Offset from where bird is facing
+            float angle = -coneAngle / 2 + coneAngle / (coneRayCount - 1) * i;
+            Vector3 direction = Quaternion.Euler(0, angle, 0) * transform.forward;
             int hitCount = Physics.RaycastNonAlloc(transform.position, direction, hits, coneRange);
-            Debug.DrawRay(transform.position, direction * coneRange, Color.blue, 40f); // Debug for visualization
+            Debug.DrawRay(transform.position, direction * coneRange, Color.blue, 40f);
+
             for (int j = 0; j < hitCount; j++)
             {
-                // Visualization - low key kinda sux but i don't really know how to fix
-                // Debug.DrawLine(transform.position, hits[j].point, Color.red, 40f); // Debug
+                // Visualization
                 LineRenderer cone = new GameObject("Cone").AddComponent<LineRenderer>();
                 cone.positionCount = 2;
                 cone.SetPosition(0, transform.position);
@@ -77,15 +75,33 @@ public class PukekoOffensiveAbility : BirdAbility
                 cone.startWidth = 0.1f;
                 cone.endWidth = 0.1f;
                 cone.material = new Material(Shader.Find("Sprites/Default")) { color = Color.red };
-                Destroy(cone.gameObject, 0.5f); // Clean up after a short time
+                Destroy(cone.gameObject, 0.5f);
 
                 if (hits[j].collider.CompareTag("Player") && hits[j].collider.gameObject != gameObject)
                 {
-                    // Apply silence effect to the bird
-                    if (hits[j].collider.TryGetComponent<BirdAbility>(out var birdAbility))
-                        StartCoroutine(ApplySilence(silenceDuration, birdAbility));
+                    GameObject target = hits[j].collider.gameObject;
 
-                    // Apply push back force to the bird
+                    // Resolve which side the target is on for correct VFX prefab
+                    bool targetIsOnLeft = false;
+                    BallInteract targetBallInteract = target.GetComponent<BallInteract>();
+                    if (targetBallInteract != null)
+                        targetIsOnLeft = targetBallInteract.onLeft;
+                    else
+                    {
+                        AIBehavior targetAI = target.GetComponent<AIBehavior>();
+                        if (targetAI != null)
+                            targetIsOnLeft = targetAI.onLeft;
+                    }
+
+                    // Apply silence, BuffsDebuffs handles VFX, audio, and re-enabling abilities
+                    BuffsDebuffs.Instance.ApplyEffect(
+                        BuffsDebuffs.EffectType.Silence,
+                        target,
+                        silenceDuration,
+                        targetIsOnLeft
+                    );
+
+                    // Apply push back force
                     if (hits[j].collider.TryGetComponent<Rigidbody>(out var rb))
                     {
                         Vector3 pushDirection = (hits[j].collider.transform.position - transform.position).normalized;
@@ -96,13 +112,6 @@ public class PukekoOffensiveAbility : BirdAbility
         }
 
         yield return new WaitForSeconds(cooldown);
-        onCooldown = false;   
-    }
-
-    public IEnumerator ApplySilence(float duration, BirdAbility bird)
-    {
-        bird.DisableAbilities(true);
-        yield return new WaitForSeconds(duration);
-        bird.DisableAbilities(false);
+        onCooldown = false;
     }
 }

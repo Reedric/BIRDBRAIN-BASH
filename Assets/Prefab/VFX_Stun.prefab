@@ -21,6 +21,10 @@ PrefabInstance:
       value: 1.3962634
       objectReference: {fileID: 0}
     - target: {fileID: 1633245366517228935, guid: d28439c4573e3cd42a0e7e759c09a64e, type: 3}
+      propertyPath: InitialModule.startSize.scalar
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 1633245366517228935, guid: d28439c4573e3cd42a0e7e759c09a64e, type: 3}
       propertyPath: RotationModule.curve.minScalar
       value: -1.3962634
       objectReference: {fileID: 0}
@@ -34,11 +38,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1633245366517228935, guid: d28439c4573e3cd42a0e7e759c09a64e, type: 3}
       propertyPath: EmissionModule.rateOverTime.scalar
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 1633245366517228935, guid: d28439c4573e3cd42a0e7e759c09a64e, type: 3}
       propertyPath: InitialModule.startLifetime.scalar
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 1633245366517228935, guid: d28439c4573e3cd42a0e7e759c09a64e, type: 3}
       propertyPath: ColorModule.gradient.maxGradient.key0.b
@@ -66,7 +70,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2809993495676171076, guid: d28439c4573e3cd42a0e7e759c09a64e, type: 3}
       propertyPath: m_Name
-      value: VFX_Stun Variant
+      value: VFX_Stun
       objectReference: {fileID: 0}
     - target: {fileID: 9082287277003647687, guid: d28439c4573e3cd42a0e7e759c09a64e, type: 3}
       propertyPath: m_LocalPosition.x

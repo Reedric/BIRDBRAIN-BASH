@@ -52,10 +52,12 @@ public class BuffsDebuffs : MonoBehaviour
         if (!activeEffects.ContainsKey(bird))
             activeEffects[bird] = new Dictionary<EffectType, Coroutine>();
 
-        // Cancel existing effect of same type
+        // If this effect type is already running, stop it and undo its gameplay changes
+        // before restarting, so stats/flags don't stack or get stuck.
         if (activeEffects[bird].ContainsKey(type))
         {
             StopCoroutine(activeEffects[bird][type]);
+            ApplyGameplayEffect(type, bird, false);
         }
 
         Coroutine co = StartCoroutine(RunEffect(type, bird, duration, onLeft));
@@ -64,7 +66,7 @@ public class BuffsDebuffs : MonoBehaviour
 
     private IEnumerator RunEffect(EffectType type, GameObject bird, float duration, bool onLeft)
     {
-        GameObject vfx = SpawnEffect(type, bird, onLeft);
+        SpawnEffect(type, bird, onLeft);
 
         // Play start sound
         if (type == EffectType.Buff)
@@ -72,11 +74,13 @@ public class BuffsDebuffs : MonoBehaviour
         else
             AudioManager.PlayDebuffStartSound();
 
-        // ApplyGameplayEffect(type, bird, true);
+        // Apply the gameplay effect (silence, stun, speed changes, etc.)
+        ApplyGameplayEffect(type, bird, true);
 
         yield return new WaitForSeconds(duration);
 
-        // ApplyGameplayEffect(type, bird, false);
+        // Remove the gameplay effect
+        ApplyGameplayEffect(type, bird, false);
 
         // Play end sound
         if (type == EffectType.Buff)
@@ -84,6 +88,7 @@ public class BuffsDebuffs : MonoBehaviour
         else
             AudioManager.PlayDebuffEndSound();
 
+        // Tear down VFX
         if (activeVFX.ContainsKey(bird) && activeVFX[bird].ContainsKey(type))
         {
             GameObject vfxInstance = activeVFX[bird][type];
@@ -136,11 +141,11 @@ public class BuffsDebuffs : MonoBehaviour
 
         return type switch
         {
-            EffectType.Buff => set.buff,
-            EffectType.Debuff => set.debuff,
+            EffectType.Buff    => set.buff,
+            EffectType.Debuff  => set.debuff,
             EffectType.Silence => set.silence,
-            EffectType.Stun => set.stun,
-            _ => null
+            EffectType.Stun    => set.stun,
+            _                  => null
         };
     }
 
@@ -173,7 +178,11 @@ public class BuffsDebuffs : MonoBehaviour
                         movement.maxGroundSpeed /= 1.5f;
                         movement.maxAirSpeed /= 1.5f;
                     }
-                    // AI resets automatically via coroutine
+                    if (ai != null)
+                    {
+                        ai.maxGroundSpeed /= 1.5f;
+                        ai.maxAirSpeed /= 1.5f;
+                    }
                 }
                 break;
 
@@ -185,7 +194,6 @@ public class BuffsDebuffs : MonoBehaviour
                         movement.maxGroundSpeed *= 0.5f;
                         movement.maxAirSpeed *= 0.5f;
                     }
-
                     if (ai != null)
                     {
                         ai.maxGroundSpeed *= 0.5f;
@@ -199,7 +207,6 @@ public class BuffsDebuffs : MonoBehaviour
                         movement.maxGroundSpeed *= 2f;
                         movement.maxAirSpeed *= 2f;
                     }
-
                     if (ai != null)
                     {
                         ai.maxGroundSpeed *= 2f;
@@ -209,14 +216,17 @@ public class BuffsDebuffs : MonoBehaviour
                 break;
 
             case EffectType.Silence:
+                // Players: DisableAbilities only gates CanUseAbilities(), so movement and ball hitting are unaffected.
+                // AI: SilenceAbilities sets a separate flag that does NOT touch CanAct(),
+                // so the AI can still move and hit the ball while silenced.
                 ability?.DisableAbilities(enable);
-                ai?.DisableAbilities(enable);
+                ai?.SilenceAbilities(enable);
                 break;
 
             case EffectType.Stun:
+                // Full lockdown: movement, jumping, abilities, and ball interaction.
                 movement?.controlMovement(!enable, !enable);
                 ability?.DisableAbilities(enable);
-
                 ai?.DisableMovement(enable);
                 ai?.DisableAbilities(enable);
                 break;

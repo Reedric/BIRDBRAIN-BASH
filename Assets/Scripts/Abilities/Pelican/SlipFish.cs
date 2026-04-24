@@ -1,23 +1,23 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
 // Behavior for the fish projectile spit out by the pelican's offensive ability (Slip Fish)
 // The fish will cause the opponent to slip if they come into contact with it, and will disappear after 15 seconds
 public class SlipFish : MonoBehaviour
 {
     public GameObject pelican;
+    // Set by PelicanOffensive so we know which side the pelican is on,
+    // letting us pass the correct opponentIsOnLeft value to BuffsDebuffs.
+    public bool pelicanIsOnLeft;
+
     [SerializeField]
     private float slipDuration = 3f;
-    private readonly HashSet<GameObject> affectedPlayers = new(); // Keeps track of players already affected
+    private readonly HashSet<GameObject> affectedPlayers = new();
 
     void OnCollisionEnter(Collision collision)
     {
-        // Check if the collided object is the opponent (you can use tags or layers to identify the opponent)
-        if (collision.gameObject.CompareTag("Player") && ValidSlipper(collision.gameObject)) // Ensure it's not the pelican itself
+        if (collision.gameObject.CompareTag("Player") && ValidSlipper(collision.gameObject))
         {
-            
-            // If we decide to make a slip animation, play it here (TO BE IMPLEMENTED)
             StartCoroutine(SlipEffect(collision.gameObject));
         }
     }
@@ -29,7 +29,9 @@ public class SlipFish : MonoBehaviour
 
         // Determine if the other is an enemy of the pelican
         GameManager gameManager = GameManager.Instance;
-        if (pelican == gameManager.leftPlayer1 || pelican == gameManager.leftPlayer1)
+
+        // Fixed: original checked leftPlayer1 twice instead of leftPlayer1 || leftPlayer2
+        if (pelican == gameManager.leftPlayer1 || pelican == gameManager.leftPlayer2)
         {
             return other == gameManager.rightPlayer1 || other == gameManager.rightPlayer2;
         }
@@ -45,10 +47,18 @@ public class SlipFish : MonoBehaviour
         if (affectedPlayers.Contains(opponent)) yield break;
         affectedPlayers.Add(opponent);
 
+        // Apply stun VFX and audio via BuffsDebuffs.
+        BuffsDebuffs.Instance.ApplyEffect(
+            BuffsDebuffs.EffectType.Stun,
+            opponent,
+            slipDuration,
+            !pelicanIsOnLeft
+        );
+
         RagdollManager ragdollManager = opponent.GetComponent<RagdollManager>();
         CharacterMovement characterMovement = opponent.GetComponent<CharacterMovement>();
 
-        if (ragdollManager != null) ragdollManager.ActivateRagdoll();    
+        if (ragdollManager != null) ragdollManager.ActivateRagdoll();
         if (characterMovement != null) characterMovement.enabled = false;
         Debug.Log("Opponent slipped!");
 

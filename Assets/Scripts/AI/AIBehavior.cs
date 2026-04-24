@@ -45,6 +45,10 @@ public class AIBehavior : MonoBehaviour
     private bool movementDisabled = false;
     private bool abilitiesDisabled = false;
 
+    // Separate flag for silence — does NOT affect CanAct() so the AI can still
+    // move and hit the ball while silenced (abilities only).
+    private bool abilitiesSilenced = false;
+
     private float originalMaxGroundSpeed;
     private float originalMaxAirSpeed;
 
@@ -172,18 +176,6 @@ public class AIBehavior : MonoBehaviour
                         MoveAI(true);
                     }
                     break;
-                // If the ball was just blocked
-                // case GameManager.GameState.Blocked:
-                //     // If the AI is near the ball and the ball is on its way down, bump the ball
-                //     if (IsAINearBall())
-                //     {
-                //         BumpBall();
-                //     }
-                //     else // Just move the AI to get into a position to hit the ball
-                //     {
-                //         MoveAI(true);
-                //     }
-                //     break;
                 // If the ball was just bumped
                 case GameManager.GameState.Bumped:
                     // If the AI is near the ball and the ball is on its way down, bump the ball
@@ -644,7 +636,6 @@ public class AIBehavior : MonoBehaviour
         // handle vfx
         HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, onLeft);
 
-
         // Trigger serve animation
         if (animator != null)
         {
@@ -703,6 +694,7 @@ public class AIBehavior : MonoBehaviour
             ballRb.linearVelocity = initVel;
         }
     }
+
     public void BuffStats(int increase, int time)
     {
         StartCoroutine(BuffTimer(increase, time));
@@ -715,11 +707,9 @@ public class AIBehavior : MonoBehaviour
         
         float originalMaxGroundSpeed = maxGroundSpeed;
         float originalMaxAirSpeed = maxAirSpeed;
-        // originalJumpForce = jumpForce;
 
         maxGroundSpeed += increase;
         maxAirSpeed += increase;
-        // jumpForce += increase;
 
         Debug.Log("NEW = "+ maxGroundSpeed);
 
@@ -727,7 +717,6 @@ public class AIBehavior : MonoBehaviour
 
         maxGroundSpeed = originalMaxGroundSpeed;
         maxAirSpeed = originalMaxAirSpeed;
-        // jumpForce = originalJumpForce;
     }
 
     // Calls whenever the character collides with another collider or rigidbody
@@ -760,6 +749,7 @@ public class AIBehavior : MonoBehaviour
         }
     }
 
+    // Stun: disables both movement AND ball interaction via CanAct()
     public void DisableMovement(bool disabled)
     {
         movementDisabled = disabled;
@@ -772,13 +762,27 @@ public class AIBehavior : MonoBehaviour
         }
     }
 
+    // Stun: disables ball interaction and special abilities via CanAct()
     public void DisableAbilities(bool disabled)
     {
         abilitiesDisabled = disabled;
     }
 
+    // Silence: only prevents special abilities — movement and ball hitting are unaffected
+    public void SilenceAbilities(bool silenced)
+    {
+        abilitiesSilenced = silenced;
+    }
+
+    // CanAct gates movement and ball interaction (used for stun)
     public bool CanAct()
     {
         return !movementDisabled && !abilitiesDisabled;
+    }
+
+    // CanUseAbilities gates special abilities only (used for silence)
+    public bool CanUseAbilities()
+    {
+        return !abilitiesSilenced;
     }
 }
