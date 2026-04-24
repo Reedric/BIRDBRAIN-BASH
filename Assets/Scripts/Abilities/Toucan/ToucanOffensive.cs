@@ -10,12 +10,17 @@ public class ToucanOffensive : BirdAbility
     
     private bool onCooldown = false;
     private PlayerInput playerInput; // Input for this player
+    void Start()
+    {
+        playerInput = GetComponent<PlayerInput>();
+    }
 
     void Update()
     {
         // Offensive ability activation (Toucan): allow activation regardless of CanHit()
         if (!onCooldown && playerInput.actions.FindAction("Offensive Ability").WasPressedThisFrame()
-            && CanUseAbilities() && GameManager.Instance.gameState == GameManager.GameState.Set)
+            && CanUseAbilities() && GameManager.Instance.gameState == GameManager.GameState.Set
+            && GetComponent<BallInteract>().IsPlayerNearBall())
         {
             TacoTocoToca();
         }

@@ -18,7 +18,7 @@ public class EndScreen : MonoBehaviour
     {
         // If game has ended, indicator is not enabled, and player just pressed trigger
         if (GameManager.Instance.gameState == GameManager.GameState.GameOver && !readyIndicator.enabled
-            && playerInput.actions.FindAction("Spike").WasPressedThisFrame())
+            && playerInput.actions.FindAction("Offensive Action").WasPressedThisFrame())
         {
             // Indicate that the player is readied on both screen to score manager
             readyIndicator.enabled = true;

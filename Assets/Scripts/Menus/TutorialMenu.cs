@@ -71,7 +71,7 @@ public class TutorialMenu : MonoBehaviour
         if (NextPress())
         {
             // If on last page of tutorial, start game; else go to next page
-            if (pageNum == 6)
+            if (pageNum == 7)
             {
                 StartGame();
             }

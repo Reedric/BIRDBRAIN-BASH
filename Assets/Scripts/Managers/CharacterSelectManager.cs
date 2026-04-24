@@ -50,6 +50,7 @@ public class CharacterSelectManager : MonoBehaviour
     public RawImage chickenTexture;
     public RawImage ostrichTexture;
     public RawImage eagleTexture;
+    public RawImage randomTexture;
 
     [Header("Ready Indicators")]
     public RawImage p1Ready;
@@ -531,6 +532,7 @@ public class CharacterSelectManager : MonoBehaviour
             BirdType.CHICKEN => chickenTexture,
             BirdType.OSTRICH => ostrichTexture,
             BirdType.EAGLE => eagleTexture,
+            BirdType.OTHER => randomTexture,
             _ => null
         };
     }

@@ -858,12 +858,13 @@ MonoBehaviour:
   explanation: {fileID: 1100444383}
   videoPlayer: {fileID: 1143560009}
   videoClips:
+  - {fileID: 32900000, guid: deeb919ad2fcf9944b7294646e34f7ad, type: 3}
   - {fileID: 32900000, guid: a05539bcd8a1ed649954fd45e9d951f8, type: 3}
-  - {fileID: 32900000, guid: a05539bcd8a1ed649954fd45e9d951f8, type: 3}
-  - {fileID: 32900000, guid: a05539bcd8a1ed649954fd45e9d951f8, type: 3}
-  - {fileID: 32900000, guid: a05539bcd8a1ed649954fd45e9d951f8, type: 3}
-  - {fileID: 32900000, guid: a05539bcd8a1ed649954fd45e9d951f8, type: 3}
-  - {fileID: 32900000, guid: a05539bcd8a1ed649954fd45e9d951f8, type: 3}
+  - {fileID: 32900000, guid: 678d4b9479f4c74409ec00fd29e0850f, type: 3}
+  - {fileID: 32900000, guid: 49237a9ee1809c04896123237a1e2f7b, type: 3}
+  - {fileID: 32900000, guid: 588b22aa621a4364594916be28f1b5f7, type: 3}
+  - {fileID: 32900000, guid: 3a71c5070d49b5b47a70091df90eaf54, type: 3}
+  - {fileID: 32900000, guid: f26636ec2f3a5e04c9762eeed4fdeb50, type: 3}
 --- !u!1 &945688230
 GameObject:
   m_ObjectHideFlags: 0
@@ -1214,6 +1215,10 @@ MonoBehaviour:
   pukekoSounds: []
   chickenSounds: []
   ostrichSounds: []
+  eagleSounds: []
+  kiwiSounds: []
+  macawSounds: []
+  owlSounds: []
   scoringSounds:
   - {fileID: 8300000, guid: eb33c0f9c80807641add146b4c6d0873, type: 3}
   ballPlayerInteractionSounds:
@@ -1231,6 +1236,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 8a5240865a3d1644eb7a3e302d94e33e, type: 3}
   backgroundTracks:
   - {fileID: 8300000, guid: f3d5d2cca2b6e9c42881ed89b0962151, type: 3}
+  pauseTrack: {fileID: 0}
 --- !u!82 &1169676016
 AudioSource:
   m_ObjectHideFlags: 0

@@ -60,6 +60,12 @@ public class MultiplayerManager : MonoBehaviour
                 type = selectedBirds[playerCount];
             }
 
+            // If still other, must've opted for random bird, give them a random bird
+            if (type == BirdType.OTHER)
+            {
+                type = (BirdType) UnityEngine.Random.Range(0, (int) type);
+            }
+
             // Get the prefab for this player
             GameObject birdPrefab = GetBirdModel(type, true, isKBMInput[playerCount]);
 
@@ -142,6 +148,7 @@ public class MultiplayerManager : MonoBehaviour
             {
                 if (player.devices.Contains(pad))
                 {
+                    Debug.LogFormat("{0} in use.", pad);
                     inUse = true;
                     break;
                 }
@@ -191,6 +198,18 @@ public class MultiplayerManager : MonoBehaviour
             case BirdType.OSTRICH:
                 if (!isPlayer) return cManager.OstrichAI;
                 return isKBM ? cManager.OstrichKBM : cManager.OstrichC;
+            case BirdType.CROW:
+                if (!isPlayer) return cManager.CrowAI;
+                return isKBM ? cManager.CrowKBM : cManager.CrowC;
+            case BirdType.EAGLE:
+                if (!isPlayer) return cManager.EagleAI;
+                return isKBM ? cManager.EagleKBM : cManager.EagleC;
+            case BirdType.KIWI:
+                if (!isPlayer) return cManager.KiwiAI;
+                return isKBM ? cManager.KiwiKBM : cManager.KiwiC;
+            case BirdType.OWL:
+                if (!isPlayer) return cManager.OwlAI;
+                return isKBM ? cManager.OwlKBM : cManager.OwlC;
             default:
                 if (!isPlayer) return cManager.PenguinAI;
                 return isKBM ? cManager.PenguinKBM : cManager.PenguinC;
@@ -247,6 +266,11 @@ public class MultiplayerManager : MonoBehaviour
 
         // Get the model for the ai
         GameObject aiModel = GetBirdModel(birdType, false, false);
+
+        // DELETE THIS LATER
+        // Currently, there are some birds with controller prefabs that don't have
+        // AI prefabs, so as a back up just default to the penguin one
+        if (aiModel == null) aiModel = cManager.PenguinAI;
 
         // Initialize the prefab keyboard and mouse prefab
         GameObject ai = Instantiate(aiModel);
