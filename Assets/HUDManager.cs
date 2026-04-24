@@ -166,6 +166,12 @@ public class HUDManager : MonoBehaviour
     [SerializeField] private Texture ostrichOffensiveIcon;
     [SerializeField] private Texture ostrichDefensiveIcon;
 
+    [Header("Eagle")]
+    [SerializeField] private string eagleDisplayName = "Eagle";
+    [SerializeField] private Texture eaglePlayerIcon;
+    [SerializeField] private Texture eagleOffensiveIcon;
+    [SerializeField] private Texture eagleDefensiveIcon;
+
 
     private static HUDManager instance;
     public static HUDManager Instance => instance;
@@ -274,7 +280,7 @@ public class HUDManager : MonoBehaviour
         if (offensiveCooldowns[playerIndex] != null)
             StopCoroutine(offensiveCooldowns[playerIndex]);
 
-        offensiveCooldowns[playerIndex] = StartCoroutine(icon.RunCooldown(duration));
+        offensiveCooldowns[playerIndex] = StartCoroutine(RunOffensiveCooldownWithSFX(icon, playerIndex, duration));
     }
 
     /// Triggers the defensive ability cooldown animation for a given player.
@@ -288,7 +294,29 @@ public class HUDManager : MonoBehaviour
         if (defensiveCooldowns[playerIndex] != null)
             StopCoroutine(defensiveCooldowns[playerIndex]);
 
-        defensiveCooldowns[playerIndex] = StartCoroutine(icon.RunCooldown(duration));
+        defensiveCooldowns[playerIndex] = StartCoroutine(RunDefensiveCooldownWithSFX(icon, playerIndex, duration));
+    }
+
+    // Runs the offensive cooldown animation then fires the ability-ready SFX.
+    private IEnumerator RunOffensiveCooldownWithSFX(AbilityIconUI icon, int playerIndex, float duration)
+    {
+        yield return StartCoroutine(icon.RunCooldown(duration));
+
+        if (playerIndex <= 1)
+            AudioManager.PlayTeam1OffensiveReadySound();
+        else
+            AudioManager.PlayTeam2OffensiveReadySound();
+    }
+
+    // Runs the defensive cooldown animation then fires the ability-ready SFX.
+    private IEnumerator RunDefensiveCooldownWithSFX(AbilityIconUI icon, int playerIndex, float duration)
+    {
+        yield return StartCoroutine(icon.RunCooldown(duration));
+
+        if (playerIndex <= 1)
+            AudioManager.PlayTeam1DefensiveReadySound();
+        else
+            AudioManager.PlayTeam2DefensiveReadySound();
     }
 
     /// Cancels any running cooldown and resets the icon immediately.
@@ -357,8 +385,9 @@ public class HUDManager : MonoBehaviour
             BirdType.PUKEKO      => new BirdHUDData { displayName = pukekoDisplayName,      playerIcon = pukekoPlayerIcon,      offensiveIcon = pukekoOffensiveIcon,      defensiveIcon = pukekoDefensiveIcon },
             BirdType.TOUCAN      => new BirdHUDData { displayName = toucanDisplayName,      playerIcon = toucanPlayerIcon,      offensiveIcon = toucanOffensiveIcon,      defensiveIcon = toucanDefensiveIcon },
             BirdType.KIWI        => new BirdHUDData { displayName = kiwiDisplayName,        playerIcon = kiwiPlayerIcon,        offensiveIcon = kiwiOffensiveIcon,        defensiveIcon = kiwiDefensiveIcon },
-            BirdType.CHICKEN     => new BirdHUDData { displayName = chickenDisplayName,        playerIcon = chickenPlayerIcon,        offensiveIcon = chickenOffensiveIcon,        defensiveIcon = chickenDefensiveIcon },
-            BirdType.OSTRICH     => new BirdHUDData { displayName = ostrichDisplayName,        playerIcon = ostrichPlayerIcon,        offensiveIcon = ostrichOffensiveIcon,        defensiveIcon = ostrichDefensiveIcon },
+            BirdType.CHICKEN     => new BirdHUDData { displayName = chickenDisplayName,     playerIcon = chickenPlayerIcon,     offensiveIcon = chickenOffensiveIcon,     defensiveIcon = chickenDefensiveIcon },
+            BirdType.OSTRICH     => new BirdHUDData { displayName = ostrichDisplayName,     playerIcon = ostrichPlayerIcon,     offensiveIcon = ostrichOffensiveIcon,     defensiveIcon = ostrichDefensiveIcon },
+            BirdType.EAGLE       => new BirdHUDData { displayName = eagleDisplayName,       playerIcon = eaglePlayerIcon,       offensiveIcon = eagleOffensiveIcon,       defensiveIcon = eagleDefensiveIcon },
             _                    => null
         };
     }

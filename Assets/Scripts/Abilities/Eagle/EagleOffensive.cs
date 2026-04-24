@@ -28,12 +28,12 @@ public class EagleOffensive : BirdAbility
 
         if (input.actions.FindAction("Offensive Ability").WasPressedThisFrame())
         {
-            StartCoroutine(StunOpponents());
+            StunOpponents();
             StartCoroutine(CooldownRoutine());
         }
     }
 
-    private IEnumerator StunOpponents()
+    private void StunOpponents()
     {
         GameManager gameManager = GameManager.Instance;
 
@@ -42,13 +42,16 @@ public class EagleOffensive : BirdAbility
         int playerID = GetComponent<BallInteract>().playerID;
         HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
 
-        // Play animation
-        if (animator != null)
-            animator.SetTrigger("OffensiveAbility"); // Make sure to have a trigger
+        // Trigger offensive ability animation if animator exists
+        var myBallInteract = GetComponent<BallInteract>();
+        if (myBallInteract != null && myBallInteract.animator != null)
+        {
+            myBallInteract.animator.SetTrigger("OffensiveAbility");
+        }
 
         // Play sound effect using AudioManager
-        // AudioManager.PlayBirdSound(BirdType.EAGLE, SoundType.OFFENSIVE, 1.0f);
-       
+        AudioManager.PlayBirdSound(BirdType.EAGLE, SoundType.OFFENSIVE, 1.0f);
+
         if (_onLeft)
         {
             opponents.Add(gameManager.rightPlayer1);
@@ -60,48 +63,21 @@ public class EagleOffensive : BirdAbility
             opponents.Add(gameManager.leftPlayer2);
         }
 
-        
+        // Opponents are always on the opposite side of the caster
+        bool opponentIsOnLeft = !_onLeft;
+
         foreach (GameObject opponent in opponents)
         {
             if (opponent == null) continue;
 
-            BirdAbility[] abilities = opponent.GetComponents<BirdAbility>();
-            if (abilities.Length > 0)
-            {
-                foreach (BirdAbility ability in abilities)
-                {
-                    ability.DisableAbilities(true);
-                }
-                opponent.GetComponent<CharacterMovement>().controlMovement(false, false);
-
-            }
-            else
-            {
-                opponent.GetComponent<AIBehavior>().enabled = false;
-            }
-        }
-
-        yield return new WaitForSeconds(stunDuration);
-
-        
-        foreach (GameObject opponent in opponents)
-        {
-            if (opponent == null) continue;
-
-            BirdAbility[] abilities = opponent.GetComponents<BirdAbility>();
-            if (abilities.Length > 0)
-            {
-                foreach (BirdAbility ability in abilities)
-                {
-                    ability.DisableAbilities(false);
-                }
-                opponent.GetComponent<CharacterMovement>().controlMovement(true, true);
-
-            }
-            else
-            {
-                opponent.GetComponent<AIBehavior>().enabled = true;
-            }
+            // BuffsDebuffs handles everything: VFX, audio, disabling movement +
+            // abilities (for both player and AI), and re-enabling after stunDuration.
+            BuffsDebuffs.Instance.ApplyEffect(
+                BuffsDebuffs.EffectType.Stun,
+                opponent,
+                stunDuration,
+                opponentIsOnLeft
+            );
         }
     }
 

@@ -35,11 +35,23 @@ public class ScoreManager : MonoBehaviour
     public RawImage fadeScreen;
     public RawImage blueWin;
     public RawImage pinkWin;
+    public RawImage blueTrophy;
+    public RawImage pinkTrophy;
     public TMP_Text blueWinScore;
     public TMP_Text pinkWinScore;
     public GameObject invisWall;
     public Transform[] endLocations;
     public bool[] readiedUp;
+
+    [Header("Confetti")]
+    public GameObject blueConfettiPrefab;
+    public GameObject pinkConfettiPrefab;
+    public Transform confettiSpawnPoint;
+
+    public float confettiSpawnInterval = 0.5f;
+    public float confettiLifetime = 4f;
+
+    private Coroutine confettiRoutine;
    
     private bool leftLastScored;
     private bool inPlay;
@@ -73,6 +85,8 @@ public class ScoreManager : MonoBehaviour
         fadeScreen.color = new Color(0, 0, 0, 0);
         blueWin.enabled = false;
         pinkWin.enabled = false;
+        blueTrophy.enabled = false;
+        pinkTrophy.enabled = false;
         blueWinScore.enabled = false;
         pinkWinScore.enabled = false;
 
@@ -359,6 +373,29 @@ public class ScoreManager : MonoBehaviour
         }
     }
 
+    IEnumerator ConfettiLoop(bool leftSideWon)
+    {
+        GameObject prefabToSpawn = leftSideWon ? blueConfettiPrefab : pinkConfettiPrefab;
+
+        if (prefabToSpawn == null)
+        {
+            Debug.LogWarning("Confetti prefab not assigned!");
+            yield break;
+        }
+
+        Transform spawnPoint = confettiSpawnPoint != null ? confettiSpawnPoint : transform;
+
+        while (true)
+        {
+            GameObject confetti = Instantiate(prefabToSpawn, spawnPoint.position, Quaternion.identity);
+
+            // Clean up each piece after a bit
+            Destroy(confetti, confettiLifetime);
+
+            yield return new WaitForSeconds(confettiSpawnInterval);
+        }
+    }
+
     private IEnumerator TransitionToEnd(bool leftSideJustWon)
     {
         // Fade to black
@@ -396,6 +433,8 @@ public class ScoreManager : MonoBehaviour
             blueWin.enabled = true;
             blueWinScore.text = $"{side1SetsWon}-{side2SetsWon}";
             blueWinScore.enabled = true;
+            blueTrophy.enabled = true;
+            confettiRoutine = StartCoroutine(ConfettiLoop(true));
         }
         else
         {
@@ -406,6 +445,8 @@ public class ScoreManager : MonoBehaviour
             pinkWin.enabled = true;
             pinkWinScore.text = $"{side1SetsWon}-{side2SetsWon}";
             pinkWinScore.enabled = true;
+            pinkTrophy.enabled = true;
+            confettiRoutine = StartCoroutine(ConfettiLoop(false));
         }
 
         // Fade out of black
@@ -424,6 +465,12 @@ public class ScoreManager : MonoBehaviour
         foreach (bool isReady in readiedUp)
         {
             if (!isReady) return;
+        }
+
+        // Stop confetti loop before leaving
+        if (confettiRoutine != null)
+        {
+            StopCoroutine(confettiRoutine);
         }
 
         // Everyone is ready, go back to main menu

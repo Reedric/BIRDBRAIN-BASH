@@ -9,12 +9,12 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(PlayerInput))]
 public class SeagullOffensive : BirdAbility
 {
-    public int debuffLength = 5; // Length of debuff in seconds
-    public int debuffAmount = 1; // Amount the debuff will DECREASE stats
-    public int debuffWindowLength = 20; // Amount of time in seconds after a score the player can trigger the debuff
+    public int debuffLength = 5;          // Length of debuff in seconds
+    public int debuffAmount = 1;          // Amount the debuff will DECREASE stats
+    public int debuffWindowLength = 20;   // Seconds after a score the player can trigger the debuff
 
     private bool _debuffWindow = false;
-    private PlayerInput playerInput; // Input for this specific player
+    private PlayerInput playerInput;
 
     void Start()
     {
@@ -39,53 +39,48 @@ public class SeagullOffensive : BirdAbility
         {
             opponents.Add(GameManager.Instance.rightPlayer1);
             opponents.Add(GameManager.Instance.rightPlayer2);
-        } else
+        }
+        else
         {
             opponents.Add(GameManager.Instance.leftPlayer1);
             opponents.Add(GameManager.Instance.leftPlayer2);
         }
 
+        // Opponents are always on the opposite side of the caster
+        bool opponentIsOnLeft = !_onLeft;
+
         foreach (GameObject opponent in opponents)
         {
-            // Try to debuff player opponent
-            try
-            {
-                if (opponent.GetComponent<BallInteract>().GetBirdType() != BirdType.OSTRICH)
-                {
-                    opponent.GetComponent<CharacterMovement>().BuffStats(-debuffAmount, debuffLength);
-                    // Trigger offensive ability animation if animator exists
-                    var cm = opponent.GetComponent<CharacterMovement>();
-                    if (cm != null && cm.animator != null)
-                    {
-                        cm.animator.SetTrigger("OffensiveAbility");
-                    }
-                }
-            }
-            catch (NullReferenceException)
-            {
-                if (opponent.GetComponent<AIBehavior>().GetBirdType() != BirdType.OSTRICH)
-                {
-                    // Must be an AI opponent
-                    var ai = opponent.GetComponent<AIBehavior>();
-                    ai.BuffStats(-debuffAmount, debuffLength);
-                    if (ai != null && ai.animator != null)
-                    {
-                        ai.animator.SetTrigger("OffensiveAbility");
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                Debug.LogError("Something weird happened in DebuffEnemy for SeagullOffensive...");
-            }
+            if (opponent == null) continue;
+
+            // Ostrich is immune to debuffs
+            BallInteract birdPlayer = opponent.GetComponent<BallInteract>();
+            BirdType birdType = birdPlayer != null
+                ? birdPlayer.GetBirdType()
+                : opponent.GetComponent<AIBehavior>().GetBirdType();
+
+            if (birdType == BirdType.OSTRICH) continue;
+
+            // BuffsDebuffs handles VFX, audio, stat changes, and cleanup
+            BuffsDebuffs.Instance.ApplyEffect(
+                BuffsDebuffs.EffectType.Debuff,
+                opponent,
+                debuffLength,
+                opponentIsOnLeft
+            );
+
+            // Trigger debuff animation on the opponent
+            CharacterMovement cm = opponent.GetComponent<CharacterMovement>();
+            AIBehavior ai = opponent.GetComponent<AIBehavior>();
+            Animator opponentAnimator = cm?.animator ?? ai?.animator;
+            if (opponentAnimator != null)
+                opponentAnimator.SetTrigger("OffensiveAbility");
         }
 
-        // Also trigger animation for this player if animator exists
+        // Trigger animation on this player
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
-        {
             myBallInteract.animator.SetTrigger("OffensiveAbility");
-        }
 
         _debuffWindow = false;
 
@@ -93,7 +88,7 @@ public class SeagullOffensive : BirdAbility
         AudioManager.PlayBirdSound(BirdType.SEAGULL, SoundType.OFFENSIVE, 1.0f);
 
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, 2);
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, 5);
     }
 
     public bool OnScore(bool leftScored)

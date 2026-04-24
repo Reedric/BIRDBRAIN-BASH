@@ -38,6 +38,7 @@ public class AudioManager : MonoBehaviour
     [Header("Testing")]
     [Tooltip("Mute background music for testing.")]
     public bool muteBackgroundMusic = false;
+
     [Header("Sounds")]
     [SerializeField] private AudioClip[] penguinSounds;
     [SerializeField] private AudioClip[] crowSounds;
@@ -62,6 +63,26 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip[] ballPlayerInteractionSounds;
     [SerializeField] private AudioClip[] ballNetHitSounds;
     [SerializeField] private AudioClip[] ballGroundHitSounds;
+
+    [Header("Ability Ready Sounds")]
+    [Tooltip("Plays when Team 1's defensive ability cooldown is over.")]
+    [SerializeField] private AudioClip team1DefensiveReadySound;
+    [Tooltip("Plays when Team 1's offensive ability cooldown is over.")]
+    [SerializeField] private AudioClip team1OffensiveReadySound;
+    [Tooltip("Plays when Team 2's defensive ability cooldown is over.")]
+    [SerializeField] private AudioClip team2DefensiveReadySound;
+    [Tooltip("Plays when Team 2's offensive ability cooldown is over.")]
+    [SerializeField] private AudioClip team2OffensiveReadySound;
+
+    [Header("Buff / Debuff Sounds")]
+    [Tooltip("Plays when a buff is applied.")]
+    [SerializeField] private AudioClip buffStartSound;
+    [Tooltip("Plays when a buff expires.")]
+    [SerializeField] private AudioClip buffEndSound;
+    [Tooltip("Plays when a debuff is applied.")]
+    [SerializeField] private AudioClip debuffStartSound;
+    [Tooltip("Plays when a debuff expires.")]
+    [SerializeField] private AudioClip debuffEndSound;
 
     [Header("Background Music")]
     [SerializeField] private AudioClip[] backgroundTracks;
@@ -164,13 +185,12 @@ public class AudioManager : MonoBehaviour
     // For playing the background track
     public static void PlayBackgroundTrack(AudioClip audioClip, float volume = 1.0f)
     {
-
         instance.backgroundAudioSource.clip = audioClip;
         instance.backgroundAudioSource.volume = volume * 0.2f;
         instance.backgroundAudioSource.Play();
     }
 
-    // stops background track if needed
+    // Stops background track if needed
     public static void StopBackgroundTrack()
     {
         instance.backgroundAudioSource.Stop();
@@ -178,20 +198,20 @@ public class AudioManager : MonoBehaviour
 
     public static void PlayPauseTrack(float volume = 1.0f)
     {
-    if (instance.pauseTrack != null)
-    {
-        instance.backgroundAudioSource.clip = instance.pauseTrack;
-        instance.backgroundAudioSource.volume = volume * 0.2f;
-        instance.backgroundAudioSource.Play();
-    }
+        if (instance.pauseTrack != null)
+        {
+            instance.backgroundAudioSource.clip = instance.pauseTrack;
+            instance.backgroundAudioSource.volume = volume * 0.2f;
+            instance.backgroundAudioSource.Play();
+        }
     }
 
     public static void PlayDefaultBackground()
     {
-    if (instance.backgroundTracks != null && instance.backgroundTracks.Length > 0)
-    {
-        PlayBackgroundTrack(instance.backgroundTracks[0]);
-    }
+        if (instance.backgroundTracks != null && instance.backgroundTracks.Length > 0)
+        {
+            PlayBackgroundTrack(instance.backgroundTracks[0]);
+        }
     }
 
     // Play a scoring sound when a point is scored
@@ -201,6 +221,16 @@ public class AudioManager : MonoBehaviour
         {
             int randomIndex = Random.Range(0, instance.scoringSounds.Length);
             instance.audioSource.PlayOneShot(instance.scoringSounds[randomIndex], volume);
+        }
+    }
+
+    // Overload: Play scoring sound by index + volume
+    public static void PlayScoringSound(int soundIndex, float volume = 1.0f)
+    {
+        if (instance.scoringSounds != null && instance.scoringSounds.Length > 0)
+        {
+            soundIndex = Mathf.Clamp(soundIndex, 0, instance.scoringSounds.Length - 1);
+            instance.audioSource.PlayOneShot(instance.scoringSounds[soundIndex], volume);
         }
     }
 
@@ -232,5 +262,63 @@ public class AudioManager : MonoBehaviour
             int randomIndex = Random.Range(0, instance.ballGroundHitSounds.Length);
             instance.audioSource.PlayOneShot(instance.ballGroundHitSounds[randomIndex], volume);
         }
+    }
+
+
+    // Play when Team 1's defensive ability cooldown is over
+    public static void PlayTeam1DefensiveReadySound(float volume = 1.0f)
+    {
+        if (instance.team1DefensiveReadySound != null)
+            instance.audioSource.PlayOneShot(instance.team1DefensiveReadySound, volume);
+    }
+
+    // Play when Team 1's offensive ability cooldown is over
+    public static void PlayTeam1OffensiveReadySound(float volume = 1.0f)
+    {
+        if (instance.team1OffensiveReadySound != null)
+            instance.audioSource.PlayOneShot(instance.team1OffensiveReadySound, volume);
+    }
+
+    // Play when Team 2's defensive ability cooldown is over
+    public static void PlayTeam2DefensiveReadySound(float volume = 1.0f)
+    {
+        if (instance.team2DefensiveReadySound != null)
+            instance.audioSource.PlayOneShot(instance.team2DefensiveReadySound, volume);
+    }
+
+    // Play when Team 2's offensive ability cooldown is over
+    public static void PlayTeam2OffensiveReadySound(float volume = 1.0f)
+    {
+        if (instance.team2OffensiveReadySound != null)
+            instance.audioSource.PlayOneShot(instance.team2OffensiveReadySound, volume);
+    }
+
+
+    // Play when a buff is applied
+    public static void PlayBuffStartSound(float volume = 1.0f)
+    {
+        if (instance.buffStartSound != null)
+            instance.audioSource.PlayOneShot(instance.buffStartSound, volume);
+    }
+
+    // Play when a buff expires
+    public static void PlayBuffEndSound(float volume = 1.0f)
+    {
+        if (instance.buffEndSound != null)
+            instance.audioSource.PlayOneShot(instance.buffEndSound, volume);
+    }
+
+    // Play when a debuff is applied
+    public static void PlayDebuffStartSound(float volume = 1.0f)
+    {
+        if (instance.debuffStartSound != null)
+            instance.audioSource.PlayOneShot(instance.debuffStartSound, volume);
+    }
+
+    // Play when a debuff expires
+    public static void PlayDebuffEndSound(float volume = 1.0f)
+    {
+        if (instance.debuffEndSound != null)
+            instance.audioSource.PlayOneShot(instance.debuffEndSound, volume);
     }
 }

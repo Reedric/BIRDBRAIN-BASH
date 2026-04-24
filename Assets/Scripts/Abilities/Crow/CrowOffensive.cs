@@ -4,17 +4,19 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(PlayerInput))]
-public class CrowOffensive : BirdAbility {
+public class CrowOffensive : BirdAbility
+{
     public float cooldown = 10f;
     public float timeEnemiesAreImpacted = 3f;
     public Animator animator; // Assign in inspector
 
     private bool onCooldown = false;
-    private PlayerInput input; // Input for the player
+    private PlayerInput input;
 
     void Start()
     {
         input = GetComponent<PlayerInput>();
+        _onLeft = GetComponent<BallInteract>().onLeft;
     }
 
     void Update()
@@ -26,7 +28,7 @@ public class CrowOffensive : BirdAbility {
         }
     }
 
-    public void CrowAbility() 
+    public void CrowAbility()
     {
         if (onCooldown)
         {
@@ -39,75 +41,59 @@ public class CrowOffensive : BirdAbility {
 
         // Play animation
         if (animator != null)
-            animator.SetTrigger("OffensiveAbility"); // Make sure to have a trigger
+            animator.SetTrigger("OffensiveAbility");
 
         // Play sound effect using AudioManager
         AudioManager.PlayBirdSound(BirdType.CROW, SoundType.OFFENSIVE, 1.0f);
 
-        StartCoroutine(DisableEnemies());
+        SilenceEnemies();
         StartCoroutine(Cooldown());
     }
 
-    IEnumerator DisableEnemies()
+    private void SilenceEnemies()
     {
-        // Determine which birds are on other team
-        List<BirdAbility> enemyAbilities = new List<BirdAbility>();
+        opponents.Clear();
+
         GameManager gameManager = GameManager.Instance;
-        if (gameManager.leftPlayer1 == gameObject || gameManager.leftPlayer2 == gameObject)
-        {
-            enemyAbilities.AddRange(gameManager.rightPlayer1.GetComponents<BirdAbility>());
-            enemyAbilities.AddRange(gameManager.rightPlayer2.GetComponents<BirdAbility>());
-        }
-        else
-        {
-            enemyAbilities.AddRange(gameManager.leftPlayer1.GetComponents<BirdAbility>());
-            enemyAbilities.AddRange(gameManager.leftPlayer2.GetComponents<BirdAbility>());
-        }
 
         if (_onLeft)
         {
             opponents.Add(gameManager.rightPlayer1);
             opponents.Add(gameManager.rightPlayer2);
-        } else
+        }
+        else
         {
             opponents.Add(gameManager.leftPlayer1);
             opponents.Add(gameManager.leftPlayer2);
         }
 
-        Debug.Log(enemyAbilities.Count);
+        // Opponents are always on the opposite side of the caster
+        bool opponentIsOnLeft = !_onLeft;
 
-        // Disable all the enemies abilities
-        for (int i = 0; i < enemyAbilities.Count; i++)
+        foreach (GameObject opponent in opponents)
         {
-            // ducky: what the hell did I just make for this ostrich check
-            BallInteract birdPlayer = opponents[i].GetComponent<BallInteract>();
-            BirdType birdType;
-            if (birdPlayer == null)
-            {
-                birdType = opponents[i].GetComponent<AIBehavior>().GetBirdType();
-            }
-            else
-            {
-                birdType = opponents[i].GetComponent<BallInteract>().GetBirdType();
-            }
-            if (birdType != BirdType.OSTRICH)
-            {
-                enemyAbilities[i].DisableAbilities(true);
-                Debug.Log(enemyAbilities[i]);
-            }
-        }
+            if (opponent == null) continue;
 
-        // Wait for ability to end
-        yield return new WaitForSeconds(timeEnemiesAreImpacted);
+            // Ostrich is immune to silence
+            BallInteract birdPlayer = opponent.GetComponent<BallInteract>();
+            BirdType birdType = birdPlayer != null
+                ? birdPlayer.GetBirdType()
+                : opponent.GetComponent<AIBehavior>().GetBirdType();
 
-        // Enable all the enemies abilities
-        foreach (BirdAbility enemy in enemyAbilities) 
-        {
-            enemy.DisableAbilities(false);
+            if (birdType == BirdType.OSTRICH) continue;
+
+            // BuffsDebuffs handles everything: VFX, audio, disabling abilities
+            // (for both player and AI), and re-enabling after timeEnemiesAreImpacted.
+            BuffsDebuffs.Instance.ApplyEffect(
+                BuffsDebuffs.EffectType.Silence,
+                opponent,
+                timeEnemiesAreImpacted,
+                opponentIsOnLeft
+            );
         }
     }
 
-    private IEnumerator Cooldown() 
+    private IEnumerator Cooldown()
     {
         onCooldown = true;
         yield return new WaitForSeconds(cooldown);

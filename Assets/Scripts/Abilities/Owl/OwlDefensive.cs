@@ -42,6 +42,9 @@ public class OwlDefensive : BirdAbility
     {
         int playerID = GetComponent<BallInteract>().playerID;
         HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
+
+        // Play sound effect using AudioManager
+        AudioManager.PlayBirdSound(BirdType.OWL, SoundType.DEFENSIVE, 1.0f);
         
         onCooldown = true;
         
