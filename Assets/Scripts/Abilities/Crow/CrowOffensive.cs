@@ -31,6 +31,7 @@ public class CrowOffensive : BirdAbility {
         if (onCooldown)
         {
             Debug.Log("The crow is on cooldown and cannot activate its ability");
+            return;
         }
 
         int playerID = GetComponent<BallInteract>().playerID;
@@ -52,7 +53,7 @@ public class CrowOffensive : BirdAbility {
         // Determine which birds are on other team
         List<BirdAbility> enemyAbilities = new List<BirdAbility>();
         GameManager gameManager = GameManager.Instance;
-        if (gameManager.leftPlayer1 == this || gameManager.leftPlayer2 == this)
+        if (gameManager.leftPlayer1 == gameObject || gameManager.leftPlayer2 == gameObject)
         {
             enemyAbilities.AddRange(gameManager.rightPlayer1.GetComponents<BirdAbility>());
             enemyAbilities.AddRange(gameManager.rightPlayer2.GetComponents<BirdAbility>());
@@ -72,6 +73,8 @@ public class CrowOffensive : BirdAbility {
             opponents.Add(gameManager.leftPlayer1);
             opponents.Add(gameManager.leftPlayer2);
         }
+
+        Debug.Log(enemyAbilities.Count);
 
         // Disable all the enemies abilities
         for (int i = 0; i < enemyAbilities.Count; i++)

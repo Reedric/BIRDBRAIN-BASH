@@ -77,9 +77,9 @@ public class CrowDefensiveAbility : BirdAbility
         GameManager gameManager = GameManager.Instance;
         if (gameObject == gameManager.leftPlayer1 || gameObject == gameManager.leftPlayer2) 
         {
-            randomSpawnPosition1 = new Vector3(Random.Range(-.5f, 8), .5f, Random.Range(-4, 4));
-            randomSpawnPosition2 = new Vector3(Random.Range(-.5f, 8), .5f, Random.Range(-4, 4));
-            randomSpawnPosition3 = new Vector3(Random.Range(-.5f, 8), .5f, Random.Range(-4, 4));
+            randomSpawnPosition1 = new Vector3(Random.Range(-8, -0.5f), .5f, Random.Range(-4, 4));
+            randomSpawnPosition2 = new Vector3(Random.Range(-8, -0.5f), .5f, Random.Range(-4, 4));
+            randomSpawnPosition3 = new Vector3(Random.Range(-8, -0.5f), .5f, Random.Range(-4, 4));
         } 
         else if (gameObject == gameManager.rightPlayer1 || gameObject == gameManager.rightPlayer2)
         {

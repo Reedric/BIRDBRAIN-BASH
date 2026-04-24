@@ -66,11 +66,11 @@ public class BuffsDebuffs : MonoBehaviour
     {
         GameObject vfx = SpawnEffect(type, bird, onLeft);
 
-        ApplyGameplayEffect(type, bird, true);
+        // ApplyGameplayEffect(type, bird, true);
 
         yield return new WaitForSeconds(duration);
 
-        ApplyGameplayEffect(type, bird, false);
+        // ApplyGameplayEffect(type, bird, false);
 
         if (activeVFX.ContainsKey(bird) && activeVFX[bird].ContainsKey(type))
         {
