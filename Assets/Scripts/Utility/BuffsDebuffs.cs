@@ -66,11 +66,23 @@ public class BuffsDebuffs : MonoBehaviour
     {
         GameObject vfx = SpawnEffect(type, bird, onLeft);
 
+        // Play start sound
+        if (type == EffectType.Buff)
+            AudioManager.PlayBuffStartSound();
+        else
+            AudioManager.PlayDebuffStartSound();
+
         // ApplyGameplayEffect(type, bird, true);
 
         yield return new WaitForSeconds(duration);
 
         // ApplyGameplayEffect(type, bird, false);
+
+        // Play end sound
+        if (type == EffectType.Buff)
+            AudioManager.PlayBuffEndSound();
+        else
+            AudioManager.PlayDebuffEndSound();
 
         if (activeVFX.ContainsKey(bird) && activeVFX[bird].ContainsKey(type))
         {
