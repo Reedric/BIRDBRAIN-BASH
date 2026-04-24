@@ -166,6 +166,12 @@ public class HUDManager : MonoBehaviour
     [SerializeField] private Texture ostrichOffensiveIcon;
     [SerializeField] private Texture ostrichDefensiveIcon;
 
+    [Header("Eagle")]
+    [SerializeField] private string eagleDisplayName = "Eagle";
+    [SerializeField] private Texture eaglePlayerIcon;
+    [SerializeField] private Texture eagleOffensiveIcon;
+    [SerializeField] private Texture eagleDefensiveIcon;
+
 
     private static HUDManager instance;
     public static HUDManager Instance => instance;
@@ -381,6 +387,7 @@ public class HUDManager : MonoBehaviour
             BirdType.KIWI        => new BirdHUDData { displayName = kiwiDisplayName,        playerIcon = kiwiPlayerIcon,        offensiveIcon = kiwiOffensiveIcon,        defensiveIcon = kiwiDefensiveIcon },
             BirdType.CHICKEN     => new BirdHUDData { displayName = chickenDisplayName,     playerIcon = chickenPlayerIcon,     offensiveIcon = chickenOffensiveIcon,     defensiveIcon = chickenDefensiveIcon },
             BirdType.OSTRICH     => new BirdHUDData { displayName = ostrichDisplayName,     playerIcon = ostrichPlayerIcon,     offensiveIcon = ostrichOffensiveIcon,     defensiveIcon = ostrichDefensiveIcon },
+            BirdType.EAGLE       => new BirdHUDData { displayName = eagleDisplayName,       playerIcon = eaglePlayerIcon,       offensiveIcon = eagleOffensiveIcon,       defensiveIcon = eagleDefensiveIcon },
             _                    => null
         };
     }

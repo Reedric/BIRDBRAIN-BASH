@@ -41,6 +41,9 @@ public class KiwiDefensive : BirdAbility
         if (onCooldown || !CanUseAbilities() || !PointInProgress()) yield break;
         onCooldown = true;
 
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
+
         // Need some type of animation or visual for burrowing but for now the bird will just go invisible
         meshRenderer.enabled = false; // makes bird invisible
         rb.useGravity = false;

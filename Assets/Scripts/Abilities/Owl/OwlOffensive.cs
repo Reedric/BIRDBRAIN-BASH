@@ -13,6 +13,7 @@ public class OwlOffensive : BirdAbility
     [SerializeField] private float lineDuration = 8f;
     [SerializeField] private Color lineColor = Color.red;
     [SerializeField] private float lineWidth = 0.2f;
+    public Animator animator; // Assign in inspector
 
     public void OnOffensiveAbility(InputValue value)
     {
@@ -21,6 +22,16 @@ public class OwlOffensive : BirdAbility
 
     private void CaptureCure()
     {
+        // Trigger offensive ability animation if animator exists
+        var myBallInteract = GetComponent<BallInteract>();
+        if (myBallInteract != null && myBallInteract.animator != null)
+        {
+            myBallInteract.animator.SetTrigger("OffensiveAbility");
+        }
+
+        // Play sound effect using AudioManager
+        AudioManager.PlayBirdSound(BirdType.OWL, SoundType.OFFENSIVE, 1.0f);
+        
         int playerID = GetComponent<BallInteract>().playerID;
         HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
 

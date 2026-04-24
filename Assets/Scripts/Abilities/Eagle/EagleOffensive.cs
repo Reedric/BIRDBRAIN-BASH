@@ -42,12 +42,15 @@ public class EagleOffensive : BirdAbility
         int playerID = GetComponent<BallInteract>().playerID;
         HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
 
-        // Play animation
-        if (animator != null)
-            animator.SetTrigger("OffensiveAbility"); // Make sure to have a trigger
-
+        // Trigger offensive ability animation if animator exists
+        var myBallInteract = GetComponent<BallInteract>();
+        if (myBallInteract != null && myBallInteract.animator != null)
+        {
+            myBallInteract.animator.SetTrigger("OffensiveAbility");
+        }
+        
         // Play sound effect using AudioManager
-        // AudioManager.PlayBirdSound(BirdType.EAGLE, SoundType.OFFENSIVE, 1.0f);
+        AudioManager.PlayBirdSound(BirdType.EAGLE, SoundType.OFFENSIVE, 1.0f);
        
         if (_onLeft)
         {

@@ -238,11 +238,11 @@ MonoBehaviour:
   eagleSounds:
   - {fileID: 8300000, guid: 5a77b3bd343d2a14395420e4c1a4fdfb, type: 3}
   kiwiSounds:
-  - {fileID: 8300000, guid: 5a77b3bd343d2a14395420e4c1a4fdfb, type: 3}
+  - {fileID: 8300000, guid: 2b642a7f1184e9f4d86fb27196940707, type: 3}
   macawSounds:
   - {fileID: 8300000, guid: 9bcf4b11a18905841bf8fefd27f76a87, type: 3}
   owlSounds:
-  - {fileID: 8300000, guid: 5a77b3bd343d2a14395420e4c1a4fdfb, type: 3}
+  - {fileID: 8300000, guid: f7901d6e3fa546f469cee6feb21be0ab, type: 3}
   scoringSounds:
   - {fileID: 8300000, guid: eb33c0f9c80807641add146b4c6d0873, type: 3}
   ballPlayerInteractionSounds:
@@ -258,6 +258,14 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 2d5b8683e09fdc849b452a98de2d0544, type: 3}
   ballGroundHitSounds:
   - {fileID: 8300000, guid: 8a5240865a3d1644eb7a3e302d94e33e, type: 3}
+  team1DefensiveReadySound: {fileID: 0}
+  team1OffensiveReadySound: {fileID: 0}
+  team2DefensiveReadySound: {fileID: 0}
+  team2OffensiveReadySound: {fileID: 0}
+  buffStartSound: {fileID: 0}
+  buffEndSound: {fileID: 0}
+  debuffStartSound: {fileID: 0}
+  debuffEndSound: {fileID: 0}
   backgroundTracks:
   - {fileID: 8300000, guid: 35284afd7bae03f40ab14686c0c16795, type: 3}
   pauseTrack: {fileID: 0}

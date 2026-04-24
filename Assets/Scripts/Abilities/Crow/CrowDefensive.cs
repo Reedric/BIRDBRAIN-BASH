@@ -102,6 +102,8 @@ public class CrowDefensiveAbility : BirdAbility
         Debug.Log("Buff activated");
         GetComponent<CharacterMovement>().BuffStats(buffAmount, buffLength);
         buffActive = true;
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldownTime);
         Cooldown();
     }
     // Clear current coins on the field
@@ -126,6 +128,8 @@ public class CrowDefensiveAbility : BirdAbility
             Destroy(other.gameObject);
             coinCount++;
         }
+        // Play sound effect using AudioManager
+        AudioManager.PlayBirdSound(BirdType.CROW, SoundType.DEFENSIVE, 1.0f);
     }
     // Set cooldown time
     void Cooldown()

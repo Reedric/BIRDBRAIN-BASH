@@ -42,6 +42,9 @@ public class KiwiOffensive : BirdAbility
         if (onCooldown || !CanUseAbilities() || !PointInProgress()) yield break;
         onCooldown = true;
 
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+
         Vector3 ballPosition = BallManager.Instance.gameObject.GetComponent<Transform>().position;
         GameObject leftLazer = CreateLazer(ballPosition, leftEyePosition.position);
         GameObject rightLazer = CreateLazer(ballPosition, rightEyePosition.position);
