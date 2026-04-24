@@ -66,6 +66,9 @@ public class ScissortailOffensive : BirdAbility
             onCooldown = true;
             yield return new WaitForSeconds(cooldown);
             onCooldown = false;
+
+            int playerID = GetComponent<BallInteract>().playerID;
+            HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
         }
     }
 }

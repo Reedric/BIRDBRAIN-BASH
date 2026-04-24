@@ -93,7 +93,7 @@ public class SeagullOffensive : BirdAbility
         AudioManager.PlayBirdSound(BirdType.SEAGULL, SoundType.OFFENSIVE, 1.0f);
 
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, 2);
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, 5);
     }
 
     public bool OnScore(bool leftScored)
