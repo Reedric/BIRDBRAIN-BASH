@@ -2755,6 +2755,8 @@ GameObject:
   - component: {fileID: 4336799827627786668}
   - component: {fileID: 2075862330278724219}
   - component: {fileID: 6188390117574024430}
+  - component: {fileID: 4683622730624149696}
+  - component: {fileID: -6471359444959576913}
   m_Layer: 0
   m_Name: ToucanC
   m_TagString: Player
@@ -7813,7 +7815,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7ce7393f3be4e14887b4f803a969e6a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cooldown: 10
+  abilitySlot: 1
+  cooldownTime: 40
   buffAmount: 2
   buffLength: 10
 --- !u!114 &2075862330278724219
@@ -7828,7 +7831,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 053fb3908196cf84fa743edeb02687af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cooldown: 10
+  abilitySlot: 0
+  cooldownTime: 20
 --- !u!114 &6188390117574024430
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7842,6 +7846,31 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   readyIndicator: {fileID: 0}
+--- !u!114 &4683622730624149696
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8653898586001143564}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d8776b00f5834d4f9f26b44f0a3eae8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &-6471359444959576913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8653898586001143564}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5218fa23fafadc54d807b4f114cfd911, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilityController: {fileID: 4683622730624149696}
 --- !u!1 &8706728290729586316
 GameObject:
   m_ObjectHideFlags: 0

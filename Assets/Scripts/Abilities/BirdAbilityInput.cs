@@ -8,6 +8,6 @@ public class BirdAbilityInput : MonoBehaviour
 {
     [SerializeField] private BirdAbilityController abilityController;
 
-    public void OnOffensiveAbilityInput() { abilityController.UseAbility(AbilitySlot.Offensive); }
-    public void OnDefensiveAbilityInput() { abilityController.UseAbility(AbilitySlot.Defensive); }
+    public void OnOffensiveAbility() { abilityController.UseAbility(AbilitySlot.Offensive); }
+    public void OnDefensiveAbility() { abilityController.UseAbility(AbilitySlot.Defensive); }
 }

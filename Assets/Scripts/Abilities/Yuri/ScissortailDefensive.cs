@@ -5,7 +5,6 @@ using UnityEngine.InputSystem;
 public class ScissortailDefensive : BirdAbility
 {
     [Header("Yuriful")]
-    public float cooldown = 6.0f;
     public float lineUptime = 3.0f;
     public float lineWidth = 0.5f;
     public float threshold = 1.0f;
@@ -62,7 +61,7 @@ public class ScissortailDefensive : BirdAbility
         AudioManager.PlayBirdSound(BirdType.SCISSORTAIL, SoundType.DEFENSIVE, 1.0f);
 
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldownTime);
 
         // Trigger defensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();

@@ -751,6 +751,8 @@ GameObject:
   - component: {fileID: 346269830226829327}
   - component: {fileID: -7414844461129695082}
   - component: {fileID: 7719913960851853918}
+  - component: {fileID: -437713856906590993}
+  - component: {fileID: -9108345702371088982}
   m_Layer: 0
   m_Name: LovebirdC
   m_TagString: Player
@@ -5788,7 +5790,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06dd2ca91fa327948af6da71c34e2622, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cooldown: 6
+  abilitySlot: 1
+  cooldownTime: 6
   dashSpeed: 60
   dashToDistance: 2
 --- !u!54 &346269830226829327
@@ -5830,8 +5833,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 593700650f8d8a043851550585a9d6f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  abilitySlot: 0
+  cooldownTime: 20
   DebuffLength: 2
-  cooldown: 20
   walkSpeed: 1
   hearts: {fileID: 2103532663826045379, guid: aa26f21b86994d044a963dfff8ce2292, type: 3}
   heartsOffset: 1.15
@@ -5848,6 +5852,31 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   readyIndicator: {fileID: 0}
+--- !u!114 &-437713856906590993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2869351363455805281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d8776b00f5834d4f9f26b44f0a3eae8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &-9108345702371088982
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2869351363455805281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5218fa23fafadc54d807b4f114cfd911, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilityController: {fileID: -437713856906590993}
 --- !u!1 &3011671434899289444
 GameObject:
   m_ObjectHideFlags: 0

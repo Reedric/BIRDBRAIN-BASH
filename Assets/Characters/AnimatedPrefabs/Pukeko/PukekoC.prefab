@@ -579,6 +579,18 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 92bd59d13499e9a4ab56fb12e10444b5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6816542919663592526}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 92bd59d13499e9a4ab56fb12e10444b5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -8535083202196516461}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 92bd59d13499e9a4ab56fb12e10444b5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -3130423565267739988}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 92bd59d13499e9a4ab56fb12e10444b5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6758414031144431846}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 92bd59d13499e9a4ab56fb12e10444b5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -7048078205267838103}
   m_SourcePrefab: {fileID: 100100000, guid: 92bd59d13499e9a4ab56fb12e10444b5, type: 3}
 --- !u!4 &3652912293590085706 stripped
 Transform:
@@ -5619,3 +5631,63 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   readyIndicator: {fileID: 0}
+--- !u!114 &-8535083202196516461
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4177670073196505840}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d8776b00f5834d4f9f26b44f0a3eae8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &-3130423565267739988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4177670073196505840}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5218fa23fafadc54d807b4f114cfd911, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilityController: {fileID: -8535083202196516461}
+--- !u!114 &6758414031144431846
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4177670073196505840}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97d3c1358f2792740940dbfac97f44d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilitySlot: 1
+  cooldownTime: 20
+  dashSpeed: 10
+--- !u!114 &-7048078205267838103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4177670073196505840}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95c57a673fa9f1a41aeb952154cdddf4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilitySlot: 0
+  cooldownTime: 40
+  silenceDuration: 3
+  pushBackForce: 2
+  coneAngle: 45
+  coneRange: 5
+  coneRayCount: 10
+  animator: {fileID: 2991937235899504965}
