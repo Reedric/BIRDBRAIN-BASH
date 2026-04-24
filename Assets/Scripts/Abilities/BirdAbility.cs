@@ -1,44 +1,40 @@
 using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine.InputSystem;
 
-public class BirdAbility : MonoBehaviour {
-    private bool abilitiesDisabled = false;
-    protected GameManager gameManager = GameManager.Instance; // ducky: GameManager instance for all abilities in case anyone needs it
-    protected List<GameObject> opponents = new(); // ducky: opponents list for all abilities in case anyone needs it
-    protected bool _onLeft; // ducky: for opponents if needed
-    private bool isStunned = false;
+/// <summary>
+/// Base class for bird abilities. Handles cooldown management and activation logic.
+/// </summary>
+public abstract class BirdAbility : MonoBehaviour 
+{
+    [SerializeField] private AbilitySlot abilitySlot;
+    public AbilitySlot Slot => abilitySlot;
 
-    void Start()
-    {
-        _onLeft = GetComponent<PlayerInput>().playerIndex < 2;
-    }
-    public void DisableAbilities(bool disabledOrNot)
-    {
-        abilitiesDisabled = disabledOrNot;
-
-        // VFX manager
-        BuffsDebuffs.Instance.ApplyEffect(
-        BuffsDebuffs.EffectType.Silence,
-        gameObject,
-        3f,
-        _onLeft
-        );
-    }
-
-    public bool CanUseAbilities()
-    {
-        return !abilitiesDisabled;
-    }
+    [SerializeField] protected float cooldownTime;
     
+    private float cooldownRemaining;
+    private bool abilitiesDisabled;
 
-    public bool PointInProgress()
+    public bool IsReady => cooldownRemaining <= 0 && !abilitiesDisabled;
+
+    public void TickCooldown(float deltaTime)
     {
-        // If the point has just started, cannot use ability
-        if (GameManager.Instance.gameState == GameManager.GameState.PointStart) return false;
-
-        // If the point has just ended, cannot use ability, else we are good to go
-        return GameManager.Instance.gameState != GameManager.GameState.PointEnd;
+        if (cooldownRemaining > 0) cooldownRemaining -= deltaTime;
     }
+
+    public bool CanActivate()
+    {
+        return IsReady && BirdAbilityRuleService.Instance.CanUseAbility(gameObject);
+    }
+
+    public bool TryActivate()
+    {
+        if (!CanActivate()) return false;
+
+        Activate();
+        cooldownRemaining = cooldownTime;
+        return true;
+    }
+
+    protected abstract void Activate();
+
+    public void SetAbilitiesDisabled(bool disabled) { abilitiesDisabled = disabled; }
 }
