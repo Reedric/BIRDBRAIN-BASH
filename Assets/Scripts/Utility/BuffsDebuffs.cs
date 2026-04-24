@@ -197,13 +197,13 @@ public class BuffsDebuffs : MonoBehaviour
                 break;
 
             case EffectType.Silence:
-                ability?.DisableAbilities(enable);
+                ability?.SetAbilitiesDisabled(enable);
                 ai?.DisableAbilities(enable);
                 break;
 
             case EffectType.Stun:
                 movement?.controlMovement(!enable, !enable);
-                ability?.DisableAbilities(enable);
+                ability?.SetAbilitiesDisabled(enable);
 
                 ai?.DisableMovement(enable);
                 ai?.DisableAbilities(enable);

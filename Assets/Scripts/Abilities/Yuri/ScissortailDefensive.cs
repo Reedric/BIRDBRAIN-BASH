@@ -10,13 +10,10 @@ public class ScissortailDefensive : BirdAbility
     public float lineWidth = 0.5f;
     public float threshold = 1.0f;
     public Material lineMaterial;
-    private bool abilityReady = true;
-    private PlayerInput playerInput;
     private LineRenderer lr;
 
     void Start()
     {
-        playerInput = GetComponent<PlayerInput>();
         lr = gameObject.AddComponent<LineRenderer>();
         lr.enabled = false;
 
@@ -103,22 +100,10 @@ public class ScissortailDefensive : BirdAbility
         }
         // Disables the line and starts cooldown
         lr.enabled = false;
-        StartCoroutine(CooldownRoutine());
     }
 
-    private IEnumerator CooldownRoutine()
+    override protected void Activate()
     {
-        yield return new WaitForSeconds(cooldown);
-        abilityReady = true;
-    }
-
-    void Update()
-    {
-        if (playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame() && abilityReady
-                    && PointInProgress() && CanUseAbilities())
-        {
-            StartCoroutine(Yuriful());
-            abilityReady = false;
-        }
+        StartCoroutine(Yuriful());
     }
 }
