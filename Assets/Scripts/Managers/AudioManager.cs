@@ -14,6 +14,7 @@ public enum BirdType
     TOUCAN,
     PUKEKO,
     OSTRICH,
+    CHICKEN,
     OTHER
 }
 
@@ -45,6 +46,8 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip[] pelicanSounds;
     [SerializeField] private AudioClip[] toucanSounds;
     [SerializeField] private AudioClip[] pukekoSounds;
+    [SerializeField] private AudioClip[] chickenSounds;
+    [SerializeField] private AudioClip[] ostrichSounds;
 
     [Header("Scoring Sounds")]
     [SerializeField] private AudioClip[] scoringSounds;
@@ -56,6 +59,9 @@ public class AudioManager : MonoBehaviour
 
     [Header("Background Music")]
     [SerializeField] private AudioClip[] backgroundTracks;
+
+    [Header("Pause Music")]
+    [SerializeField] private AudioClip pauseTrack;
 
     private static AudioManager instance;
     private AudioSource audioSource;
@@ -122,6 +128,12 @@ public class AudioManager : MonoBehaviour
             case BirdType.PUKEKO:
                 birdSounds = instance.pukekoSounds;
                 break;
+            case BirdType.CHICKEN:
+                birdSounds = instance.chickenSounds;
+                break;
+            case BirdType.OSTRICH:
+                birdSounds = instance.ostrichSounds;
+                break;
             default:
                 birdSounds = instance.penguinSounds;
                 break;
@@ -144,6 +156,24 @@ public class AudioManager : MonoBehaviour
     public static void StopBackgroundTrack()
     {
         instance.backgroundAudioSource.Stop();
+    }
+
+    public static void PlayPauseTrack(float volume = 1.0f)
+    {
+    if (instance.pauseTrack != null)
+    {
+        instance.backgroundAudioSource.clip = instance.pauseTrack;
+        instance.backgroundAudioSource.volume = volume * 0.2f;
+        instance.backgroundAudioSource.Play();
+    }
+    }
+
+    public static void PlayDefaultBackground()
+    {
+    if (instance.backgroundTracks != null && instance.backgroundTracks.Length > 0)
+    {
+        PlayBackgroundTrack(instance.backgroundTracks[0]);
+    }
     }
 
     // Play a scoring sound when a point is scored

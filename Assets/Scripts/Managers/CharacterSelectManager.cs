@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -22,17 +23,17 @@ public class CharacterSelectManager : MonoBehaviour
     public List<BirdType> availableBirds = new();
     public int numberOfPlayers = 4;
     public Canvas mainCanvas;
-    public Transform cursor1Prefab; // Need cursor prefab(s) to show player cursors on the select screen
-    public Transform cursor2Prefab; // Need cursor prefab(s) to show player cursors on the select screen
-    public Transform cursor3Prefab; // Need cursor prefab(s) to show player cursors on the select screen
-    public Transform cursor4Prefab; // Need cursor prefab(s) to show player cursors on the select screen
+    public Transform cursor1Prefab;
+    public Transform cursor2Prefab;
+    public Transform cursor3Prefab;
+    public Transform cursor4Prefab;
     public Button readyButton;
 
     [Header("Player Icons")]
-    public RawImage blue1Icon; // Player 0 icon
-    public RawImage blue2Icon; // Player 1 icon
-    public RawImage pink1Icon; // Player 2 icon
-    public RawImage pink2Icon; // Player 3 icon
+    public RawImage blue1Icon;
+    public RawImage blue2Icon;
+    public RawImage pink1Icon;
+    public RawImage pink2Icon;
 
     [Header("Bird Textures")]
     public RawImage penguinTexture;
@@ -46,6 +47,8 @@ public class CharacterSelectManager : MonoBehaviour
     public RawImage pukekoTexture;
     public RawImage toucanTexture;
     public RawImage kiwiTexture;
+    public RawImage chickenTexture;
+    public RawImage ostrichTexture;
 
     [Header("Ready Indicators")]
     public RawImage p1Ready;
@@ -56,12 +59,28 @@ public class CharacterSelectManager : MonoBehaviour
     [Header("Go Button")]
     public RawImage goButton;
 
+    [Header("Cursor Animation")]
+    [Range(0.1f, 0.99f)]
+    public float cursorPressScale = 0.65f;
+
+    [Tooltip("Seconds to shrink down on press")]
+    public float cursorShrinkDuration = 0.07f;
+
+    [Tooltip("Seconds to bounce back after the press")]
+    public float cursorBounceDuration = 0.14f;
+
+    [Range(1.0f, 1.5f)]
+    public float cursorBounceOvershoot = 1.15f;
+
     // per-player data maintained while on the select screen
     private List<int> chosenBirdIndices = new();
     private List<bool> isKBMInput = new();
     private List<bool> playerReady = new();
     private List<Transform> playerCursors = new();
     private List<PlayerInputState> playerInputStates = new();
+
+    // One coroutine slot per player — stops any in-progress animation before starting a new one
+    private readonly Coroutine[] cursorAnimCoroutines = new Coroutine[4];
 
     // name of the scene to load once selections are done (MAKE SURE THIS MATCHES MULTIPLAYER MANAGER AND CHANGES WHEN NEEDED)
     private const string mainSceneName = "HowToPlay";
@@ -97,7 +116,6 @@ public class CharacterSelectManager : MonoBehaviour
             return;
         }
         instance = this;
-        // DontDestroyOnLoad(gameObject);
 
         // Auto-find icons if not assigned
         if (blue1Icon == null) blue1Icon = System.Array.Find(FindObjectsByType<RawImage>(FindObjectsSortMode.None), img => img.gameObject.name == "Blue1Icon");
@@ -113,27 +131,20 @@ public class CharacterSelectManager : MonoBehaviour
         }
         else
         {
-            // ensure transfer lists exist so other code can reference them
             if (DataTransferManager.isKBMInput == null) DataTransferManager.isKBMInput = new List<bool>();
             if (DataTransferManager.selectedBirds == null) DataTransferManager.selectedBirds = new List<BirdType>();
         }
 
-        // make sure internal lists are sized correctly
         ResizePlayerLists(numberOfPlayers);
-
-        // Setup input state for each player, prefer the transferred input scheme where available
         SetupPlayerInputStates();
     }
 
-    // Start is called before the first frame update
     private void Start()
     {
         CreatePlayerCursors();
 
-        // Wire up the ready button if available
         if (readyButton != null) readyButton.onClick.AddListener(CheckAllPlayersReady);
 
-        // Hide all ready indicators and GO button initially
         if (p1Ready != null) p1Ready.enabled = false;
         if (p2Ready != null) p2Ready.enabled = false;
         if (p3Ready != null) p3Ready.enabled = false;
@@ -141,9 +152,25 @@ public class CharacterSelectManager : MonoBehaviour
         if (goButton != null) goButton.enabled = false;
     }
 
-    // Update is called once per frame
     private void Update()
     {
+        // Back button: Escape/Backspace (keyboard) or B button on any connected gamepad
+        if (Keyboard.current != null &&
+            (Keyboard.current.escapeKey.wasPressedThisFrame || Keyboard.current.backspaceKey.wasPressedThisFrame))
+        {
+            NavigateBackToMainMenu();
+            return;
+        }
+
+        foreach (Gamepad pad in Gamepad.all)
+        {
+            if (pad.bButton.wasPressedThisFrame)
+            {
+                NavigateBackToMainMenu();
+                return;
+            }
+        }
+
         // Update cursor positions and handle input for each player
         for (int i = 0; i < playerInputStates.Count; ++i)
         {
@@ -163,7 +190,6 @@ public class CharacterSelectManager : MonoBehaviour
     private void SetupPlayerInputStates()
     {
         playerInputStates.Clear();
-        // If transfer manager provided an input scheme, use that
         if (DataTransferManager.isKBMInput != null && DataTransferManager.isKBMInput.Count == numberOfPlayers)
         {
             int gamepadIndex = 0;
@@ -173,27 +199,22 @@ public class CharacterSelectManager : MonoBehaviour
                 InputDevice dev = kbm ? (InputDevice)Keyboard.current : (gamepadIndex < Gamepad.all.Count ? (InputDevice)Gamepad.all[gamepadIndex++] : null);
                 playerInputStates.Add(new PlayerInputState(i, kbm, dev));
             }
-
             isKBMInput = new List<bool>(DataTransferManager.isKBMInput);
         }
         else
         {
-            // All players are gamepades
             for (int i = 0; i < numberOfPlayers; ++i)
             {
                 InputDevice dev = i < Gamepad.all.Count ? (InputDevice)Gamepad.all[i] : null;
                 playerInputStates.Add(new PlayerInputState(i, false, dev));
             }
-
             isKBMInput.Clear();
             foreach (var state in playerInputStates) isKBMInput.Add(state.isKBM);
         }
     }
 
-    // Create a cursor for each player. (CURSOR PREFABS ARE NEEEDED)
     private void CreatePlayerCursors()
     {
-        // Array of cursor prefabs for each player
         Transform[] cursorPrefabs = new Transform[] { cursor1Prefab, cursor2Prefab, cursor3Prefab, cursor4Prefab };
 
         playerCursors.Clear();
@@ -206,21 +227,24 @@ public class CharacterSelectManager : MonoBehaviour
                 Debug.LogWarning($"Cursor prefab for player {i + 1} not assigned in CharacterSelectManager!");
                 continue;
             }
+
             Transform cursor = Instantiate(prefab, mainCanvas.transform);
             cursor.name = $"Cursor_Player{i}";
 
             // Color cursors per player
             Image cursorImage = cursor.GetComponent<Image>();
             if (cursorImage != null)
-            {
                 cursorImage.color = GetPlayerColor(i);
-            }
+
+            // Pivot (0, 1) = top-left corner.
+            RectTransform rt = cursor.GetComponent<RectTransform>();
+            if (rt != null)
+                rt.pivot = new Vector2(0f, 1f);
 
             playerCursors.Add(cursor);
         }
     }
 
-    // Update input for a given player and check for any button selections.
     private void UpdatePlayerInput(int playerIndex)
     {
         if (playerIndex < 0 || playerIndex >= playerInputStates.Count) return;
@@ -230,34 +254,33 @@ public class CharacterSelectManager : MonoBehaviour
         {
             state.cursorPosition = Mouse.current.position.ReadValue();
 
-            // Check for mouse clicks on buttons
             if (Mouse.current.leftButton.wasPressedThisFrame)
             {
+                PlayCursorPressAnimation(playerIndex);
                 HandlePlayerButtonPress(playerIndex);
             }
         }
         else
         {
-            // Players 1-3: Gamepad input
             Gamepad pad = state.device as Gamepad;
             if (pad != null)
             {
-                // Left stick controls cursor movement
                 state.inputDirection = pad.leftStick.ReadValue();
 
-                // Update cursor position
                 float moveSpeed = 1000f * Time.deltaTime;
                 state.cursorPosition += state.inputDirection * moveSpeed;
 
-                // Clamp to screen bounds
                 state.cursorPosition.x = Mathf.Clamp(state.cursorPosition.x, 0, Screen.width);
                 state.cursorPosition.y = Mathf.Clamp(state.cursorPosition.y, 0, Screen.height);
 
-                // Check for button presses (South button)
-                if (pad.aButton.wasPressedThisFrame) HandlePlayerButtonPress(playerIndex);
+                if (pad.aButton.wasPressedThisFrame)
+                {
+                    PlayCursorPressAnimation(playerIndex);
+                    HandlePlayerButtonPress(playerIndex);
+                }
 
-                // Check for "ready" input (Start button, or similar)
-                if (pad.startButton.wasPressedThisFrame) playerReady[playerIndex] = !playerReady[playerIndex];
+                if (pad.startButton.wasPressedThisFrame)
+                    playerReady[playerIndex] = !playerReady[playerIndex];
             }
         }
     }
@@ -270,7 +293,8 @@ public class CharacterSelectManager : MonoBehaviour
         Transform cursor = playerCursors[playerIndex];
         Vector2 screenPos = playerInputStates[playerIndex].cursorPosition;
 
-        // Convert screen position to canvas position
+        // With the pivot set to (0, 1) the RectTransform's anchor point IS the
+        // top-left corner, so placing it at localPos puts the tip exactly there.
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
             mainCanvas.GetComponent<RectTransform>(),
             screenPos,
@@ -281,20 +305,68 @@ public class CharacterSelectManager : MonoBehaviour
         cursor.GetComponent<RectTransform>().localPosition = localPos;
     }
 
-    // Check if UI button is under the cursor and respond to it
+    // Cursor press animation
+    // Triggers the shrink → bounce animation for a player's cursor.
+    private void PlayCursorPressAnimation(int playerIndex)
+    {
+        if (playerIndex < 0 || playerIndex >= playerCursors.Count) return;
+
+        if (cursorAnimCoroutines[playerIndex] != null)
+        {
+            StopCoroutine(cursorAnimCoroutines[playerIndex]);
+            playerCursors[playerIndex].localScale = Vector3.one; // reset before restarting
+        }
+
+        cursorAnimCoroutines[playerIndex] = StartCoroutine(CursorPressRoutine(playerIndex));
+    }
+
+    private IEnumerator CursorPressRoutine(int playerIndex)
+    {
+        Transform cursor = playerCursors[playerIndex];
+
+        // Phase 1 — shrink down to cursorPressScale
+        float elapsed = 0f;
+        while (elapsed < cursorShrinkDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / cursorShrinkDuration);
+            float s = Mathf.Lerp(1f, cursorPressScale, t);
+            cursor.localScale = new Vector3(s, s, 1f);
+            yield return null;
+        }
+        cursor.localScale = new Vector3(cursorPressScale, cursorPressScale, 1f);
+
+        // Phase 2 — bounce back, briefly overshooting 1.0 before settling
+        // sin(t * π) peaks at t = 0.5, giving a smooth overshoot arc
+        elapsed = 0f;
+        while (elapsed < cursorBounceDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / cursorBounceDuration);
+            float baseScale = Mathf.Lerp(cursorPressScale, 1f, t);
+            float overshoot = Mathf.Sin(t * Mathf.PI) * (cursorBounceOvershoot - 1f);
+            float s = baseScale + overshoot;
+            cursor.localScale = new Vector3(s, s, 1f);
+            yield return null;
+        }
+
+        cursor.localScale = Vector3.one; // snap clean
+        cursorAnimCoroutines[playerIndex] = null;
+    }
+
+    // -------------------------------------------------------------------------
+
     private void HandlePlayerButtonPress(int playerIndex)
     {
         if (playerIndex >= playerInputStates.Count) return;
         Vector2 screenPos = playerInputStates[playerIndex].cursorPosition;
 
-        // Raycast to find UI element under cursor
         PointerEventData pointerData = new(EventSystem.current) { position = screenPos };
         List<RaycastResult> results = new();
         EventSystem.current.RaycastAll(pointerData, results);
 
         foreach (RaycastResult result in results)
         {
-            // Check if this is a bird selection button
             BirdSelectButton birdButton = result.gameObject.GetComponent<BirdSelectButton>();
             if (birdButton != null)
             {
@@ -302,7 +374,6 @@ public class CharacterSelectManager : MonoBehaviour
                 return;
             }
 
-            // Check if this is a standard Unity UI Button
             Button uiButton = result.gameObject.GetComponent<Button>();
             if (uiButton != null)
             {
@@ -312,25 +383,16 @@ public class CharacterSelectManager : MonoBehaviour
         }
     }
 
-
-    // Make sure the it's the correct size and has defaults
-    // Needs to be called whenever player count changes
     public void ResizePlayerLists(int count)
     {
         numberOfPlayers = Mathf.Clamp(count, 1, 4);
 
-        while (chosenBirdIndices.Count < numberOfPlayers)
-            chosenBirdIndices.Add(0);
-        while (isKBMInput.Count < numberOfPlayers)
-            isKBMInput.Add(true);
-        while (playerReady.Count < numberOfPlayers)
-            playerReady.Add(false);
-        while (chosenBirdIndices.Count > numberOfPlayers)
-            chosenBirdIndices.RemoveAt(chosenBirdIndices.Count - 1);
-        while (isKBMInput.Count > numberOfPlayers)
-            isKBMInput.RemoveAt(isKBMInput.Count - 1);
-        while (playerReady.Count > numberOfPlayers)
-            playerReady.RemoveAt(playerReady.Count - 1);
+        while (chosenBirdIndices.Count < numberOfPlayers) chosenBirdIndices.Add(0);
+        while (isKBMInput.Count < numberOfPlayers)       isKBMInput.Add(true);
+        while (playerReady.Count < numberOfPlayers)       playerReady.Add(false);
+        while (chosenBirdIndices.Count > numberOfPlayers) chosenBirdIndices.RemoveAt(chosenBirdIndices.Count - 1);
+        while (isKBMInput.Count > numberOfPlayers)        isKBMInput.RemoveAt(isKBMInput.Count - 1);
+        while (playerReady.Count > numberOfPlayers)       playerReady.RemoveAt(playerReady.Count - 1);
     }
 
     /// <summary>
@@ -342,25 +404,24 @@ public class CharacterSelectManager : MonoBehaviour
     {
         return playerIndex switch
         {
-            0 => Color.cyan,    
-            1 => Color.yellow,  
-            2 => Color.magenta, 
-            3 => Color.green,  
+            0 => Color.cyan,
+            1 => Color.yellow,
+            2 => Color.magenta,
+            3 => Color.green,
             _ => Color.white
         };
     }
 
-    // Set the chosen bird for a specific player
     public void SetPlayerBirdIndex(int playerIndex, int birdIndex)
     {
         if (playerIndex < 0 || playerIndex >= chosenBirdIndices.Count) return;
         if (birdIndex < 0 || birdIndex >= availableBirds.Count) return;
 
         chosenBirdIndices[playerIndex] = birdIndex;
-        playerReady[playerIndex] = true; // ready when they pick a bird
+        playerReady[playerIndex] = true;
         UpdatePlayerReadyUI(playerIndex);
         UpdatePlayerBirdUI(playerIndex);
-        CheckAllPlayersReady(); // update go button visibility
+        CheckAllPlayersReady();
     }
 
     private void CheckAllPlayersReady()
@@ -368,25 +429,16 @@ public class CharacterSelectManager : MonoBehaviour
         bool all = true;
         for (int i = 0; i < playerReady.Count; ++i)
         {
-            if (!playerReady[i])
-            {
-                all = false;
-                break;
-            }
+            if (!playerReady[i]) { all = false; break; }
         }
-        if (goButton != null)
-            goButton.enabled = all;
+
+        if (goButton != null) goButton.enabled = all;
 
         if (!all)
-        {
             for (int i = 0; i < playerReady.Count; ++i)
-                if (!playerReady[i])
-                    Debug.Log($"Player {i + 1} is not ready yet.");
-        }
+                if (!playerReady[i]) Debug.Log($"Player {i + 1} is not ready yet.");
         else
-        {
             Debug.Log("All players ready - GO button shown");
-        }
     }
 
     private void UpdatePlayerReadyUI(int playerIndex)
@@ -399,11 +451,9 @@ public class CharacterSelectManager : MonoBehaviour
             3 => p4Ready,
             _ => null
         };
-        if (img != null)
-            img.enabled = playerReady[playerIndex];
+        if (img != null) img.enabled = playerReady[playerIndex];
     }
 
-    // Get the bird type that the specified player has chosen.
     public BirdType GetSelectedBird(int playerIndex)
     {
         if (playerIndex < 0 || playerIndex >= chosenBirdIndices.Count) return BirdType.OTHER;
@@ -415,41 +465,29 @@ public class CharacterSelectManager : MonoBehaviour
     /// <summary>
     /// Updates the player icon when a bird is selected.
     /// </summary>
-    /// <param name="playerIndex"></param>
     protected virtual void UpdatePlayerBirdUI(int playerIndex)
-
     {
         if (playerIndex < 0 || playerIndex >= chosenBirdIndices.Count) return;
 
-        // Get the bird type for this player
         BirdType selectedBird = availableBirds[chosenBirdIndices[playerIndex]];
-
-        // Play happy sound for selected bird
         AudioManager.PlayBirdSound(selectedBird, SoundType.HAPPY);
 
-        // Get the RawImage for this bird
         RawImage birdRawImage = GetBirdTexture(selectedBird);
-
-        // Get the icon for this player
         RawImage playerIcon = GetPlayerIcon(playerIndex);
 
-        // Update the icon texture from the bird RawImage
         if (playerIcon != null && birdRawImage != null)
         {
             playerIcon.texture = birdRawImage.texture;
 
-            // preserve the original RawImage scaling/size
             RectTransform birdRect = birdRawImage.GetComponent<RectTransform>();
             RectTransform iconRect = playerIcon.GetComponent<RectTransform>();
             if (birdRect != null && iconRect != null)
             {
-                // double the original dimensions
                 iconRect.sizeDelta = birdRect.sizeDelta * 1.2f;
                 iconRect.localScale = birdRect.localScale * 1.2f;
             }
         }
 
-        // Update player name text
         string birdName = selectedBird.ToString();
         TMP_Text nameText = playerIndex switch
         {
@@ -459,13 +497,9 @@ public class CharacterSelectManager : MonoBehaviour
             3 => pink2Name,
             _ => null
         };
-        if (nameText != null)
-            nameText.text = birdName;
+        if (nameText != null) nameText.text = birdName;
     }
 
-    /// <summary>
-    /// Returns the RawImage icon for a given player.
-    /// </summary>
     private RawImage GetPlayerIcon(int playerIndex)
     {
         return playerIndex switch
@@ -478,9 +512,6 @@ public class CharacterSelectManager : MonoBehaviour
         };
     }
 
-    /// <summary>
-    /// Returns the texture for a given bird type.
-    /// </summary>
     private RawImage GetBirdTexture(BirdType birdType)
     {
         return birdType switch
@@ -496,17 +527,26 @@ public class CharacterSelectManager : MonoBehaviour
             BirdType.TOUCAN => toucanTexture,
             BirdType.PUKEKO => pukekoTexture,
             BirdType.KIWI => kiwiTexture,
+            BirdType.CHICKEN => chickenTexture,
+            BirdType.OSTRICH => ostrichTexture,
             _ => null
         };
     }
 
-    // This is pretty much just data transfer to the multiplayer manager
     public void BeginMatch()
     {
-        // Hide the character select screen
+        // Ensure every player has actually chosen a bird before allowing the match to start
+        for (int i = 0; i < numberOfPlayers; ++i)
+        {
+            if (!playerReady[i])
+            {
+                Debug.LogWarning($"Cannot start match — Player {i + 1} has not selected a bird yet.");
+                return;
+            }
+        }
+
         mainCanvas.enabled = false;
 
-        // copy lists to the global transfer object; multiplayer manager will read them
         DataTransferManager.isKBMInput = new List<bool>(isKBMInput);
         DataTransferManager.selectedBirds = new List<BirdType>();
         for (int i = 0; i < numberOfPlayers; ++i)
@@ -532,19 +572,8 @@ public class CharacterSelectManager : MonoBehaviour
         playerReady[playerIndex] = ready;
     }
 
-    /// <summary>
-    /// Navigates back to the main menu scene.
-    /// </summary>
     public void NavigateBackToMainMenu()
     {
         SceneManager.LoadScene(mainMenuSceneName);
     }
-
-    // void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-    // {
-    //     if (scene.name == "CharSelect")
-    //     {
-    //         Start();
-    //     }
-    // }
 }

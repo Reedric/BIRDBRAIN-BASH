@@ -30,6 +30,7 @@ public class TutorialMenu : MonoBehaviour
         // Initialize titles
         titles = new string[]
         {
+            "Move Order",
             "Movement",
             "Bumping/Setting",
             "Serving/Spiking",
@@ -41,12 +42,13 @@ public class TutorialMenu : MonoBehaviour
         // Initialize explanations
         explanations = new string[]
         {
-            "Use the left joystick to move around and button south to jump!",
-            "Use the left trigger to bump and set!",
-            "Use the right trigger to serve and spike!",
-            "Use button east to block!",
-            "Use the left bumper to use your defensive ability!",
-            "Use the right bumper to use your offensive ability!"
+            "BUMP, SET, SPIKE! You must make actions in that order, alternating between you and your teammate!",
+            "Use the LEFT JOYSTICK to move around and BUTTON SOUTH to jump!",
+            "Use the LEFT TRIGGER to bump and set!",
+            "Use the RIGHT TRIGGER to serve and spike!",
+            "Use BUTTON EAST to block!",
+            "Use the LEFT BUMPER to use your defensive ability!",
+            "Use the RIGHT BUMPER to use your offensive ability!"
         };
 
         // Assign player 1's input device

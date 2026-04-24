@@ -231,6 +231,10 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
   - {fileID: 8300000, guid: c4a20388ea9da164e943affae112abe9, type: 3}
   - {fileID: 8300000, guid: 6be0e182bd4d4ce409972ae9ddc44ca0, type: 3}
+  chickenSounds:
+  - {fileID: 8300000, guid: 2d8aa020e10dd29418acd5430665a2a6, type: 3}
+  ostrichSounds:
+  - {fileID: 8300000, guid: 957f65cb92519db4384612c170814eb9, type: 3}
   scoringSounds:
   - {fileID: 8300000, guid: eb33c0f9c80807641add146b4c6d0873, type: 3}
   ballPlayerInteractionSounds:
@@ -445,6 +449,7 @@ GameObject:
   - component: {fileID: 76350181}
   - component: {fileID: 76350180}
   - component: {fileID: 76350179}
+  - component: {fileID: 76350183}
   m_Layer: 5
   m_Name: Pukeko
   m_TagString: Untagged
@@ -565,6 +570,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 76350177}
   m_CullTransparentMesh: 1
+--- !u!114 &76350183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 76350177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b18c1e56d4b6d408cdde921248ffa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSpeed: 1
+  verticalEnabled: 0
+  verticalAmplitude: 20
+  verticalSpeed: 1
+  verticalPhaseShift: 0
+  horizontalEnabled: 0
+  horizontalAmplitude: 10
+  horizontalSpeed: 1.5
+  horizontalPhaseShift: 1.5707964
+  rotationEnabled: 1
+  rotationAmplitude: 4
+  rotationSpeed: 0.85
+  rotationPhaseShift: 0
+  scaleEnabled: 0
+  scaleAmplitude: 0.01
+  scaleSpeed: 0.4
+  scalePhaseShift: 0
+  squishMode: 0
+  squishPhaseOffset: 1.5707964
 --- !u!1 &92687076
 GameObject:
   m_ObjectHideFlags: 0
@@ -715,6 +751,7 @@ GameObject:
   - component: {fileID: 136543772}
   - component: {fileID: 136543771}
   - component: {fileID: 136543770}
+  - component: {fileID: 136543774}
   m_Layer: 5
   m_Name: Dodo
   m_TagString: Untagged
@@ -835,6 +872,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 136543768}
   m_CullTransparentMesh: 1
+--- !u!114 &136543774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 136543768}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b18c1e56d4b6d408cdde921248ffa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSpeed: 1
+  verticalEnabled: 0
+  verticalAmplitude: 20
+  verticalSpeed: 1
+  verticalPhaseShift: 0
+  horizontalEnabled: 0
+  horizontalAmplitude: 10
+  horizontalSpeed: 1.5
+  horizontalPhaseShift: 1.5707964
+  rotationEnabled: 1
+  rotationAmplitude: 4
+  rotationSpeed: 0.85
+  rotationPhaseShift: 0
+  scaleEnabled: 0
+  scaleAmplitude: 0.01
+  scaleSpeed: 0.4
+  scalePhaseShift: 0
+  squishMode: 0
+  squishPhaseOffset: 1.5707964
 --- !u!1 &173590886
 GameObject:
   m_ObjectHideFlags: 0
@@ -1129,6 +1197,7 @@ GameObject:
   - component: {fileID: 336894328}
   - component: {fileID: 336894330}
   - component: {fileID: 336894331}
+  - component: {fileID: 336894332}
   m_Layer: 5
   m_Name: Penguin
   m_TagString: Untagged
@@ -1249,6 +1318,37 @@ MonoBehaviour:
   birdIndex: 0
   highlightImage: {fileID: 0}
   highlightColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &336894332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 336894326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b18c1e56d4b6d408cdde921248ffa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSpeed: 1
+  verticalEnabled: 0
+  verticalAmplitude: 20
+  verticalSpeed: 1
+  verticalPhaseShift: 0
+  horizontalEnabled: 0
+  horizontalAmplitude: 10
+  horizontalSpeed: 1.5
+  horizontalPhaseShift: 1.5707964
+  rotationEnabled: 1
+  rotationAmplitude: 4
+  rotationSpeed: 0.85
+  rotationPhaseShift: 0
+  scaleEnabled: 0
+  scaleAmplitude: 0.01
+  scaleSpeed: 0.4
+  scalePhaseShift: 0
+  squishMode: 0
+  squishPhaseOffset: 1.5707964
 --- !u!1 &345323399
 GameObject:
   m_ObjectHideFlags: 0
@@ -1308,8 +1408,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: P2
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 3cff39121c1a32d4483995c721e4a290, type: 2}
-  m_sharedMaterial: {fileID: -2540352743027268655, guid: 3cff39121c1a32d4483995c721e4a290, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
+  m_sharedMaterial: {fileID: -1492929328572945960, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1399,6 +1499,7 @@ GameObject:
   - component: {fileID: 420900230}
   - component: {fileID: 420900229}
   - component: {fileID: 420900228}
+  - component: {fileID: 420900232}
   m_Layer: 5
   m_Name: Eagle
   m_TagString: Untagged
@@ -1437,7 +1538,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d0881116f8ad5940a0c7f881b90eaf8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  birdIndex: 10
+  birdIndex: 13
   highlightImage: {fileID: 0}
   highlightColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &420900229
@@ -1519,6 +1620,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 420900226}
   m_CullTransparentMesh: 1
+--- !u!114 &420900232
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 420900226}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b18c1e56d4b6d408cdde921248ffa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSpeed: 1
+  verticalEnabled: 0
+  verticalAmplitude: 20
+  verticalSpeed: 1
+  verticalPhaseShift: 0
+  horizontalEnabled: 0
+  horizontalAmplitude: 10
+  horizontalSpeed: 1.5
+  horizontalPhaseShift: 1.5707964
+  rotationEnabled: 1
+  rotationAmplitude: 4
+  rotationSpeed: 0.85
+  rotationPhaseShift: 0
+  scaleEnabled: 0
+  scaleAmplitude: 0.01
+  scaleSpeed: 0.4
+  scalePhaseShift: 0
+  squishMode: 0
+  squishPhaseOffset: 1.5707964
 --- !u!1 &458631789
 GameObject:
   m_ObjectHideFlags: 0
@@ -1604,6 +1736,7 @@ GameObject:
   - component: {fileID: 459583979}
   - component: {fileID: 459583981}
   - component: {fileID: 459583982}
+  - component: {fileID: 459583983}
   m_Layer: 5
   m_Name: Owl
   m_TagString: Untagged
@@ -1724,6 +1857,37 @@ MonoBehaviour:
   birdIndex: 1
   highlightImage: {fileID: 0}
   highlightColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &459583983
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 459583977}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b18c1e56d4b6d408cdde921248ffa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSpeed: 1
+  verticalEnabled: 0
+  verticalAmplitude: 20
+  verticalSpeed: 1
+  verticalPhaseShift: 0
+  horizontalEnabled: 0
+  horizontalAmplitude: 10
+  horizontalSpeed: 1.5
+  horizontalPhaseShift: 1.5707964
+  rotationEnabled: 1
+  rotationAmplitude: 4
+  rotationSpeed: 0.85
+  rotationPhaseShift: 0
+  scaleEnabled: 0
+  scaleAmplitude: 0.01
+  scaleSpeed: 0.4
+  scalePhaseShift: 0
+  squishMode: 0
+  squishPhaseOffset: 1.5707964
 --- !u!1 &554441692
 GameObject:
   m_ObjectHideFlags: 0
@@ -1809,6 +1973,7 @@ GameObject:
   - component: {fileID: 557182215}
   - component: {fileID: 557182214}
   - component: {fileID: 557182213}
+  - component: {fileID: 557182217}
   m_Layer: 5
   m_Name: Seagull
   m_TagString: Untagged
@@ -1941,6 +2106,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 557182211}
   m_CullTransparentMesh: 1
+--- !u!114 &557182217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 557182211}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b18c1e56d4b6d408cdde921248ffa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSpeed: 1
+  verticalEnabled: 0
+  verticalAmplitude: 20
+  verticalSpeed: 1
+  verticalPhaseShift: 0
+  horizontalEnabled: 0
+  horizontalAmplitude: 10
+  horizontalSpeed: 1.5
+  horizontalPhaseShift: 1.5707964
+  rotationEnabled: 1
+  rotationAmplitude: 4
+  rotationSpeed: 0.85
+  rotationPhaseShift: 0
+  scaleEnabled: 0
+  scaleAmplitude: 0.01
+  scaleSpeed: 0.4
+  scalePhaseShift: 0
+  squishMode: 0
+  squishPhaseOffset: 1.5707964
 --- !u!1 &572496280
 GameObject:
   m_ObjectHideFlags: 0
@@ -1954,6 +2150,7 @@ GameObject:
   - component: {fileID: 572496284}
   - component: {fileID: 572496283}
   - component: {fileID: 572496282}
+  - component: {fileID: 572496286}
   m_Layer: 5
   m_Name: Crow
   m_TagString: Untagged
@@ -2074,6 +2271,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 572496280}
   m_CullTransparentMesh: 1
+--- !u!114 &572496286
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 572496280}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b18c1e56d4b6d408cdde921248ffa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSpeed: 1
+  verticalEnabled: 0
+  verticalAmplitude: 20
+  verticalSpeed: 1
+  verticalPhaseShift: 0
+  horizontalEnabled: 0
+  horizontalAmplitude: 10
+  horizontalSpeed: 1.5
+  horizontalPhaseShift: 1.5707964
+  rotationEnabled: 1
+  rotationAmplitude: 4
+  rotationSpeed: 0.85
+  rotationPhaseShift: 0
+  scaleEnabled: 0
+  scaleAmplitude: 0.01
+  scaleSpeed: 0.4
+  scalePhaseShift: 0
+  squishMode: 0
+  squishPhaseOffset: 1.5707964
 --- !u!1 &587243405
 GameObject:
   m_ObjectHideFlags: 0
@@ -2133,8 +2361,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: ???
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 3cff39121c1a32d4483995c721e4a290, type: 2}
-  m_sharedMaterial: {fileID: -2540352743027268655, guid: 3cff39121c1a32d4483995c721e4a290, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
+  m_sharedMaterial: {fileID: -1492929328572945960, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2224,6 +2452,7 @@ GameObject:
   - component: {fileID: 614617403}
   - component: {fileID: 614617402}
   - component: {fileID: 614617401}
+  - component: {fileID: 614617405}
   m_Layer: 5
   m_Name: Chicken
   m_TagString: Untagged
@@ -2262,7 +2491,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d0881116f8ad5940a0c7f881b90eaf8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  birdIndex: 10
+  birdIndex: 11
   highlightImage: {fileID: 0}
   highlightColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &614617402
@@ -2344,6 +2573,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 614617399}
   m_CullTransparentMesh: 1
+--- !u!114 &614617405
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 614617399}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b18c1e56d4b6d408cdde921248ffa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSpeed: 1
+  verticalEnabled: 0
+  verticalAmplitude: 20
+  verticalSpeed: 1
+  verticalPhaseShift: 0
+  horizontalEnabled: 0
+  horizontalAmplitude: 10
+  horizontalSpeed: 1.5
+  horizontalPhaseShift: 1.5707964
+  rotationEnabled: 1
+  rotationAmplitude: 4
+  rotationSpeed: 0.85
+  rotationPhaseShift: 0
+  scaleEnabled: 0
+  scaleAmplitude: 0.01
+  scaleSpeed: 0.4
+  scalePhaseShift: 0
+  squishMode: 0
+  squishPhaseOffset: 1.5707964
 --- !u!1 &647091735
 GameObject:
   m_ObjectHideFlags: 0
@@ -2562,6 +2822,7 @@ GameObject:
   - component: {fileID: 953422597}
   - component: {fileID: 953422596}
   - component: {fileID: 953422595}
+  - component: {fileID: 953422599}
   m_Layer: 5
   m_Name: Kiwi
   m_TagString: Untagged
@@ -2682,6 +2943,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 953422593}
   m_CullTransparentMesh: 1
+--- !u!114 &953422599
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 953422593}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b18c1e56d4b6d408cdde921248ffa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSpeed: 1
+  verticalEnabled: 0
+  verticalAmplitude: 20
+  verticalSpeed: 1
+  verticalPhaseShift: 0
+  horizontalEnabled: 0
+  horizontalAmplitude: 10
+  horizontalSpeed: 1.5
+  horizontalPhaseShift: 1.5707964
+  rotationEnabled: 1
+  rotationAmplitude: 4
+  rotationSpeed: 0.85
+  rotationPhaseShift: 0
+  scaleEnabled: 0
+  scaleAmplitude: 0.01
+  scaleSpeed: 0.4
+  scalePhaseShift: 0
+  squishMode: 0
+  squishPhaseOffset: 1.5707964
 --- !u!1 &1151245110
 GameObject:
   m_ObjectHideFlags: 0
@@ -2695,6 +2987,7 @@ GameObject:
   - component: {fileID: 1151245114}
   - component: {fileID: 1151245113}
   - component: {fileID: 1151245112}
+  - component: {fileID: 1151245116}
   m_Layer: 5
   m_Name: YURI
   m_TagString: Untagged
@@ -2815,6 +3108,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1151245110}
   m_CullTransparentMesh: 1
+--- !u!114 &1151245116
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1151245110}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b18c1e56d4b6d408cdde921248ffa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSpeed: 1
+  verticalEnabled: 0
+  verticalAmplitude: 20
+  verticalSpeed: 1
+  verticalPhaseShift: 0
+  horizontalEnabled: 0
+  horizontalAmplitude: 10
+  horizontalSpeed: 1.5
+  horizontalPhaseShift: 1.5707964
+  rotationEnabled: 1
+  rotationAmplitude: 4
+  rotationSpeed: 0.85
+  rotationPhaseShift: 0
+  scaleEnabled: 0
+  scaleAmplitude: 0.01
+  scaleSpeed: 0.4
+  scalePhaseShift: 0
+  squishMode: 0
+  squishPhaseOffset: 1.5707964
 --- !u!1 &1159560959
 GameObject:
   m_ObjectHideFlags: 0
@@ -2876,8 +3200,8 @@ MonoBehaviour:
 
 '
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 3cff39121c1a32d4483995c721e4a290, type: 2}
-  m_sharedMaterial: {fileID: -2540352743027268655, guid: 3cff39121c1a32d4483995c721e4a290, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
+  m_sharedMaterial: {fileID: -1492929328572945960, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2998,6 +3322,7 @@ GameObject:
   - component: {fileID: 1239037954}
   - component: {fileID: 1239037956}
   - component: {fileID: 1239037957}
+  - component: {fileID: 1239037958}
   m_Layer: 5
   m_Name: Pelican
   m_TagString: Untagged
@@ -3118,6 +3443,37 @@ MonoBehaviour:
   birdIndex: 2
   highlightImage: {fileID: 0}
   highlightColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &1239037958
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1239037952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b18c1e56d4b6d408cdde921248ffa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSpeed: 1
+  verticalEnabled: 0
+  verticalAmplitude: 20
+  verticalSpeed: 1
+  verticalPhaseShift: 0
+  horizontalEnabled: 0
+  horizontalAmplitude: 10
+  horizontalSpeed: 1.5
+  horizontalPhaseShift: 1.5707964
+  rotationEnabled: 1
+  rotationAmplitude: 4
+  rotationSpeed: 0.85
+  rotationPhaseShift: 0
+  scaleEnabled: 0
+  scaleAmplitude: 0.01
+  scaleSpeed: 0.4
+  scalePhaseShift: 0
+  squishMode: 0
+  squishPhaseOffset: 1.5707964
 --- !u!1 &1328298803
 GameObject:
   m_ObjectHideFlags: 0
@@ -3177,8 +3533,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: P4
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 3cff39121c1a32d4483995c721e4a290, type: 2}
-  m_sharedMaterial: {fileID: -2540352743027268655, guid: 3cff39121c1a32d4483995c721e4a290, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
+  m_sharedMaterial: {fileID: -1492929328572945960, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3340,6 +3696,7 @@ GameObject:
   - component: {fileID: 1371690816}
   - component: {fileID: 1371690815}
   - component: {fileID: 1371690814}
+  - component: {fileID: 1371690818}
   m_Layer: 5
   m_Name: Lovebird
   m_TagString: Untagged
@@ -3472,6 +3829,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1371690812}
   m_CullTransparentMesh: 1
+--- !u!114 &1371690818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1371690812}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b18c1e56d4b6d408cdde921248ffa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSpeed: 1
+  verticalEnabled: 0
+  verticalAmplitude: 20
+  verticalSpeed: 1
+  verticalPhaseShift: 0
+  horizontalEnabled: 0
+  horizontalAmplitude: 10
+  horizontalSpeed: 1.5
+  horizontalPhaseShift: 1.5707964
+  rotationEnabled: 1
+  rotationAmplitude: 4
+  rotationSpeed: 0.85
+  rotationPhaseShift: 0
+  scaleEnabled: 0
+  scaleAmplitude: 0.01
+  scaleSpeed: 0.4
+  scalePhaseShift: 0
+  squishMode: 0
+  squishPhaseOffset: 1.5707964
 --- !u!1 &1381969067
 GameObject:
   m_ObjectHideFlags: 0
@@ -3652,8 +4040,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: ???
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 3cff39121c1a32d4483995c721e4a290, type: 2}
-  m_sharedMaterial: {fileID: -2540352743027268655, guid: 3cff39121c1a32d4483995c721e4a290, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
+  m_sharedMaterial: {fileID: -1492929328572945960, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -4150,8 +4538,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: ???
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 3cff39121c1a32d4483995c721e4a290, type: 2}
-  m_sharedMaterial: {fileID: -2540352743027268655, guid: 3cff39121c1a32d4483995c721e4a290, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
+  m_sharedMaterial: {fileID: -1492929328572945960, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -4359,8 +4747,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: ???
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 3cff39121c1a32d4483995c721e4a290, type: 2}
-  m_sharedMaterial: {fileID: -2540352743027268655, guid: 3cff39121c1a32d4483995c721e4a290, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
+  m_sharedMaterial: {fileID: -1492929328572945960, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -4450,6 +4838,7 @@ GameObject:
   - component: {fileID: 1734531602}
   - component: {fileID: 1734531601}
   - component: {fileID: 1734531600}
+  - component: {fileID: 1734531604}
   m_Layer: 5
   m_Name: Ostrich
   m_TagString: Untagged
@@ -4488,7 +4877,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d0881116f8ad5940a0c7f881b90eaf8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  birdIndex: 10
+  birdIndex: 12
   highlightImage: {fileID: 0}
   highlightColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &1734531601
@@ -4570,6 +4959,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1734531598}
   m_CullTransparentMesh: 1
+--- !u!114 &1734531604
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1734531598}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b18c1e56d4b6d408cdde921248ffa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSpeed: 1
+  verticalEnabled: 0
+  verticalAmplitude: 20
+  verticalSpeed: 1
+  verticalPhaseShift: 0
+  horizontalEnabled: 0
+  horizontalAmplitude: 10
+  horizontalSpeed: 1.5
+  horizontalPhaseShift: 1.5707964
+  rotationEnabled: 1
+  rotationAmplitude: 4
+  rotationSpeed: 0.85
+  rotationPhaseShift: 0
+  scaleEnabled: 0
+  scaleAmplitude: 0.01
+  scaleSpeed: 0.4
+  scalePhaseShift: 0
+  squishMode: 0
+  squishPhaseOffset: 1.5707964
 --- !u!1 &1764788328
 GameObject:
   m_ObjectHideFlags: 0
@@ -4655,6 +5075,7 @@ GameObject:
   - component: {fileID: 1779107171}
   - component: {fileID: 1779107170}
   - component: {fileID: 1779107169}
+  - component: {fileID: 1779107173}
   m_Layer: 5
   m_Name: Toucan
   m_TagString: Untagged
@@ -4787,6 +5208,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1779107167}
   m_CullTransparentMesh: 1
+--- !u!114 &1779107173
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1779107167}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b18c1e56d4b6d408cdde921248ffa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSpeed: 1
+  verticalEnabled: 0
+  verticalAmplitude: 20
+  verticalSpeed: 1
+  verticalPhaseShift: 0
+  horizontalEnabled: 0
+  horizontalAmplitude: 10
+  horizontalSpeed: 1.5
+  horizontalPhaseShift: 1.5707964
+  rotationEnabled: 1
+  rotationAmplitude: 4
+  rotationSpeed: 0.85
+  rotationPhaseShift: 0
+  scaleEnabled: 0
+  scaleAmplitude: 0.01
+  scaleSpeed: 0.4
+  scalePhaseShift: 0
+  squishMode: 0
+  squishPhaseOffset: 1.5707964
 --- !u!1 &1857110027
 GameObject:
   m_ObjectHideFlags: 0
@@ -4992,7 +5444,7 @@ MonoBehaviour:
   blue2Name: {fileID: 1596772759}
   pink1Name: {fileID: 1718734310}
   pink2Name: {fileID: 1389631583}
-  availableBirds: 00000000070000000500000009000000030000000600000008000000040000000a0000000100000002000000
+  availableBirds: 00000000070000000500000009000000030000000600000008000000040000000a00000001000000020000000c0000000b0000000d000000
   numberOfPlayers: 1
   mainCanvas: {fileID: 1933689300}
   cursor1Prefab: {fileID: 1592670345}
@@ -5015,6 +5467,8 @@ MonoBehaviour:
   pukekoTexture: {fileID: 76350181}
   toucanTexture: {fileID: 1779107171}
   kiwiTexture: {fileID: 953422597}
+  chickenTexture: {fileID: 614617403}
+  ostrichTexture: {fileID: 1734531602}
   p1Ready: {fileID: 1437344202}
   p2Ready: {fileID: 1454632524}
   p3Ready: {fileID: 554441694}
@@ -5463,8 +5917,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: P3
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 3cff39121c1a32d4483995c721e4a290, type: 2}
-  m_sharedMaterial: {fileID: -2540352743027268655, guid: 3cff39121c1a32d4483995c721e4a290, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
+  m_sharedMaterial: {fileID: -1492929328572945960, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

@@ -42,6 +42,16 @@ public class CharacterManager : MonoBehaviour
     [SerializeField] private GameObject pelicanC;
     [SerializeField] private GameObject pelicanAI;
 
+    [Header("Chicken")]
+    [SerializeField] private GameObject chickenKBM;
+    [SerializeField] private GameObject chickenC;
+    [SerializeField] private GameObject chickenAI;
+
+    [Header("Ostrich")]
+    [SerializeField] private GameObject ostrichKBM;
+    [SerializeField] private GameObject ostrichC;
+    [SerializeField] private GameObject ostrichAI;
+
     [HideInInspector] public GameObject PenguinKBM => penguinKBM;
     [HideInInspector] public GameObject PenguinC => penguinC;
     [HideInInspector] public GameObject PenguinAI => penguinAI;
@@ -67,4 +77,12 @@ public class CharacterManager : MonoBehaviour
     [HideInInspector] public GameObject PelicanKBM => pelicanKBM;
     [HideInInspector] public GameObject PelicanC => pelicanC;
     [HideInInspector] public GameObject PelicanAI => pelicanAI;
+
+    [HideInInspector] public GameObject ChickenKBM => chickenKBM;
+    [HideInInspector] public GameObject ChickenC => chickenC;
+    [HideInInspector] public GameObject ChickenAI => chickenAI;
+
+    [HideInInspector] public GameObject OstrichKBM => ostrichKBM;
+    [HideInInspector] public GameObject OstrichC => ostrichC;
+    [HideInInspector] public GameObject OstrichAI => ostrichAI;
 }

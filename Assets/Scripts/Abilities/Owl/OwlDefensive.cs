@@ -40,6 +40,9 @@ public class OwlDefensive : BirdAbility
 
     private IEnumerator Investigation()
     {
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
+        
         onCooldown = true;
         
         GameObject line = CreateLine();

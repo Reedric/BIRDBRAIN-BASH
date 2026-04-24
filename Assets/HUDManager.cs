@@ -154,6 +154,18 @@ public class HUDManager : MonoBehaviour
     [SerializeField] private Texture kiwiOffensiveIcon;
     [SerializeField] private Texture kiwiDefensiveIcon;
 
+    [Header("Chicken")]
+    [SerializeField] private string chickenDisplayName = "Chicken";
+    [SerializeField] private Texture chickenPlayerIcon;
+    [SerializeField] private Texture chickenOffensiveIcon;
+    [SerializeField] private Texture chickenDefensiveIcon;
+
+    [Header("Ostrich")]
+    [SerializeField] private string ostrichDisplayName = "Ostrich";
+    [SerializeField] private Texture ostrichPlayerIcon;
+    [SerializeField] private Texture ostrichOffensiveIcon;
+    [SerializeField] private Texture ostrichDefensiveIcon;
+
 
     private static HUDManager instance;
     public static HUDManager Instance => instance;
@@ -176,10 +188,36 @@ public class HUDManager : MonoBehaviour
         if (instance != null && instance != this) { Destroy(gameObject); return; }
         instance = this;
     }
-
+    
     private void Start()
     {
+        ResetAllCooldownIcons();
         PopulatePlayerCards();
+    }
+
+    private void ResetAllCooldownIcons()
+    {
+        foreach (PlayerCardUI card in GetOrderedCards())
+        {
+            if (card == null) continue;
+            card.offensiveAbility?.ResetImmediately();
+            card.defensiveAbility?.ResetImmediately();
+        }
+    }
+
+    public void RegisterAICard(int playerIndex, BirdType birdType)
+    {
+        PlayerCardUI[] cards = GetOrderedCards();
+        if (playerIndex < 0 || playerIndex >= cards.Length || cards[playerIndex] == null) return;
+
+        BirdHUDData data = GetBirdHUDData(birdType);
+        if (data != null)
+            data.displayName = "[CPU] " + data.displayName;
+
+        if (cards[playerIndex].cardRoot != null)
+            cards[playerIndex].cardRoot.SetActive(true);
+
+        ApplyBirdDataToCard(cards[playerIndex], data);
     }
 
     private void PopulatePlayerCards()
@@ -319,6 +357,8 @@ public class HUDManager : MonoBehaviour
             BirdType.PUKEKO      => new BirdHUDData { displayName = pukekoDisplayName,      playerIcon = pukekoPlayerIcon,      offensiveIcon = pukekoOffensiveIcon,      defensiveIcon = pukekoDefensiveIcon },
             BirdType.TOUCAN      => new BirdHUDData { displayName = toucanDisplayName,      playerIcon = toucanPlayerIcon,      offensiveIcon = toucanOffensiveIcon,      defensiveIcon = toucanDefensiveIcon },
             BirdType.KIWI        => new BirdHUDData { displayName = kiwiDisplayName,        playerIcon = kiwiPlayerIcon,        offensiveIcon = kiwiOffensiveIcon,        defensiveIcon = kiwiDefensiveIcon },
+            BirdType.CHICKEN     => new BirdHUDData { displayName = chickenDisplayName,        playerIcon = chickenPlayerIcon,        offensiveIcon = chickenOffensiveIcon,        defensiveIcon = chickenDefensiveIcon },
+            BirdType.OSTRICH     => new BirdHUDData { displayName = ostrichDisplayName,        playerIcon = ostrichPlayerIcon,        offensiveIcon = ostrichOffensiveIcon,        defensiveIcon = ostrichDefensiveIcon },
             _                    => null
         };
     }

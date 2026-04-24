@@ -53,11 +53,15 @@ public class PauseMenu : MonoBehaviour
         {
             GameManager.Instance.rightPlayer2.GetComponent<PlayerInput>().actions.FindActionMap("UI").Enable();
         }
+
+        AudioManager.PlayDefaultBackground();
     }
 
     // Pauses Gameplay
     public void Pause()
     {
+        AudioManager.PlayPauseTrack();
+        
         pauseMenuUI.SetActive(true);
         Time.timeScale = 0f;
         GameIsPaused = true;
