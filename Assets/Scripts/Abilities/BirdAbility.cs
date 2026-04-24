@@ -20,14 +20,10 @@ public abstract class BirdAbility : MonoBehaviour
         if (cooldownRemaining > 0) cooldownRemaining -= deltaTime;
     }
 
-    public bool CanActivate()
-    {
-        return IsReady && BirdAbilityRuleService.Instance.CanUseAbility(gameObject);
-    }
-
     public bool TryActivate()
     {
-        if (!CanActivate()) return false;
+        if (!IsReady) return false;
+        if (!BirdAbilityRuleService.Instance.CanUseAbility(gameObject)) return false;
 
         Activate();
         cooldownRemaining = cooldownTime;
