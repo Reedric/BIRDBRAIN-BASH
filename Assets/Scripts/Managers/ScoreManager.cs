@@ -55,6 +55,8 @@ public class ScoreManager : MonoBehaviour
    
     private bool leftLastScored;
     private bool inPlay;
+    private bool outCheckPending; // guard against multiple outCheck coroutines
+    public GameObject lastPhysicalTouch;
     UnityEvent LeftScored;
     UnityEvent RightScored;
 
@@ -145,10 +147,10 @@ public class ScoreManager : MonoBehaviour
             StartCoroutine(PlaySounds(true));
             CheckWinSet(true);
         }
-
         // ducky: If ball goes out, run coroutine in case out collision was registered before court collision
-        else if (collision.gameObject.CompareTag("Out"))
+        else if (collision.gameObject.CompareTag("Out") && inPlay && !outCheckPending)
         {
+            outCheckPending = true;
             StartCoroutine(outCheck());
         }
     }
@@ -164,28 +166,31 @@ public class ScoreManager : MonoBehaviour
         // Checks if ball still in play
         if (inPlay)
         {
-            // Left side scores
-            if (gameManager.lastHit == gameManager.rightPlayer1 || gameManager.lastHit == gameManager.rightPlayer2)
+            GameObject touchSource = lastPhysicalTouch != null ? lastPhysicalTouch : gameManager.lastHit;
+
+            if (touchSource == gameManager.rightPlayer1 || touchSource == gameManager.rightPlayer2)
             {
                 side1Score += 1;
                 side1ScoreUI.text = side1Score.ToString();
                 inPlay = false;
+                lastPhysicalTouch = null;
                 Debug.Log("Out! side 1 scored! points: " + side1Score);
                 StartCoroutine(PlaySounds(true));
                 CheckWinSet(true);
             }
-
-            // Right side scores
-            else if (gameManager.lastHit == gameManager.leftPlayer1 || gameManager.lastHit == gameManager.leftPlayer2)
+            else if (touchSource == gameManager.leftPlayer1 || touchSource == gameManager.leftPlayer2)
             {
                 side2Score += 1;
                 side2ScoreUI.text = side2Score.ToString();
                 inPlay = false;
+                lastPhysicalTouch = null;
                 Debug.Log("Out! side 2 scored! points: " + side2Score);
                 StartCoroutine(PlaySounds(false));
                 CheckWinSet(false);
             }
         }
+
+        outCheckPending = false; // always reset so next point can trigger it again
     }
 
     // After each score, check the win conditions for both sides
@@ -259,6 +264,8 @@ public class ScoreManager : MonoBehaviour
     {
         // ducky: Reset additional spike speed to 0.0f
         BallManager.Instance.resetSpikeSpeed();
+        outCheckPending = false; // reset for the new point
+        lastPhysicalTouch = null;
 
         // Check for rotation of server
         if (leftJustScored != leftLastScored)
