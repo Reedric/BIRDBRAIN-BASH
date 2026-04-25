@@ -139,6 +139,27 @@ public class GameManager : MonoBehaviour
 
     public static void NextPoint()
     {
+        // Clear any active buffs/debuffs/stuns before resetting positions
+        BuffsDebuffs.Instance.ClearAllEffects();
+
+        // Brute-force reset all player movement/ragdoll state
+        foreach (GameObject player in new[] {
+            instance.leftPlayer1, instance.leftPlayer2,
+            instance.rightPlayer1, instance.rightPlayer2 })
+        {
+            if (player == null) continue;
+
+            CharacterMovement movement = player.GetComponent<CharacterMovement>();
+            if (movement != null) movement.enabled = true;
+
+            Rigidbody rb = player.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+                rb.useGravity = true;
+            }
+        }
         // Reset all positions and velocities for all players
         instance.leftPlayer1.transform.position = instance.leftPlayer1Origin;
         instance.leftPlayer2.transform.position = instance.leftPlayer2Origin;

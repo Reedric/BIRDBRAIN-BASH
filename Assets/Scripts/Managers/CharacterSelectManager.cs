@@ -156,21 +156,12 @@ public class CharacterSelectManager : MonoBehaviour
 
     private void Update()
     {
-        // Back button: Escape/Backspace (keyboard) or B button on any connected gamepad
+        // Back button: Escape/Backspace (keyboard)
         if (Keyboard.current != null &&
             (Keyboard.current.escapeKey.wasPressedThisFrame || Keyboard.current.backspaceKey.wasPressedThisFrame))
         {
             NavigateBackToMainMenu();
             return;
-        }
-
-        foreach (Gamepad pad in Gamepad.all)
-        {
-            if (pad.bButton.wasPressedThisFrame)
-            {
-                NavigateBackToMainMenu();
-                return;
-            }
         }
 
         // Update cursor positions and handle input for each player
@@ -441,6 +432,7 @@ public class CharacterSelectManager : MonoBehaviour
                 if (!playerReady[i]) Debug.Log($"Player {i + 1} is not ready yet.");
         else
             Debug.Log("All players ready - GO button shown");
+            AudioManager.PlayBuffStartSound();
     }
 
     private void UpdatePlayerReadyUI(int playerIndex)

@@ -64,6 +64,7 @@ public class MultiplayerManager : MonoBehaviour
             if (type == BirdType.OTHER)
             {
                 type = (BirdType) UnityEngine.Random.Range(0, (int) type);
+                selectedBirds[playerCount] = type; // write resolved type back so HUD can read it
             }
 
             // Get the prefab for this player

@@ -15,6 +15,8 @@ public class BuffsDebuffs : MonoBehaviour
     }
 
     private Dictionary<GameObject, Dictionary<EffectType, GameObject>> activeVFX = new();
+    private Dictionary<GameObject, (float groundSpeed, float airSpeed, float jumpForce, float aiGroundSpeed, float aiAirSpeed)> stunOriginalValues = new();
+    private HashSet<RagdollManager> activeRagdolls = new();
 
     [System.Serializable]
     public class EffectSet
@@ -149,6 +151,12 @@ public class BuffsDebuffs : MonoBehaviour
         };
     }
 
+    public void TrackRagdoll(RagdollManager rm, bool active)
+    {
+        if (active) activeRagdolls.Add(rm);
+        else activeRagdolls.Remove(rm);
+    }
+
     private void ApplyGameplayEffect(EffectType type, GameObject bird, bool enable)
     {
         CharacterMovement movement = bird.GetComponent<CharacterMovement>();
@@ -224,12 +232,65 @@ public class BuffsDebuffs : MonoBehaviour
                 break;
 
             case EffectType.Stun:
-                // Full lockdown: movement, jumping, abilities, and ball interaction.
-                movement?.controlMovement(!enable, !enable);
-                ability?.DisableAbilities(enable);
-                ai?.DisableMovement(enable);
-                ai?.DisableAbilities(enable);
+                if (enable)
+                {
+                    // Snapshot originals before overwriting
+                    float origGround  = movement != null ? movement.maxGroundSpeed : 0f;
+                    float origAir     = movement != null ? movement.maxAirSpeed    : 0f;
+                    float origJump    = movement != null ? movement.jumpForce      : 0f;
+                    float origAiGround = ai != null ? ai.maxGroundSpeed : 0f;
+                    float origAiAir   = ai != null ? ai.maxAirSpeed    : 0f;
+
+                    stunOriginalValues[bird] = (origGround, origAir, origJump, origAiGround, origAiAir);
+
+                    if (movement != null)
+                    {
+                        movement.maxGroundSpeed = 1f;
+                        movement.maxAirSpeed    = 1f;
+                        movement.jumpForce     = 1f;
+                    }
+                    if (ai != null)
+                    {
+                        ai.maxGroundSpeed = 1f;
+                        ai.maxAirSpeed    = 1f;
+                    }
+                }
+                else
+                {
+                    if (stunOriginalValues.TryGetValue(bird, out var orig))
+                    {
+                        if (movement != null)
+                        {
+                            movement.maxGroundSpeed = orig.groundSpeed;
+                            movement.maxAirSpeed    = orig.airSpeed;
+                            movement.jumpForce      = orig.jumpForce;
+                        }
+                        if (ai != null)
+                        {
+                            ai.maxGroundSpeed = orig.aiGroundSpeed;
+                            ai.maxAirSpeed    = orig.aiAirSpeed;
+                        }
+                        stunOriginalValues.Remove(bird);
+                    }
+                }
                 break;
         }
+    }
+
+    // cleanup effects after point is over
+    public void ClearAllEffects()
+    {
+        foreach (var bird in activeEffects.Keys)
+        {
+            foreach (var kvp in activeEffects[bird])
+            {
+                StopCoroutine(kvp.Value);
+                ApplyGameplayEffect(kvp.Key, bird, false);
+            }
+        }
+
+        activeEffects.Clear();
+        activeVFX.Clear();
+        stunOriginalValues.Clear();
     }
 }
