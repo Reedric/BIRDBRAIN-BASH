@@ -18,7 +18,8 @@ public class SlipFish : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player") && ValidSlipper(collision.gameObject))
         {
-            StartCoroutine(SlipEffect(collision.gameObject));
+            // Run on the persistent singleton so fish destruction can't kill the coroutine
+            BuffsDebuffs.Instance.StartCoroutine(SlipEffect(collision.gameObject));
         }
     }
 
@@ -55,18 +56,8 @@ public class SlipFish : MonoBehaviour
             !pelicanIsOnLeft
         );
 
-        RagdollManager ragdollManager = opponent.GetComponent<RagdollManager>();
-        CharacterMovement characterMovement = opponent.GetComponent<CharacterMovement>();
-
-        if (ragdollManager != null) ragdollManager.ActivateRagdoll();
-        if (characterMovement != null) characterMovement.enabled = false;
-        Debug.Log("Opponent slipped!");
-
         yield return new WaitForSeconds(slipDuration);
 
-        if (ragdollManager != null) ragdollManager.DeactivateRagdoll();
-        if (characterMovement != null) characterMovement.enabled = true;
         affectedPlayers.Remove(opponent);
-        Debug.Log("Slip effect ended!");
     }
 }

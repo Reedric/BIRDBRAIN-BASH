@@ -55,19 +55,23 @@ public class PukekoOffensiveAbility : BirdAbility
         for (int i = 0; i < coneRayCount; i++)
         {
             float angle = -coneAngle / 2 + coneAngle / (coneRayCount - 1) * i;
-            Vector3 direction = Quaternion.Euler(0, angle, 0) * transform.forward;
+
+            // mirror direction for right-side players
+            Vector3 baseDirection = _onLeft ? transform.forward : -transform.forward;
+            Vector3 direction = Quaternion.Euler(0, angle, 0) * baseDirection;
+
             int hitCount = Physics.RaycastNonAlloc(transform.position, direction, hits, coneRange);
             Debug.DrawRay(transform.position, direction * coneRange, Color.blue, 40f);
 
             for (int j = 0; j < hitCount; j++)
             {
-                // Visualization
+                float xSign = _onLeft ? 1f : -1f; // ✅ Fix 1: mirror visualization too
                 LineRenderer cone = new GameObject("Cone").AddComponent<LineRenderer>();
                 cone.positionCount = 2;
                 cone.SetPosition(0, transform.position);
                 for (int k = 0; k <= coneRayCount; k++)
                 {
-                    float x = Mathf.Sin(Mathf.Deg2Rad * (angle + coneAngle / 2 * k / coneRayCount)) * coneRange;
+                    float x = xSign * Mathf.Sin(Mathf.Deg2Rad * (angle + coneAngle / 2 * k / coneRayCount)) * coneRange;
                     float y = Mathf.Cos(Mathf.Deg2Rad * (angle + coneAngle / 2 * k / coneRayCount)) * coneRange;
                     cone.SetPosition(1, transform.position + new Vector3(x, y, 0));
                 }
@@ -81,7 +85,6 @@ public class PukekoOffensiveAbility : BirdAbility
                 {
                     GameObject target = hits[j].collider.gameObject;
 
-                    // Resolve which side the target is on for correct VFX prefab
                     bool targetIsOnLeft = false;
                     BallInteract targetBallInteract = target.GetComponent<BallInteract>();
                     if (targetBallInteract != null)
@@ -93,7 +96,9 @@ public class PukekoOffensiveAbility : BirdAbility
                             targetIsOnLeft = targetAI.onLeft;
                     }
 
-                    // Apply silence, BuffsDebuffs handles VFX, audio, and re-enabling abilities
+                    // Skip allies (same side as the caster)
+                    if (targetIsOnLeft == _onLeft) continue;
+
                     BuffsDebuffs.Instance.ApplyEffect(
                         BuffsDebuffs.EffectType.Silence,
                         target,
@@ -110,7 +115,7 @@ public class PukekoOffensiveAbility : BirdAbility
                 }
             }
         }
-
+        
         yield return new WaitForSeconds(cooldown);
         onCooldown = false;
     }

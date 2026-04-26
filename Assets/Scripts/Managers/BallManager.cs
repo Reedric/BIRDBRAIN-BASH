@@ -58,6 +58,11 @@ public class BallManager : MonoBehaviour
             offCourse = true;
         }
 
+        if (other.gameObject.CompareTag("Player"))
+        {
+            ScoreManager.Instance.lastPhysicalTouch = other.gameObject;
+        }
+
         // Clear unblockable owner on any collision (spike has reached a target)
         if (unblockableOwner != null)
         {

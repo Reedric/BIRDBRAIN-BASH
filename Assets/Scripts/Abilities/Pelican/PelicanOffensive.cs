@@ -66,7 +66,7 @@ public class PelicanOffensive : BirdAbility
         // Add arc velocity so the fish clears the net
         if (fish.TryGetComponent<Rigidbody>(out var rb))
         {
-            rb.linearVelocity = forward * slipFishSpeed + Vector3.up * (slipFishSpeed / 4);
+            rb.linearVelocity = forward * (slipFishSpeed * 0.85f) + Vector3.up * (slipFishSpeed / 4);
         }
 
         Destroy(fish, fishLifetime);
