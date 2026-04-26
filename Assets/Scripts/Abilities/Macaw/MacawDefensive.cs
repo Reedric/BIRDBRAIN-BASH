@@ -7,13 +7,12 @@ using UnityEngine;
 /// </summary>
 public class MacawDefensive : BirdAbility
 {
-    [SerializeField] private float cooldown = 20f;
     [SerializeField] private float mimicDuration = 15f;
 
-    private bool onCooldown = false;
     private List<BirdAbility> playerAbilities = new();
     private const int playerCount = 4;
     private BirdAbility currentAbility;
+    private float mimicTimer;
 
     void Start()
     {
@@ -33,17 +32,32 @@ public class MacawDefensive : BirdAbility
                 playerAbilities.AddRange(player.GetComponents<BirdAbility>());
         }
 
-        currentAbility = PrimeRandomAbility();
+        PrimeRandomAbility();
     }
 
-    public void OnDefensiveAbility()
+    override protected void Activate()
     {
-        
+        if (currentAbility == null) return;
+
+        currentAbility.TryActivate();
+    }
+
+    // TODO: find better way to do this to not clog update
+    void Update()
+    {
+        if (currentAbility == null) return;
+
+        mimicTimer += Time.deltaTime;
+        if (mimicTimer >= mimicDuration)
+        {
+            PrimeRandomAbility();
+            mimicTimer = 0f;
+        }
     }
 
     // called every mimicDuration so long as the abilty hasnt been used
-    private BirdAbility PrimeRandomAbility()
+    private void PrimeRandomAbility()
     {
-        return playerAbilities[Random.Range(0, playerAbilities.Count)];
+        currentAbility = playerAbilities[Random.Range(0, playerAbilities.Count)];
     }
 }

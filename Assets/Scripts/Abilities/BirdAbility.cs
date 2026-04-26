@@ -1,31 +1,35 @@
 using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
 
-public class BirdAbility : MonoBehaviour {
-    private bool abilitiesDisabled = false;
-    protected GameManager gameManager = GameManager.Instance; // ducky: GameManager instance for all abilities in case anyone needs it
-    protected List<GameObject> opponents = new(); // ducky: opponents list for all abilities in case anyone needs it
-    protected bool _onLeft; // ducky: for opponents if needed
-    private bool isStunned = false;
+/// <summary>
+/// Base class for bird abilities. Handles cooldown management and activation logic.
+/// </summary>
+public abstract class BirdAbility : MonoBehaviour 
+{
+    public AbilitySlot AbilitySlot;
 
-    public void DisableAbilities(bool disabledOrNot)
-    {
-        abilitiesDisabled = disabledOrNot;
-    }
-
-    public bool CanUseAbilities()
-    {
-        return !abilitiesDisabled;
-    }
+    [SerializeField] protected float _cooldownTime;
     
+    private float _cooldownRemaining;
+    private bool _abilitiesDisabled;
 
-    public bool PointInProgress()
+    public bool IsReady => _cooldownRemaining <= 0 && !_abilitiesDisabled;
+
+    public void TickCooldown(float deltaTime)
     {
-        // If the point has just started, cannot use ability
-        if (GameManager.Instance.gameState == GameManager.GameState.PointStart) return false;
-
-        // If the point has just ended, cannot use ability, else we are good to go
-        return GameManager.Instance.gameState != GameManager.GameState.PointEnd;
+        if (_cooldownRemaining > 0) _cooldownRemaining -= deltaTime;
     }
+
+    public bool TryActivate()
+    {
+        if (!IsReady) return false;
+        if (!BirdAbilityRuleService.Instance.CanUseAbility(gameObject)) return false;
+
+        Activate();
+        _cooldownRemaining = _cooldownTime;
+        return true;
+    }
+
+    protected abstract void Activate();
+
+    public void SetAbilitiesDisabled(bool disabled) { _abilitiesDisabled = disabled; }
 }

@@ -186,6 +186,13 @@ public class CharacterMovement : MonoBehaviour
     {
         Debug.Log("BUFFING...");
         Debug.Log("ORIGINAL = " + maxGroundSpeed);
+
+        BuffsDebuffs.Instance.ApplyEffect(
+        BuffsDebuffs.EffectType.Buff,
+        gameObject,
+        5f,
+        true
+        );
         
         originalMaxGroundSpeed = maxGroundSpeed;
         originalMaxAirSpeed = maxAirSpeed;

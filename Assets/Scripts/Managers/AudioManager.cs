@@ -15,6 +15,8 @@ public enum BirdType
     PUKEKO,
     OSTRICH,
     CHICKEN,
+    EAGLE,
+    MACAW, 
     OTHER
 }
 
@@ -48,6 +50,10 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip[] pukekoSounds;
     [SerializeField] private AudioClip[] chickenSounds;
     [SerializeField] private AudioClip[] ostrichSounds;
+    [SerializeField] private AudioClip[] eagleSounds;
+    [SerializeField] private AudioClip[] kiwiSounds;
+    [SerializeField] private AudioClip[] macawSounds;
+    [SerializeField] private AudioClip[] owlSounds;
 
     [Header("Scoring Sounds")]
     [SerializeField] private AudioClip[] scoringSounds;
@@ -133,6 +139,18 @@ public class AudioManager : MonoBehaviour
                 break;
             case BirdType.OSTRICH:
                 birdSounds = instance.ostrichSounds;
+                break;
+            case BirdType.OWL:
+                birdSounds = instance.owlSounds;
+                break;
+            case BirdType.EAGLE:
+                birdSounds = instance.eagleSounds;
+                break;
+            case BirdType.KIWI:
+                birdSounds = instance.kiwiSounds;
+                break;
+            case BirdType.MACAW:
+                birdSounds = instance.macawSounds;
                 break;
             default:
                 birdSounds = instance.penguinSounds;

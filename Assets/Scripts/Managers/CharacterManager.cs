@@ -52,6 +52,31 @@ public class CharacterManager : MonoBehaviour
     [SerializeField] private GameObject ostrichC;
     [SerializeField] private GameObject ostrichAI;
 
+    [Header("Owl")]
+    [SerializeField] private GameObject owlKBM;
+    [SerializeField] private GameObject owlC;
+    [SerializeField] private GameObject owlAI;
+
+    [Header("Kiwi")]
+    [SerializeField] private GameObject kiwiKBM;
+    [SerializeField] private GameObject kiwiC;
+    [SerializeField] private GameObject kiwiAI;
+
+    [Header("Crow")]
+    [SerializeField] private GameObject crowKBM;
+    [SerializeField] private GameObject crowC;
+    [SerializeField] private GameObject crowAI;
+
+    [Header("Eagle")]
+    [SerializeField] private GameObject eagleKBM;
+    [SerializeField] private GameObject eagleC;
+    [SerializeField] private GameObject eagleAI;
+
+    [Header("Macaw")]
+    [SerializeField] private GameObject macawKBM;
+    [SerializeField] private GameObject macawC;
+    [SerializeField] private GameObject macawAI;
+
     [HideInInspector] public GameObject PenguinKBM => penguinKBM;
     [HideInInspector] public GameObject PenguinC => penguinC;
     [HideInInspector] public GameObject PenguinAI => penguinAI;
@@ -85,4 +110,24 @@ public class CharacterManager : MonoBehaviour
     [HideInInspector] public GameObject OstrichKBM => ostrichKBM;
     [HideInInspector] public GameObject OstrichC => ostrichC;
     [HideInInspector] public GameObject OstrichAI => ostrichAI;
+
+    [HideInInspector] public GameObject OwlKBM => owlKBM;
+    [HideInInspector] public GameObject OwlC => owlC;
+    [HideInInspector] public GameObject OwlAI => owlAI;
+
+    [HideInInspector] public GameObject KiwiKBM => kiwiKBM;
+    [HideInInspector] public GameObject KiwiC => kiwiC;
+    [HideInInspector] public GameObject KiwiAI => kiwiAI;
+
+    [HideInInspector] public GameObject CrowKBM => crowKBM;
+    [HideInInspector] public GameObject CrowC => crowC;
+    [HideInInspector] public GameObject CrowAI => crowAI;
+
+    [HideInInspector] public GameObject EagleKBM => eagleKBM;
+    [HideInInspector] public GameObject EagleC => eagleC;
+    [HideInInspector] public GameObject EagleAI => eagleAI;
+
+    [HideInInspector] public GameObject MacawKBM => macawKBM;
+    [HideInInspector] public GameObject MacawC => macawC;
+    [HideInInspector] public GameObject MacawAI => macawAI;
 }

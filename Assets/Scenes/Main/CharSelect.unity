@@ -235,6 +235,14 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 2d8aa020e10dd29418acd5430665a2a6, type: 3}
   ostrichSounds:
   - {fileID: 8300000, guid: 957f65cb92519db4384612c170814eb9, type: 3}
+  eagleSounds:
+  - {fileID: 8300000, guid: 5a77b3bd343d2a14395420e4c1a4fdfb, type: 3}
+  kiwiSounds:
+  - {fileID: 8300000, guid: 5a77b3bd343d2a14395420e4c1a4fdfb, type: 3}
+  macawSounds:
+  - {fileID: 8300000, guid: 9bcf4b11a18905841bf8fefd27f76a87, type: 3}
+  owlSounds:
+  - {fileID: 8300000, guid: 5a77b3bd343d2a14395420e4c1a4fdfb, type: 3}
   scoringSounds:
   - {fileID: 8300000, guid: eb33c0f9c80807641add146b4c6d0873, type: 3}
   ballPlayerInteractionSounds:
@@ -252,6 +260,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 8a5240865a3d1644eb7a3e302d94e33e, type: 3}
   backgroundTracks:
   - {fileID: 8300000, guid: 35284afd7bae03f40ab14686c0c16795, type: 3}
+  pauseTrack: {fileID: 0}
 --- !u!82 &16291429
 AudioSource:
   m_ObjectHideFlags: 0
@@ -5469,11 +5478,16 @@ MonoBehaviour:
   kiwiTexture: {fileID: 953422597}
   chickenTexture: {fileID: 614617403}
   ostrichTexture: {fileID: 1734531602}
+  eagleTexture: {fileID: 420900230}
   p1Ready: {fileID: 1437344202}
   p2Ready: {fileID: 1454632524}
   p3Ready: {fileID: 554441694}
   p4Ready: {fileID: 458631791}
   goButton: {fileID: 647091737}
+  cursorPressScale: 0.65
+  cursorShrinkDuration: 0.07
+  cursorBounceDuration: 0.14
+  cursorBounceOvershoot: 1.15
 --- !u!1 &1962441903
 GameObject:
   m_ObjectHideFlags: 0

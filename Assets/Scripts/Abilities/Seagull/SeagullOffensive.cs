@@ -15,6 +15,7 @@ public class SeagullOffensive : BirdAbility
 
     private bool _debuffWindow = false;
     private PlayerInput playerInput; // Input for this specific player
+    private bool _onLeft;
 
     void Start()
     {
@@ -24,12 +25,9 @@ public class SeagullOffensive : BirdAbility
         GetComponent<CharacterMovement>().controlMovement(true, true);
     }
 
-    void Update()
+    override protected void Activate()
     {
-        if (_debuffWindow && playerInput.actions.FindAction("Offensive Ability").WasPressedThisFrame() && CanMock())
-        {
-            DebuffEnemy();
-        }
+        DebuffEnemy();
     }
 
     public void DebuffEnemy()
@@ -117,10 +115,10 @@ public class SeagullOffensive : BirdAbility
     private bool CanMock()
     {
         // If abilities are disabled for the seagull, cannot mock
-        if (!CanUseAbilities()) return false;
+        if (!BirdAbilityRuleService.Instance.CanUseAbility(gameObject)) return false;
 
         // If the point hasn't just ended or point not about to start return false
-        if (!gameManager.gameState.Equals(GameManager.GameState.PointStart) && gameManager.gameState.Equals(GameManager.GameState.PointEnd))
+        if (!GameManager.Instance.gameState.Equals(GameManager.GameState.PointStart) && GameManager.Instance.gameState.Equals(GameManager.GameState.PointEnd))
         {
             return false;
         }

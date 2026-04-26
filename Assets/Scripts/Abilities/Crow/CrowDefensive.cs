@@ -3,38 +3,21 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(PlayerInput))]
-public class CrowDefensiveAbility : BirdAbility
+public class CrowDefensive : BirdAbility
 {
-    public float cooldownTime; // Cooldown in seconds
-    public float cooldownTimer; // Timer to track cooldown
     public int buffAmount; // Amount the ability increases ally's stats
     public int buffLength; // Amount of time in seconds the buff lasts
     private int coinCount = 0; // Counter for coins collected
     private int oldScore = 0; // Score of the last round
     public GameObject coin; // Coin item
     private List<GameObject> coins = new List<GameObject>(); // List to keep track of spawned coins
-    private bool onCooldown = false; // If the ability is currently on cooldown
     private bool buffActive = false; // If the stat buff is currently active
     private Vector3 randomSpawnPosition1;
     private Vector3 randomSpawnPosition2;
     private Vector3 randomSpawnPosition3;
-    private PlayerInput playerInput; // Input for this specific player
-
-    void Start()
-    {
-        playerInput = GetComponent<PlayerInput>();
-    }
     
     void Update()
     {
-        //Check if conditions are met to activate ability
-        InputAction statBuff = playerInput.actions.FindAction("Defensive Ability");
-        GameManager gameManager = GameManager.Instance;
-        if (!onCooldown &&  CanUseAbilities() && PointInProgress() && statBuff.WasPressedThisFrame())
-        {
-            CrowDefCall();
-        } 
-
         // Check if coins exist and if score has changed since last round, if so reset coin count
         if (oldScore != (ScoreManager.Instance.side1Score + ScoreManager.Instance.side2Score))
         {
@@ -48,18 +31,6 @@ public class CrowDefensiveAbility : BirdAbility
                 buffActive = false;
             }
         }
-        // Cooldown timer countdown
-        if (onCooldown)
-        {
-            cooldownTimer -= Time.deltaTime;
-            if (cooldownTimer <= 0)
-            {
-                onCooldown = false;
-                cooldownTimer = 0;
-                Debug.Log("Defensive ability is ready to use");
-                buffActive = false;
-            }
-        }
         // Coins needed to activate stat buff
         if (coinCount == 3) 
         {
@@ -67,9 +38,11 @@ public class CrowDefensiveAbility : BirdAbility
             CrowDefBuff();
         }
     }
-    // Call ability
-    void CrowDefCall() 
+    protected override void Activate()
     {
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
+
         // Clear coins from the court if they exist from a previous ability use
         ClearCurrCoins();
 
@@ -94,7 +67,6 @@ public class CrowDefensiveAbility : BirdAbility
         coins.Add(coin1);
         coins.Add(coin2);
         coins.Add(coin3);
-        Cooldown();
     }
     // Call stat buff
     void CrowDefBuff()
@@ -102,7 +74,6 @@ public class CrowDefensiveAbility : BirdAbility
         Debug.Log("Buff activated");
         GetComponent<CharacterMovement>().BuffStats(buffAmount, buffLength);
         buffActive = true;
-        Cooldown();
     }
     // Clear current coins on the field
     void ClearCurrCoins() 
@@ -127,10 +98,5 @@ public class CrowDefensiveAbility : BirdAbility
             coinCount++;
         }
     }
-    // Set cooldown time
-    void Cooldown()
-    {
-        cooldownTimer = cooldownTime;
-        onCooldown = true;
-    }
+
 }

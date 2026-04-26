@@ -4,15 +4,16 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(PlayerInput))]
+[RequireComponent(typeof(BallInteract))]
 public class EagleOffensive : BirdAbility
 {
     [Header("Ability Settings")]
     public float stunDuration = 2f;
-    public float cooldown = 10f;
     public Animator animator; // Assign in inspector
 
-    private bool onCooldown = false;
     private PlayerInput input;
+    private bool _onLeft;
+    private List<GameObject> opponents = new();
 
     private void Awake()
     {
@@ -20,17 +21,9 @@ public class EagleOffensive : BirdAbility
         _onLeft = GetComponent<BallInteract>().onLeft;
     }
 
-    private void Update()
+    override protected void Activate()
     {
-        if (onCooldown) return;
-        if (!CanUseAbilities()) return;
-        if (!PointInProgress()) return;
-
-        if (input.actions.FindAction("Offensive Ability").WasPressedThisFrame())
-        {
-            StartCoroutine(StunOpponents());
-            StartCoroutine(CooldownRoutine());
-        }
+        StartCoroutine(StunOpponents());
     }
 
     private IEnumerator StunOpponents()
@@ -40,7 +33,7 @@ public class EagleOffensive : BirdAbility
         opponents.Clear();
 
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         // Play animation
         if (animator != null)
@@ -70,7 +63,7 @@ public class EagleOffensive : BirdAbility
             {
                 foreach (BirdAbility ability in abilities)
                 {
-                    ability.DisableAbilities(true);
+                    ability.SetAbilitiesDisabled(true);
                 }
                 opponent.GetComponent<CharacterMovement>().controlMovement(false, false);
 
@@ -93,7 +86,7 @@ public class EagleOffensive : BirdAbility
             {
                 foreach (BirdAbility ability in abilities)
                 {
-                    ability.DisableAbilities(false);
+                    ability.SetAbilitiesDisabled(false);
                 }
                 opponent.GetComponent<CharacterMovement>().controlMovement(true, true);
 
@@ -103,12 +96,5 @@ public class EagleOffensive : BirdAbility
                 opponent.GetComponent<AIBehavior>().enabled = true;
             }
         }
-    }
-
-    private IEnumerator CooldownRoutine()
-    {
-        onCooldown = true;
-        yield return new WaitForSeconds(cooldown);
-        onCooldown = false;
     }
 }

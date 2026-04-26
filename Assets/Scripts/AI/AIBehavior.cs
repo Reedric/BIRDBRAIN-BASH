@@ -42,6 +42,12 @@ public class AIBehavior : MonoBehaviour
     public Vector3 rotationOffsetEuler = Vector3.zero; // local rotation adjustment for the prefab
     private bool isWalking = false; // Whether the AI is currently walking
 
+    private bool movementDisabled = false;
+    private bool abilitiesDisabled = false;
+
+    private float originalMaxGroundSpeed;
+    private float originalMaxAirSpeed;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -144,6 +150,10 @@ public class AIBehavior : MonoBehaviour
     // Check the current state of the AI
     private void CheckState()
     {
+        if (!CanAct())
+        {
+            return;
+        }
         // Check if they AI can hit the ball
         if (CanHit())
         {
@@ -293,6 +303,8 @@ public class AIBehavior : MonoBehaviour
     // Move the AI towards the ball or not
     private void MoveAI(bool towardsBall)
     {
+        if (movementDisabled) return;
+        
         // Initialize target for AI
         Vector3 target = new Vector3(5, 0, 0);
 
@@ -746,5 +758,27 @@ public class AIBehavior : MonoBehaviour
                 dustParticles.Stop();
             }
         }
+    }
+
+    public void DisableMovement(bool disabled)
+    {
+        movementDisabled = disabled;
+
+        if (disabled)
+        {
+            Rigidbody rb = GetComponent<Rigidbody>();
+            if (rb != null)
+                rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
+        }
+    }
+
+    public void DisableAbilities(bool disabled)
+    {
+        abilitiesDisabled = disabled;
+    }
+
+    public bool CanAct()
+    {
+        return !movementDisabled && !abilitiesDisabled;
     }
 }

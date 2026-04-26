@@ -8,26 +8,17 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterMovement))]
 public class ToucanDefensive : BirdAbility
 {
-    public float cooldown; // Cooldown in seconds
     public int buffAmount; // Amount the ability increases ally's stats
     public int buffLength; // Amount of time in seconds the buff lasts
+    private bool _onLeft;
 
-    private bool onCooldown = false;
-    private PlayerInput playerInput; // Input for this specific player
-
-    void Update()
+    override protected void Activate()
     {
-        // If pressesd defensive ability button, activate ability
-        if (!onCooldown && playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame()
-            && CanUseAbilities() && PointInProgress())
-        {
-            TouCanDoIt();
-        }
+        TouCanDoIt();
     }
     
     public void Start()
     {
-        playerInput = GetComponent<PlayerInput>();
         _onLeft = GetComponent<BallInteract>().onLeft;
     }
 
@@ -77,20 +68,16 @@ public class ToucanDefensive : BirdAbility
         }
 
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
 
         // Play defensive sound
-        AudioManager.PlayBirdSound(BirdType.TOUCAN, SoundType.DEFENSIVE, 1.0f);
-        
-        StartCoroutine(Cooldown());
-    }
+        AudioManager.PlayBirdSound(BirdType.TOUCAN, SoundType.HAPPY, 1.0f);
 
-    // Cools down cooldown seconds
-    public IEnumerator Cooldown()
-    {
-        onCooldown = true;
-        yield return new WaitForSeconds(cooldown);
-        onCooldown = false;
+        // Trigger defensive ability animation if animator exists
+        var myBallInteract = GetComponent<BallInteract>();
+        if (myBallInteract != null && myBallInteract.animator != null)
+        {
+            myBallInteract.animator.SetTrigger("DefensiveAbility");
+        }
     }
-
 }

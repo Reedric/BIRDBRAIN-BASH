@@ -65,15 +65,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d344f799dc313bf49a80e0d2deb0fc9d, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.4
+      value: 1.3
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d344f799dc313bf49a80e0d2deb0fc9d, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.4
+      value: 1.3
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d344f799dc313bf49a80e0d2deb0fc9d, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.4
+      value: 1.3
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d344f799dc313bf49a80e0d2deb0fc9d, type: 3}
       propertyPath: m_LocalPosition.x
@@ -5652,8 +5652,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6dca93e819a6fc47a03b72b82e10caf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  birdType: 0
   onLeft: 0
-  ballManager: {fileID: 0}
   interactionRadius: 3
   animator: {fileID: 5364555466199206145}
   maxGroundSpeed: 2
@@ -5662,6 +5662,7 @@ MonoBehaviour:
   rotationSpeed: 10
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
+  rotationOffsetEuler: {x: 0, y: 0, z: 0}
 --- !u!114 &6966827129823796945
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -6,16 +6,10 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(BallInteract))]
 public class ToucanOffensive : BirdAbility
 {
-    public float cooldown = 10f; // Cooldown in seconds (TBA)
-    
-    private bool onCooldown = false;
-    private PlayerInput playerInput; // Input for this player
-
-    void Update()
+    override protected void Activate()
     {
         // Offensive ability activation (Toucan): allow activation regardless of CanHit()
-        if (!onCooldown && playerInput.actions.FindAction("Offensive Ability").WasPressedThisFrame()
-            && CanUseAbilities() && GameManager.Instance.gameState == GameManager.GameState.Set)
+        if (GameManager.Instance.gameState == GameManager.GameState.Set)
         {
             TacoTocoToca();
         }
@@ -25,7 +19,7 @@ public class ToucanOffensive : BirdAbility
     {
 
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         // Play defensive sound
         AudioManager.PlayBirdSound(BirdType.TOUCAN, SoundType.OFFENSIVE, 1.0f);
@@ -35,14 +29,5 @@ public class ToucanOffensive : BirdAbility
 
         // Spike the ball
         GetComponent<BallInteract>().SpikeBall();
-
-        StartCoroutine(Cooldown());
-    }
-
-    private IEnumerator Cooldown()
-    {
-        onCooldown = true;
-        yield return new WaitForSeconds(cooldown);
-        onCooldown = false;
     }
 }

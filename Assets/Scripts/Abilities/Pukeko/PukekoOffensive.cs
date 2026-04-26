@@ -9,7 +9,6 @@ using UnityEngine;
 public class PukekoOffensiveAbility : BirdAbility
 {
     [Header("Pukeko Offensive Settings")]
-    [SerializeField] private float cooldown = 40f;
     [SerializeField] private float silenceDuration = 3f;
     [SerializeField] private float pushBackForce = 2f;
 
@@ -19,8 +18,7 @@ public class PukekoOffensiveAbility : BirdAbility
     [SerializeField] private int coneRayCount = 10; // Number of rays to cast within the cone (adjust for performance and feel)
 
     public Animator animator; // Assign in inspector
-    
-    private bool onCooldown = false;
+
     private RaycastHit[] hits; // Pre-allocate to avoid garbage collection as long as possible
 
     void Awake()
@@ -28,20 +26,16 @@ public class PukekoOffensiveAbility : BirdAbility
         hits = new RaycastHit[coneRayCount];
     }
 
-    public void OnOffensiveAbility()
+    override protected void Activate()
     {
-        if (!onCooldown)
-        {
-            // Debug.Log("Pukeko Offensive Ability Activated: Sonic Squawk");
-            onCooldown = true;
-            StartCoroutine(SonicSquawk());
-        }
+        SonicSquawk();
+        Debug.Log("Pukeko Offensive Activated");
     }
 
-    private IEnumerator SonicSquawk()
+    private void SonicSquawk()
     {
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         if (animator != null)
             animator.SetTrigger("OffensiveAbility");
@@ -90,15 +84,12 @@ public class PukekoOffensiveAbility : BirdAbility
                 }
             }
         }
-
-        yield return new WaitForSeconds(cooldown);
-        onCooldown = false;   
     }
 
     public IEnumerator ApplySilence(float duration, BirdAbility bird)
     {
-        bird.DisableAbilities(true);
+        bird.SetAbilitiesDisabled(true);
         yield return new WaitForSeconds(duration);
-        bird.DisableAbilities(false);
+        bird.SetAbilitiesDisabled(false);
     }
 }
