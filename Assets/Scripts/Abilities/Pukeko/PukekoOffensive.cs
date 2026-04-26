@@ -29,12 +29,13 @@ public class PukekoOffensiveAbility : BirdAbility
     override protected void Activate()
     {
         SonicSquawk();
+        Debug.Log("Pukeko Offensive Activated");
     }
 
     private void SonicSquawk()
     {
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldownTime);
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         if (animator != null)
             animator.SetTrigger("OffensiveAbility");

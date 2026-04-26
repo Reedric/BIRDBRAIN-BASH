@@ -3614,6 +3614,7 @@ GameObject:
   m_Component:
   - component: {fileID: 614297108}
   - component: {fileID: 614297107}
+  - component: {fileID: 614297109}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -3656,6 +3657,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &614297109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 614297106}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 282f244185a3ff243a55966dbb387b08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameManager: {fileID: 614297107}
 --- !u!1 &627020992
 GameObject:
   m_ObjectHideFlags: 0
@@ -5456,8 +5470,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b857e6222b0444b39f5fd7890d2121f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  AbilitySlot: 0
+  _cooldownTime: 0
   stunDuration: 2
-  cooldown: 10
   animator: {fileID: 0}
 --- !u!54 &883184696
 Rigidbody:
@@ -7749,7 +7764,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2a429a805a69481993bac141dba5e01, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cooldown: 10
+  AbilitySlot: 0
+  _cooldownTime: 0
   timeEnemiesAreImpacted: 3
   animator: {fileID: 0}
 --- !u!114 &1218523449
@@ -7764,8 +7780,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc7c8781ac91a374b9e6dca334643d11, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cooldownTime: 0
-  cooldownTimer: 0
+  AbilitySlot: 0
+  _cooldownTime: 0
   buffAmount: 0
   buffLength: 0
   coin: {fileID: 1090145823125685694, guid: 8f44a91b09bbe9847bec887c0f5b7f6d, type: 3}
@@ -9255,8 +9271,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3c57a2d70224e2e439fd5049e62abdfa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  AbilitySlot: 0
+  _cooldownTime: 0
   animator: {fileID: 1198049553215210241}
-  offensiveAbilityAction: Offensive Ability
 --- !u!1 &1341130226 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4177670073196505840, guid: fa022a8398cc7d4469439c183cd09bca, type: 3}
@@ -11826,7 +11843,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 46ff018494085e745bbd1d0f3c0fcdc9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cooldown: 15
+  AbilitySlot: 0
+  _cooldownTime: 0
   leftEyePosition: {fileID: 1707259120}
   rightEyePosition: {fileID: 1707259119}
   lazerWidth: 0.2
@@ -11844,9 +11862,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7bb5587bbf392f44b84ef873b6bd297d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  AbilitySlot: 0
+  _cooldownTime: 0
   burrowDuration: 2
   speedBoost: 2
-  cooldown: 12
 --- !u!23 &1707259123
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -13349,7 +13368,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a11ecf477f560ea44aefb0f92693a253, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cooldown: 33
+  AbilitySlot: 0
+  _cooldownTime: 0
   lineDuration: 8
   lineColor: {r: 1, g: 0, b: 0, a: 1}
   lineWidth: 0.2
@@ -13365,7 +13385,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b75843b3f9fae3849b1a28b2ba0dc478, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cooldown: 15
+  AbilitySlot: 0
+  _cooldownTime: 0
   lineDuration: 10
   lineGradient:
     serializedVersion: 2
@@ -16663,8 +16684,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3c57a2d70224e2e439fd5049e62abdfa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  AbilitySlot: 0
+  _cooldownTime: 0
   animator: {fileID: 6582082561950038145}
-  offensiveAbilityAction: Offensive Ability
 --- !u!1001 &6711133781811346435
 PrefabInstance:
   m_ObjectHideFlags: 0

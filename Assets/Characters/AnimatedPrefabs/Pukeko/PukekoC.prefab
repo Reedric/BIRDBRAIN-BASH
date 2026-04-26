@@ -5668,8 +5668,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97d3c1358f2792740940dbfac97f44d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  abilitySlot: 1
-  cooldownTime: 20
+  AbilitySlot: 1
+  _cooldownTime: 20
   dashSpeed: 10
 --- !u!114 &-7048078205267838103
 MonoBehaviour:
@@ -5683,8 +5683,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 95c57a673fa9f1a41aeb952154cdddf4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  abilitySlot: 0
-  cooldownTime: 40
+  AbilitySlot: 0
+  _cooldownTime: 40
   silenceDuration: 3
   pushBackForce: 2
   coneAngle: 45

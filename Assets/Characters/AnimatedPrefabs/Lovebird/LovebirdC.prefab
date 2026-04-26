@@ -5790,8 +5790,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06dd2ca91fa327948af6da71c34e2622, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  abilitySlot: 1
-  cooldownTime: 6
+  AbilitySlot: 1
+  _cooldownTime: 6
   dashSpeed: 60
   dashToDistance: 2
 --- !u!54 &346269830226829327
@@ -5833,8 +5833,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 593700650f8d8a043851550585a9d6f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  abilitySlot: 0
-  cooldownTime: 20
+  AbilitySlot: 0
+  _cooldownTime: 11
   DebuffLength: 2
   walkSpeed: 1
   hearts: {fileID: 2103532663826045379, guid: aa26f21b86994d044a963dfff8ce2292, type: 3}

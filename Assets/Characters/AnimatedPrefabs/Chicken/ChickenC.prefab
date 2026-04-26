@@ -230,8 +230,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 171e46d3b935f964e82f9d7ebedc28c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  abilitySlot: 0
-  cooldownTime: 15
+  AbilitySlot: 0
+  _cooldownTime: 15
   eggSplashPrefab: {fileID: 5807350752594719048, guid: ab387014074b92846b61df1099739bcc, type: 3}
   mainCanvas: {fileID: 0}
   displayTime: 4

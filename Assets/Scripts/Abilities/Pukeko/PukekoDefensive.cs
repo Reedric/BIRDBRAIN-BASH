@@ -28,6 +28,7 @@ public class PukekoDefensive : BirdAbility
     override protected void Activate()
     {
         StartCoroutine(PlayingDirty());
+        Debug.Log("Pukeko Defensive Activated");
     }
 
     private IEnumerator PlayingDirty()

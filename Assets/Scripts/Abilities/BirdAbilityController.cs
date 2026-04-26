@@ -12,7 +12,7 @@ public class BirdAbilityController : MonoBehaviour
     void Awake()
     {
         foreach (var ability in GetComponentsInChildren<BirdAbility>())
-            abilities[ability.Slot] = ability;
+            abilities[ability.AbilitySlot] = ability;
     }
 
     void Update()
