@@ -6,7 +6,7 @@ public class BirdAbilityRuleService : MonoBehaviour
 
     [SerializeField] private GameManager gameManager;
 
-    private bool globalAbilitiesDisabled;
+    private bool _globalAbilitiesDisabled;
 
     void Awake()
     {
@@ -20,16 +20,20 @@ public class BirdAbilityRuleService : MonoBehaviour
 
     public void SetGlobalAbilitiesDisabled(bool disabled)
     {
-        globalAbilitiesDisabled = disabled;
+        _globalAbilitiesDisabled = disabled;
     }
 
     public bool CanUseAbility(GameObject user)
     {
-        if (globalAbilitiesDisabled) return false;
+        if (_globalAbilitiesDisabled) return false;
 
         if (gameManager == null) return false;
         if (gameManager.gameState == GameManager.GameState.PointStart) return false;
         if (gameManager.gameState == GameManager.GameState.PointEnd) return false;
+
+        // TODO:
+        // if on defense, only allow defensive abilities
+        // if on offense, only allow offensive abilities
         
         return true;
     }

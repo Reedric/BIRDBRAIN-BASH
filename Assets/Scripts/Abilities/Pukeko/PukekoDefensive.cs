@@ -33,7 +33,7 @@ public class PukekoDefensive : BirdAbility
     private IEnumerator PlayingDirty()
     {
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldownTime);
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
         
         isDashing = true;
         characterMovement.controlMovement(false, false);

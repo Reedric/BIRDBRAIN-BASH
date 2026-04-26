@@ -33,7 +33,7 @@ public class EagleOffensive : BirdAbility
         opponents.Clear();
 
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldownTime);
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         // Play animation
         if (animator != null)

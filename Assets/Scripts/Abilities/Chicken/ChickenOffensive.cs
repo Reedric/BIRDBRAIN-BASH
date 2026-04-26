@@ -40,7 +40,7 @@ public class ChickenOffensive : BirdAbility
         rt.localRotation = Quaternion.Euler(0, 0, Random.Range(0f, 360f));
 
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldownTime);
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         // Play animation
         if (animator != null)

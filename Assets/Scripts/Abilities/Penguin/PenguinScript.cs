@@ -164,7 +164,7 @@ public class PenguinScript : BirdAbility
         characterMovement.overrideRotation = true;
 
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, dashCooldown);
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
 
         // Play slide sound
         AudioManager.PlayBirdSound(BirdType.PENGUIN, SoundType.DEFENSIVE, 1.0f);

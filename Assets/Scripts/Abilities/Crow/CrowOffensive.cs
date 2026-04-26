@@ -20,7 +20,7 @@ public class CrowOffensive : BirdAbility {
     protected override void Activate()
     {
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldownTime);
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         // Play animation
         if (animator != null)

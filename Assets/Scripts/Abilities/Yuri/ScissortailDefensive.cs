@@ -61,7 +61,7 @@ public class ScissortailDefensive : BirdAbility
         AudioManager.PlayBirdSound(BirdType.SCISSORTAIL, SoundType.DEFENSIVE, 1.0f);
 
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldownTime);
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
 
         // Trigger defensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();

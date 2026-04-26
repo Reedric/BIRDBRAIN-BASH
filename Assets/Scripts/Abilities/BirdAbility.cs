@@ -5,19 +5,18 @@ using UnityEngine;
 /// </summary>
 public abstract class BirdAbility : MonoBehaviour 
 {
-    [SerializeField] private AbilitySlot abilitySlot;
-    public AbilitySlot Slot => abilitySlot;
+    public AbilitySlot AbilitySlot;
 
-    [SerializeField] protected float cooldownTime;
+    [SerializeField] protected float _cooldownTime;
     
-    private float cooldownRemaining;
-    private bool abilitiesDisabled;
+    private float _cooldownRemaining;
+    private bool _abilitiesDisabled;
 
-    public bool IsReady => cooldownRemaining <= 0 && !abilitiesDisabled;
+    public bool IsReady => _cooldownRemaining <= 0 && !_abilitiesDisabled;
 
     public void TickCooldown(float deltaTime)
     {
-        if (cooldownRemaining > 0) cooldownRemaining -= deltaTime;
+        if (_cooldownRemaining > 0) _cooldownRemaining -= deltaTime;
     }
 
     public bool TryActivate()
@@ -26,11 +25,11 @@ public abstract class BirdAbility : MonoBehaviour
         if (!BirdAbilityRuleService.Instance.CanUseAbility(gameObject)) return false;
 
         Activate();
-        cooldownRemaining = cooldownTime;
+        _cooldownRemaining = _cooldownTime;
         return true;
     }
 
     protected abstract void Activate();
 
-    public void SetAbilitiesDisabled(bool disabled) { abilitiesDisabled = disabled; }
+    public void SetAbilitiesDisabled(bool disabled) { _abilitiesDisabled = disabled; }
 }

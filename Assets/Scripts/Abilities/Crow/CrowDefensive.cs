@@ -41,7 +41,7 @@ public class CrowDefensive : BirdAbility
     protected override void Activate()
     {
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldownTime);
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
 
         // Clear coins from the court if they exist from a previous ability use
         ClearCurrCoins();

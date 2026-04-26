@@ -38,7 +38,7 @@ public class MacawOffensive : BirdAbility
     override protected void Activate()
     {
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldownTime);
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         // Play sound effect using AudioManager
         AudioManager.PlayBirdSound(BirdType.MACAW, SoundType.OFFENSIVE, 1.0f);

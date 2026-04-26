@@ -58,7 +58,7 @@ public class LovebirdOffensive : BirdAbility
     public void DebuffEnemy()
     {
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldownTime);
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         // Play offensive sound
         AudioManager.PlayBirdSound(BirdType.LOVEBIRD, SoundType.OFFENSIVE, 1.0f);
