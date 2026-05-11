@@ -39,6 +39,8 @@ public class ScoreManager : MonoBehaviour
     public RawImage pinkTrophy;
     public TMP_Text blueWinScore;
     public TMP_Text pinkWinScore;
+    public TMP_Text blueContinue;
+    public TMP_Text pinkContinue;
     public GameObject invisWall;
     public Transform[] endLocations;
     public bool[] readiedUp;
@@ -91,6 +93,9 @@ public class ScoreManager : MonoBehaviour
         pinkTrophy.enabled = false;
         blueWinScore.enabled = false;
         pinkWinScore.enabled = false;
+        blueContinue.enabled = false;
+        pinkContinue.enabled = false;
+        
 
         // Make sure main camera is enabled
         endCamera.enabled = false;
@@ -440,6 +445,8 @@ public class ScoreManager : MonoBehaviour
             blueWin.enabled = true;
             blueWinScore.text = $"{side1SetsWon}-{side2SetsWon}";
             blueWinScore.enabled = true;
+            blueContinue.enabled = true;
+        
             blueTrophy.enabled = true;
             confettiRoutine = StartCoroutine(ConfettiLoop(true));
         }
@@ -453,6 +460,7 @@ public class ScoreManager : MonoBehaviour
             pinkWinScore.text = $"{side1SetsWon}-{side2SetsWon}";
             pinkWinScore.enabled = true;
             pinkTrophy.enabled = true;
+            pinkContinue.enabled = true;
             confettiRoutine = StartCoroutine(ConfettiLoop(false));
         }
 

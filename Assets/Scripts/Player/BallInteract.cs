@@ -213,9 +213,15 @@ public class BallInteract : MonoBehaviour
     // Check if the player can hit the ball
     private bool CanHit()
     {
-        // If the ball on the other side of the court, can't it the ball
-        if (BallManager.Instance.transform.position.x * transform.position.x >= 0) return false;
-        
+        // During a serve, the server and ball are intentionally on the same side.
+        if (GameManager.Instance.gameState == GameManager.GameState.PointStart
+            && GameManager.Instance.server == gameObject)
+            return true;
+
+        // If the ball is on the OTHER side of the court, can't hit the ball
+        if (BallManager.Instance.transform.position.x * transform.position.x < 0)
+            return false;
+            
         GameManager gameManager = GameManager.Instance;
         // If the point has ended, they cannot hit the ball
         if (gameManager.gameState.Equals(GameManager.GameState.PointEnd)) return false;
@@ -237,7 +243,9 @@ public class BallInteract : MonoBehaviour
         if (gameManager.leftAttack.Equals(onLeft) && !gameManager.gameState.Equals(GameManager.GameState.Spiked)) return true;
 
         // If the ball is on the other side of the court and has been spiked, they can hit, else they cannot
-        return !gameManager.leftAttack.Equals(onLeft) && gameManager.gameState.Equals(GameManager.GameState.Spiked);
+        return !gameManager.leftAttack.Equals(onLeft)
+            && (gameManager.gameState.Equals(GameManager.GameState.Spiked)
+            || gameManager.gameState.Equals(GameManager.GameState.Blocked));
     }
 
     // Bump the ball

@@ -250,9 +250,16 @@ public class AIBehavior : MonoBehaviour
     // Check if the AI is legally able to hit the ball
     private bool CanHit()
     {
-        // If the ball on the other side of the court, can't it the ball
-        if (BallManager.Instance.transform.position.x * transform.position.x >= 0) return false;
-        
+        // During a serve, the server and ball are intentionally on the same side —
+        // skip the court-side check so the server AI can actually serve.
+        if (GameManager.Instance.gameState == GameManager.GameState.PointStart
+            && GameManager.Instance.server == gameObject)
+            return true;
+
+        // If the ball is on the OTHER side of the court, can't hit the ball
+        if (BallManager.Instance.transform.position.x * transform.position.x < 0)
+            return false;
+            
         GameManager gameManager = GameManager.Instance;
         // If the point has ended, they cannot hit the ball
         if (gameManager.gameState.Equals(GameManager.GameState.PointEnd)) return false;
