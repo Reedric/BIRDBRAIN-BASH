@@ -4,21 +4,40 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(PlayerInput))]
-public class CrowOffensive : BirdAbility {
+public class CrowOffensive : BirdAbility
+{
+    public float cooldown = 10f;
     public float timeEnemiesAreImpacted = 3f;
     public Animator animator; // Assign in inspector
 
-    private BallInteract ballInteract;
+    private bool onCooldown = false;
+    private PlayerInput input;
 
     void Start()
     {
-        ballInteract = GetComponent<BallInteract>();
+        input = GetComponent<PlayerInput>();
+        _onLeft = GetComponent<BallInteract>().onLeft;
     }
 
-    protected override void Activate()
+    void Update()
     {
+        if (!onCooldown && input.actions.FindAction("Offensive Ability").WasPressedThisFrame()
+            && CanUseAbilities() && PointInProgress())
+        {
+            CrowAbility();
+        }
+    }
+
+    public void CrowAbility()
+    {
+        if (onCooldown)
+        {
+            Debug.Log("The crow is on cooldown and cannot activate its ability");
+            return;
+        }
+
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
 
         // Play animation
         if (animator != null)
@@ -27,27 +46,17 @@ public class CrowOffensive : BirdAbility {
         // Play sound effect using AudioManager
         AudioManager.PlayBirdSound(BirdType.CROW, SoundType.OFFENSIVE, 1.0f);
 
-        StartCoroutine(DisableEnemies());
+        SilenceEnemies();
+        StartCoroutine(Cooldown());
     }
 
-    IEnumerator DisableEnemies()
+    private void SilenceEnemies()
     {
-        // Determine which birds are on other team
-        List<BirdAbility> enemyAbilities = new List<BirdAbility>();
-        List<GameObject> opponents = new List<GameObject>();
-        GameManager gameManager = GameManager.Instance;
-        if (gameManager.leftPlayer1 == gameObject || gameManager.leftPlayer2 == gameObject)
-        {
-            enemyAbilities.AddRange(gameManager.rightPlayer1.GetComponents<BirdAbility>());
-            enemyAbilities.AddRange(gameManager.rightPlayer2.GetComponents<BirdAbility>());
-        }
-        else
-        {
-            enemyAbilities.AddRange(gameManager.leftPlayer1.GetComponents<BirdAbility>());
-            enemyAbilities.AddRange(gameManager.leftPlayer2.GetComponents<BirdAbility>());
-        }
+        opponents.Clear();
 
-        if (ballInteract.onLeft)
+        GameManager gameManager = GameManager.Instance;
+
+        if (_onLeft)
         {
             opponents.Add(gameManager.rightPlayer1);
             opponents.Add(gameManager.rightPlayer2);
@@ -58,35 +67,36 @@ public class CrowOffensive : BirdAbility {
             opponents.Add(gameManager.leftPlayer2);
         }
 
-        // Disable all the enemies abilities
-        for (int i = 0; i < enemyAbilities.Count; i++)
-        {
-            // ducky: what the hell did I just make for this ostrich check
-            BallInteract birdPlayer = opponents[i].GetComponent<BallInteract>();
-            BirdType birdType;
-            if (birdPlayer == null)
-            {
-                birdType = opponents[i].GetComponent<AIBehavior>().GetBirdType();
-            }
-            else
-            {
-                birdType = opponents[i].GetComponent<BallInteract>().GetBirdType();
-            }
-            if (birdType != BirdType.OSTRICH)
-            {
-                enemyAbilities[i].SetAbilitiesDisabled(true);
-                Debug.Log(enemyAbilities[i]);
-            }
-        }
+        // Opponents are always on the opposite side of the caster
+        bool opponentIsOnLeft = !_onLeft;
 
-        // Wait for ability to end
-        yield return new WaitForSeconds(timeEnemiesAreImpacted);
-
-        foreach (BirdAbility enemy in enemyAbilities)
+        foreach (GameObject opponent in opponents)
         {
-            enemy.SetAbilitiesDisabled(false);
+            if (opponent == null) continue;
+
+            // Ostrich is immune to silence
+            BallInteract birdPlayer = opponent.GetComponent<BallInteract>();
+            BirdType birdType = birdPlayer != null
+                ? birdPlayer.GetBirdType()
+                : opponent.GetComponent<AIBehavior>().GetBirdType();
+
+            if (birdType == BirdType.OSTRICH) continue;
+
+            // BuffsDebuffs handles everything: VFX, audio, disabling abilities
+            // (for both player and AI), and re-enabling after timeEnemiesAreImpacted.
+            BuffsDebuffs.Instance.ApplyEffect(
+                BuffsDebuffs.EffectType.Silence,
+                opponent,
+                timeEnemiesAreImpacted,
+                opponentIsOnLeft
+            );
         }
     }
 
-
+    private IEnumerator Cooldown()
+    {
+        onCooldown = true;
+        yield return new WaitForSeconds(cooldown);
+        onCooldown = false;
+    }
 }

@@ -6,8 +6,10 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(BallInteract))]
 public class PelicanDefensive : BirdAbility
 {
+    public float cooldown; // Cooldown in seconds
     public int holdLength; // Maximum amount of time in seconds the pelican can hold the ball in its mouth
     public BallInteract ballInteract;
+    private bool onCooldown = false;
     private bool isBallEaten = false;
     private PlayerInput playerInput;
 
@@ -17,9 +19,15 @@ public class PelicanDefensive : BirdAbility
         playerInput = GetComponent<PlayerInput>();
     }
 
-    override protected void Activate()
+    void Update()
     {
-        EatTheBall();
+        if (playerInput == null) return;
+
+        // If pressed defensive ability button, activate ability
+        if (!onCooldown && playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame() && CanUseAbilities())
+        {
+            EatTheBall();
+        }
 
         if (isBallEaten && playerInput.actions.FindAction("Serve").WasPressedThisFrame())
         {
@@ -31,12 +39,13 @@ public class PelicanDefensive : BirdAbility
         {
             BallManager.Instance.gameObject.transform.position = transform.position + new Vector3(0, 1f, 0);
         }
+        
     }
 
     public void EatTheBall()
     {
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
         
         GameManager gameManager = GameManager.Instance;
         bool validState = gameManager.gameState == GameManager.GameState.PointStart;
@@ -56,8 +65,19 @@ public class PelicanDefensive : BirdAbility
             BallManager.Instance.gameObject.SetActive(false);
             isBallEaten = true;
 
+            StartCoroutine(Cooldown());
             StartCoroutine(HoldTime());
         }
+    }
+
+    
+
+    // Cools down cooldown seconds
+    public IEnumerator Cooldown()
+    {
+        onCooldown = true;
+        yield return new WaitForSeconds(cooldown);
+        onCooldown = false;
     }
 
     public IEnumerator HoldTime()

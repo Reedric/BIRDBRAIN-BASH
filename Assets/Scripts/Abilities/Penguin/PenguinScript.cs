@@ -1,5 +1,4 @@
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -7,7 +6,6 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterMovement))]
 [RequireComponent(typeof(PlayerInput))]
 [RequireComponent(typeof(Rigidbody))]
-
 public class PenguinScript : BirdAbility
 {
     [Header("Dash Ability")]
@@ -81,8 +79,8 @@ public class PenguinScript : BirdAbility
 
         penguinHeight = transform.position.y; // christofort: grabs the Y value of the penguin
         // chrIStofort: added a check for the penguin's y value, to make sure it isn't higher than the ground
-        if (dashPressed &&  cooldownTimer <= 0 && !isDashing
-            && characterMovement.grounded)
+        if (dashPressed && PointInProgress() && cooldownTimer <= 0 && !isDashing
+            && characterMovement.grounded && CanUseAbilities())
         {
             StartDash();
         }
@@ -115,7 +113,7 @@ public class PenguinScript : BirdAbility
         bool useSnowBall = snowBall != null && snowBall.WasPressedThisFrame();
 
         // Christofort: activating the SnowBall
-        if (useSnowBall && snowBallTimer <= 0 && !usingSnowBall
+        if (useSnowBall && snowBallTimer <= 0 && !usingSnowBall && CanUseAbilities()
             && GameManager.Instance.gameState == GameManager.GameState.Set && ballInteraction.IsPlayerNearBall())
         {
             startSnowBall(); 
@@ -137,7 +135,6 @@ public class PenguinScript : BirdAbility
         spawnPoint = BallManager.Instance.gameObject.transform.position;
     }
 
-    override protected void Activate() { } // just throwing this here to satisfy the abstract class requirement
 
     void StartDash()
     {
@@ -164,7 +161,7 @@ public class PenguinScript : BirdAbility
         characterMovement.overrideRotation = true;
 
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, dashCooldown);
 
         // Play slide sound
         AudioManager.PlayBirdSound(BirdType.PENGUIN, SoundType.DEFENSIVE, 1.0f);

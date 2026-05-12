@@ -5,14 +5,18 @@ using UnityEngine.InputSystem;
 public class ScissortailDefensive : BirdAbility
 {
     [Header("Yuriful")]
+    public float cooldown = 6.0f;
     public float lineUptime = 3.0f;
     public float lineWidth = 0.5f;
     public float threshold = 1.0f;
     public Material lineMaterial;
+    private bool abilityReady = true;
+    private PlayerInput playerInput;
     private LineRenderer lr;
 
     void Start()
     {
+        playerInput = GetComponent<PlayerInput>();
         lr = gameObject.AddComponent<LineRenderer>();
         lr.enabled = false;
 
@@ -61,7 +65,7 @@ public class ScissortailDefensive : BirdAbility
         AudioManager.PlayBirdSound(BirdType.SCISSORTAIL, SoundType.DEFENSIVE, 1.0f);
 
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
 
         // Trigger defensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
@@ -99,10 +103,22 @@ public class ScissortailDefensive : BirdAbility
         }
         // Disables the line and starts cooldown
         lr.enabled = false;
+        StartCoroutine(CooldownRoutine());
     }
 
-    override protected void Activate()
+    private IEnumerator CooldownRoutine()
     {
-        StartCoroutine(Yuriful());
+        yield return new WaitForSeconds(cooldown);
+        abilityReady = true;
+    }
+
+    void Update()
+    {
+        if (playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame() && abilityReady
+                    && PointInProgress() && CanUseAbilities())
+        {
+            StartCoroutine(Yuriful());
+            abilityReady = false;
+        }
     }
 }

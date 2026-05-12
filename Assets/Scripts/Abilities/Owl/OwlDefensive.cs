@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// predicts the trajectory of the ball visualized by a line.
@@ -7,6 +8,7 @@ using UnityEngine;
 public class OwlDefensive : BirdAbility
 {
     [Header("Owl Defensive Settings")]
+    [SerializeField] private float cooldown = 15f;
     [SerializeField] private float lineDuration = 10f;
 
     [Header("Line Settings")]
@@ -19,6 +21,7 @@ public class OwlDefensive : BirdAbility
     private Transform ballTransform;
     private Rigidbody ballRigidbody;
 
+    private bool onCooldown = false;
     private Vector3[] predictionPoints;
 
     private void Awake() 
@@ -29,15 +32,21 @@ public class OwlDefensive : BirdAbility
         predictionPoints = new Vector3[lineSegments];
     }
 
-    override protected void Activate()
+    public void OnDefensiveAbility(InputValue value)
     {
+        if (onCooldown || !CanUseAbilities() || !PointInProgress()) return;
         StartCoroutine(Investigation());
     }
 
     private IEnumerator Investigation()
     {
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
+
+        // Play sound effect using AudioManager
+        AudioManager.PlayBirdSound(BirdType.OWL, SoundType.DEFENSIVE, 1.0f);
+        
+        onCooldown = true;
         
         GameObject line = CreateLine();
         LineRenderer lineRenderer = line.GetComponent<LineRenderer>();
@@ -56,6 +65,9 @@ public class OwlDefensive : BirdAbility
             }
         }
         Destroy(line);
+
+        yield return new WaitForSeconds(cooldown - lineDuration);
+        onCooldown = false;
     }
 
     private GameObject CreateLine()

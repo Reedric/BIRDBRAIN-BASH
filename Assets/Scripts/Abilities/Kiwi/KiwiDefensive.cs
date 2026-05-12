@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(MeshRenderer))]
 [RequireComponent(typeof(CharacterMovement))]
@@ -16,6 +17,9 @@ public class KiwiDefensive : BirdAbility
     [SerializeField] private float burrowDuration = 2f;
     [SerializeField] private float speedBoost = 2f;
 
+    [SerializeField] private float cooldown = 12f;
+    private bool onCooldown = false;
+
     private MeshRenderer meshRenderer;
     private CharacterMovement characterMovement;
     private Rigidbody rb;
@@ -27,13 +31,19 @@ public class KiwiDefensive : BirdAbility
         rb = GetComponent<Rigidbody>();
     }
 
-    override protected void Activate()
+    public void OnDefensiveAbility(InputValue value)
     {
         StartCoroutine(StealthBurrowing());
     }
 
     private IEnumerator StealthBurrowing()
     {
+        if (onCooldown || !CanUseAbilities() || !PointInProgress()) yield break;
+        onCooldown = true;
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
+
         // Need some type of animation or visual for burrowing but for now the bird will just go invisible
         meshRenderer.enabled = false; // makes bird invisible
         rb.useGravity = false;
@@ -46,5 +56,8 @@ public class KiwiDefensive : BirdAbility
         rb.useGravity = true;
         transform.Translate(Vector3.up * 5f);
         characterMovement.maxAirSpeed -= speedBoost;
+
+        yield return new WaitForSeconds(cooldown);
+        onCooldown = false;
     }
 }
