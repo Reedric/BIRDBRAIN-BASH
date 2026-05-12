@@ -1,16 +1,28 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
-public class DodoOffensive : BirdAbility
+public class DodoScript : MonoBehaviour
 {
     public Animator animator; // Assign in inspector
-
+    public string offensiveAbilityAction = "Offensive Ability"; // Input action name
+    private PlayerInput playerInput;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        playerInput = GetComponent<PlayerInput>();
         if (animator == null) animator = GetComponent<Animator>();
     }
 
-    protected override void Activate()
+    // Update is called once per frame
+    void Update()
+    {
+        if (playerInput != null && playerInput.actions.FindAction(offensiveAbilityAction).WasPressedThisFrame())
+        {
+            TriggerOffensiveAbility();
+        }
+    }
+
+    private void TriggerOffensiveAbility()
     {
         // Play animation
         if (animator != null)

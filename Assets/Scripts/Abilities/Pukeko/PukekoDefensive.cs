@@ -10,8 +10,10 @@ using System.Collections;
 public class PukekoDefensive : BirdAbility
 {
     [Header("Pukeko Defensive Settings")]
+    [SerializeField] private float cooldown = 20f;
     [SerializeField] private float dashSpeed = 10f;
 
+    private bool onCooldown = false;
     private bool isDashing = false;
     private Rigidbody rb;
     private CharacterMovement characterMovement;
@@ -25,16 +27,20 @@ public class PukekoDefensive : BirdAbility
         ballInteract = GetComponent<BallInteract>();
     }
 
-    override protected void Activate()
+    public void OnDefensiveAbility()
     {
-        StartCoroutine(PlayingDirty());
-        Debug.Log("Pukeko Defensive Activated");
+        if (!onCooldown)
+        {
+            // Debug.Log("Pukeko Defensive Ability Activated: Playing Dirty");
+            onCooldown = true;
+            StartCoroutine(PlayingDirty());
+        }
     }
 
     private IEnumerator PlayingDirty()
     {
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
         
         isDashing = true;
         characterMovement.controlMovement(false, false);
@@ -46,6 +52,9 @@ public class PukekoDefensive : BirdAbility
 
         isDashing = false;
         characterMovement.controlMovement(true, true);
+
+        yield return new WaitForSeconds(cooldown);
+        onCooldown = false;
     }
 
     // Detect collision with the ball during the dash

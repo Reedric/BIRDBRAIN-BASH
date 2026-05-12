@@ -10,9 +10,11 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class MacawOffensive : BirdAbility
 {
+    [SerializeField] private float cooldown = 20f;
     [SerializeField] private float flipDuration = 10f; 
 
     private List<PlayerInput> opponentControls = new();
+    private bool onCooldown = false;
     private bool onLeft;
 
     void Start()
@@ -35,22 +37,22 @@ public class MacawOffensive : BirdAbility
         //}
     }
 
-    override protected void Activate()
+    public void OnOffensiveAbility()
     {
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
-
-        // Play sound effect using AudioManager
-        AudioManager.PlayBirdSound(BirdType.MACAW, SoundType.OFFENSIVE, 1.0f);
-
         StartCoroutine(FlipFlap());
     }
 
     private IEnumerator FlipFlap()
     {
+        if (onCooldown || !CanUseAbilities() || !PointInProgress()) yield break;
+        onCooldown = true;
+
         FlipControls(true);
         yield return new WaitForSeconds(flipDuration);
         FlipControls(false);
+
+        yield return new WaitForSeconds(cooldown);
+        onCooldown = false;
     }
 
     private void FlipControls(bool shouldFlip)
