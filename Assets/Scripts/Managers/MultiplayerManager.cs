@@ -18,6 +18,10 @@ public class MultiplayerManager : MonoBehaviour
     private List<bool> isKBMInput; // List of inputs for players (true is KBM, false is Controller) [Only ONE KBM allowed]
     private List<BirdType> selectedBirds; // List of birds each player selected
 
+    // HUDManager.Instance is null during Awake() because script execution order isn't guaranteed.
+    // We store pending AI registrations here and flush them in Start() once HUDManager exists.
+    private List<(int playerIndex, BirdType birdType)> pendingAIRegistrations = new();
+
     void Awake()
     {
         // Assign the instance
@@ -44,6 +48,15 @@ public class MultiplayerManager : MonoBehaviour
         {
             indicator.enabled = false;
         }
+
+        // Flush deferred AI card registrations now that HUDManager.Instance is guaranteed to exist.
+        // MakeAI() stores registrations here instead of calling HUDManager directly during Awake(),
+        // because HUDManager.Instance is null at that point (Awake() order is not guaranteed).
+        foreach (var (playerIndex, birdType) in pendingAIRegistrations)
+        {
+            HUDManager.Instance?.RegisterAICard(playerIndex, birdType);
+        }
+        pendingAIRegistrations.Clear();
     }
 
     void InitializePlayers()
@@ -312,7 +325,8 @@ public class MultiplayerManager : MonoBehaviour
         }
         fo.target = ai.transform;
 
-        // Register this AI's bird with the HUD so its player card shows up
-        HUDManager.Instance?.RegisterAICard(playerCount, birdType);
+        // Store for deferred registration — HUDManager.Instance is null here during Awake(),
+        // so we queue this and flush it in Start() instead of calling RegisterAICard directly.
+        pendingAIRegistrations.Add((playerCount, birdType));
     }
 }

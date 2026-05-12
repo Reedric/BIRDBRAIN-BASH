@@ -238,17 +238,17 @@ public class HUDManager : MonoBehaviour
 
         PlayerCardUI[] cards = GetOrderedCards();
 
-        for (int i = 0; i < cards.Length; i++)
+        // Only loop through human player slots — AI slots are handled exclusively
+        // by RegisterAICard() which runs in MultiplayerManager.Awake(). Looping
+        // through all 4 cards here was calling SetActive(false) on AI cards AFTER
+        // RegisterAICard() had already set them up, wiping them out.
+        for (int i = 0; i < selectedBirds.Count; i++)
         {
             PlayerCardUI card = cards[i];
             if (card == null) continue;
 
-            bool playerIsActive = i < selectedBirds.Count;
-
             if (card.cardRoot != null)
-                card.cardRoot.SetActive(playerIsActive);
-
-            if (!playerIsActive) continue;
+                card.cardRoot.SetActive(true);
 
             BirdHUDData data = GetBirdHUDData(selectedBirds[i]);
             ApplyBirdDataToCard(card, data);

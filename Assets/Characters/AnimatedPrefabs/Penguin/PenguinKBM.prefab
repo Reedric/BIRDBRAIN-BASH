@@ -7622,7 +7622,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxGroundSpeed: 4
-  maxAirSpeed: 2
+  maxAirSpeed: 4
   jumpForce: 3
   rotationSpeed: 10
   rotationOffsetEuler: {x: 0, y: 0, z: 0}
@@ -7660,6 +7660,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8d4e2e6aff8b4245811c0e5020de2c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  AbilitySlot: 0
+  _cooldownTime: 0
   dashCooldown: 5
   dashDuration: 1
   dashSpeed: 10
