@@ -255,8 +255,8 @@ MonoBehaviour:
 
     Press BUTTON NORTH to skip to game'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
-  m_sharedMaterial: {fileID: -1492929328572945960, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
+  m_sharedMaterial: {fileID: -1081790109219817819, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -392,8 +392,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: ACTION
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
-  m_sharedMaterial: {fileID: -1492929328572945960, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
+  m_sharedMaterial: {fileID: -1081790109219817819, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -657,8 +657,8 @@ MonoBehaviour:
 
     Press BUTTON EAST to go straight to the game'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
-  m_sharedMaterial: {fileID: -1492929328572945960, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
+  m_sharedMaterial: {fileID: -1081790109219817819, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -784,12 +784,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -1003,8 +1003,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: INFORMATION ABOUT CONTROLS
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
-  m_sharedMaterial: {fileID: -1492929328572945960, guid: f7016ce9fd1e937409c310fd50d9183f, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
+  m_sharedMaterial: {fileID: -1081790109219817819, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1234,6 +1234,14 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 2d5b8683e09fdc849b452a98de2d0544, type: 3}
   ballGroundHitSounds:
   - {fileID: 8300000, guid: 8a5240865a3d1644eb7a3e302d94e33e, type: 3}
+  team1DefensiveReadySound: {fileID: 0}
+  team1OffensiveReadySound: {fileID: 0}
+  team2DefensiveReadySound: {fileID: 0}
+  team2OffensiveReadySound: {fileID: 0}
+  buffStartSound: {fileID: 0}
+  buffEndSound: {fileID: 0}
+  debuffStartSound: {fileID: 0}
+  debuffEndSound: {fileID: 0}
   backgroundTracks:
   - {fileID: 8300000, guid: f3d5d2cca2b6e9c42881ed89b0962151, type: 3}
   pauseTrack: {fileID: 0}

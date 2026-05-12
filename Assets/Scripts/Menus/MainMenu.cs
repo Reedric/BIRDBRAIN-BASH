@@ -4,18 +4,27 @@ using System.Collections;
 
 public class MainMenu : MonoBehaviour
 {
-    [SerializeField] private string characterSelectSceneName = "AlexaCharSelect";
+    [Header("Panels")]
+    [Tooltip("The GameObject that holds the main menu buttons (Play, Quit, Credits, etc.)")]
+    [SerializeField] private GameObject mainMenuPanel;
+
+    [Tooltip("The GameObject that holds the NumPlayers screen.")]
+    [SerializeField] private GameObject numPlayersPanel;
 
     [Header("Credits")]
-    [SerializeField] private GameObject creditsCanvas; //
-    [SerializeField] private Animator creditsAnimator; // Animator on the scrolling text
+    [SerializeField] private GameObject creditsCanvas;
+    [SerializeField] private Animator creditsAnimator;
     [SerializeField] private float creditsDuration = 30f;
 
     private bool isShowingCredits = false;
 
+    /// <summary>
+    /// Opens the NumPlayers screen instead of jumping straight to CharSelect.
+    /// </summary>
     public void PlayButton()
     {
-        SceneManager.LoadScene(characterSelectSceneName);
+        if (mainMenuPanel  != null) mainMenuPanel.SetActive(false);
+        if (numPlayersPanel != null) numPlayersPanel.SetActive(true);
     }
 
     public void Quit()
@@ -26,7 +35,6 @@ public class MainMenu : MonoBehaviour
     public void CreditsButton()
     {
         if (isShowingCredits) return;
-
         StartCoroutine(PlayCredits());
     }
 
