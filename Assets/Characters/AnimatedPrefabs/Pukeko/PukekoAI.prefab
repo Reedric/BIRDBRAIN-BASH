@@ -5159,3 +5159,13 @@ MonoBehaviour:
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
   rotationOffsetEuler: {x: 0, y: 0, z: 0}
+  aiDifficulty: 1
+  easyBumpChance: 0.5
+  easySetChance: 0.5
+  easySpikeChance: 0.5
+  mediumBumpChance: 0.75
+  mediumSetChance: 0.75
+  mediumSpikeChance: 0.75
+  hardBumpChance: 0.9
+  hardSetChance: 0.9
+  hardSpikeChance: 0.9

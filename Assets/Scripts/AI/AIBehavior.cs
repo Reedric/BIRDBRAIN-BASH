@@ -52,6 +52,34 @@ public class AIBehavior : MonoBehaviour
     private float originalMaxGroundSpeed;
     private float originalMaxAirSpeed;
 
+        public enum AIDifficulty
+    {
+        Easy,
+        Medium,
+        Hard
+    }
+
+    [Header("AI Difficulty")]
+    [SerializeField] private AIDifficulty aiDifficulty = AIDifficulty.Medium;
+
+    [Header("Easy Difficulty Chances")]
+    [Range(0f, 1f)] public float easyBumpChance = 0.5f;
+    [Range(0f, 1f)] public float easySetChance = 0.5f;
+    [Range(0f, 1f)] public float easySpikeChance = 0.5f;
+
+    [Header("Medium Difficulty Chances")]
+    [Range(0f, 1f)] public float mediumBumpChance = 0.75f;
+    [Range(0f, 1f)] public float mediumSetChance = 0.75f;
+    [Range(0f, 1f)] public float mediumSpikeChance = 0.75f;
+
+    [Header("Hard Difficulty Chances")]
+    [Range(0f, 1f)] public float hardBumpChance = 0.90f;
+    [Range(0f, 1f)] public float hardSetChance = 0.90f;
+    [Range(0f, 1f)] public float hardSpikeChance = 0.90f;
+
+    private bool attemptedHitThisVolley = false;
+    private bool willAttemptHit = false;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -158,6 +186,13 @@ public class AIBehavior : MonoBehaviour
         {
             return;
         }
+
+        // Reset hit attempt when the ball is no longer nearby
+        if (!IsAINearBall())
+        {
+            attemptedHitThisVolley = false;
+        }
+
         // Check if they AI can hit the ball
         if (CanHit())
         {
@@ -165,31 +200,66 @@ public class AIBehavior : MonoBehaviour
             switch (GameManager.Instance.gameState)
             {
                 // If the ball was just spiked, served, or blocked
-                case GameManager.GameState.Spiked: case GameManager.GameState.Served: case GameManager.GameState.Blocked:
+                case GameManager.GameState.Spiked:
+                case GameManager.GameState.Served:
+                case GameManager.GameState.Blocked:
+
                     // If the AI is near the ball and the ball is on its way down, bump the ball
                     if (IsAINearBall() && ballRb.linearVelocity.y < 0)
                     {
-                        BumpBall();
+                        // Roll ONLY ONCE per hit opportunity
+                        if (!attemptedHitThisVolley)
+                        {
+                            attemptedHitThisVolley = true;
+                            willAttemptHit = CanPerformBump();
+                        }
+
+                        // If the AI succeeded its roll, bump the ball
+                        if (willAttemptHit)
+                        {
+                            BumpBall();
+
+                            // Reset after successful hit
+                            attemptedHitThisVolley = false;
+                        }
                     }
                     else // Just move the AI to get into a position to hit the ball
                     {
                         MoveAI(true);
                     }
                     break;
+
                 // If the ball was just bumped
                 case GameManager.GameState.Bumped:
-                    // If the AI is near the ball and the ball is on its way down, bump the ball
+
+                    // If the AI is near the ball and the ball is on its way down, set the ball
                     if (IsAINearBall() && ballRb.linearVelocity.y < 0)
                     {
-                        SetBall();
+                        // Roll ONLY ONCE per hit opportunity
+                        if (!attemptedHitThisVolley)
+                        {
+                            attemptedHitThisVolley = true;
+                            willAttemptHit = CanPerformSet();
+                        }
+
+                        // If the AI succeeded its roll, set the ball
+                        if (willAttemptHit)
+                        {
+                            SetBall();
+
+                            // Reset after successful hit
+                            attemptedHitThisVolley = false;
+                        }
                     }
                     else // Just move the AI to get into a position to hit the ball
                     {
                         MoveAI(true);
                     }
                     break;
+
                 // If the ball was just set
                 case GameManager.GameState.Set:
+
                     // Get the position of the AI and the ball
                     Vector2 aiPos = new Vector2(transform.position.x, transform.position.z);
                     Vector2 ballPos = new Vector2(ballRb.transform.position.x, ballRb.transform.position.z);
@@ -210,7 +280,21 @@ public class AIBehavior : MonoBehaviour
                         }
                         else if (IsAINearBall()) // Else if the AI is under the ball, not grounded, and is close to the ball, spike it
                         {
-                            SpikeBall();
+                            // Roll ONLY ONCE per spike opportunity
+                            if (!attemptedHitThisVolley)
+                            {
+                                attemptedHitThisVolley = true;
+                                willAttemptHit = CanPerformSpike();
+                            }
+
+                            // If the AI succeeded its roll, spike the ball
+                            if (willAttemptHit)
+                            {
+                                SpikeBall();
+
+                                // Reset after successful hit
+                                attemptedHitThisVolley = false;
+                            }
                         }
                     }
                     else // Else, the ball is not on its way down
@@ -222,8 +306,10 @@ public class AIBehavior : MonoBehaviour
                         }
                     }
                     break;
+
                 // If the point is about to start (ball needs to be served)
                 case GameManager.GameState.PointStart:
+
                     // If this AI is the one serving
                     if (GameManager.Instance.server == gameObject)
                     {
@@ -240,6 +326,7 @@ public class AIBehavior : MonoBehaviour
                     break;
             }
         }
+
         // Reposition for defense ONLY IF the ball is not about to be served AND the AI cannot hit it
         else if (!GameManager.Instance.gameState.Equals(GameManager.GameState.PointStart))
         {
@@ -300,6 +387,44 @@ public class AIBehavior : MonoBehaviour
         // Get the distance the AI is from the ball, return whether it is less than or equal that interaction radius
         float distance = Vector3.Distance(contactPoint.position, BallManager.Instance.gameObject.transform.position);
         return distance <= interactionRadius;
+    }
+
+    // Returns true if the AI succeeds its skill check
+    private bool RollHitChance(float easy, float medium, float hard)
+    {
+        float chance = medium;
+
+        switch (aiDifficulty)
+        {
+            case AIDifficulty.Easy:
+                chance = easy;
+                break;
+
+            case AIDifficulty.Medium:
+                chance = medium;
+                break;
+
+            case AIDifficulty.Hard:
+                chance = hard;
+                break;
+        }
+
+        return UnityEngine.Random.value <= chance;
+    }
+
+    private bool CanPerformBump()
+    {
+        return RollHitChance(easyBumpChance, mediumBumpChance, hardBumpChance);
+    }
+
+    private bool CanPerformSet()
+    {
+        return RollHitChance(easySetChance, mediumSetChance, hardSetChance);
+    }
+
+    private bool CanPerformSpike()
+    {
+        return RollHitChance(easySpikeChance, mediumSpikeChance, hardSpikeChance);
     }
     
     // Move the AI towards the ball or not

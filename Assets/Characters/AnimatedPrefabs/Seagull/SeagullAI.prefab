@@ -5154,6 +5154,16 @@ MonoBehaviour:
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
   rotationOffsetEuler: {x: 0, y: 0, z: 0}
+  aiDifficulty: 1
+  easyBumpChance: 0.5
+  easySetChance: 0.5
+  easySpikeChance: 0.5
+  mediumBumpChance: 0.75
+  mediumSetChance: 0.75
+  mediumSpikeChance: 0.75
+  hardBumpChance: 0.9
+  hardSetChance: 0.9
+  hardSpikeChance: 0.9
 --- !u!4 &978468804367139537 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 8612fe484065c804097315eedc3bb8b3, type: 3}

@@ -7113,6 +7113,16 @@ MonoBehaviour:
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
   rotationOffsetEuler: {x: 0, y: 0, z: 0}
+  aiDifficulty: 1
+  easyBumpChance: 0.5
+  easySetChance: 0.5
+  easySpikeChance: 0.5
+  mediumBumpChance: 0.65
+  mediumSetChance: 0.65
+  mediumSpikeChance: 0.65
+  hardBumpChance: 0.9
+  hardSetChance: 0.9
+  hardSpikeChance: 0.9
 --- !u!1 &7476073338430894634
 GameObject:
   m_ObjectHideFlags: 0
