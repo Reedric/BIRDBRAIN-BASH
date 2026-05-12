@@ -1,9 +1,16 @@
 using UnityEngine;
-using UnityEngine.UI;
 
-// Applies smooth sin-wave-based wobble effects to a UI Image (or any RectTransform).
-// Drives position, rotation, and scale via the RectTransform — no vertex editing needed.
-// Works with:  UI Image, RawImage, or literally any GameObject with a RectTransform.
+// Applies smooth sin-wave-based wobble effects to any UI element
+// that uses a RectTransform.
+// Works with:
+// - UI Image
+// - RawImage
+// - TextMeshProUGUI (TMP text)
+// - Buttons
+// - Panels
+// - Literally any UI object with a RectTransform
+// Drives position, rotation, and scale directly through the RectTransform.
+// No vertex editing or TMP mesh manipulation required.
 
 public class ImageWobble : MonoBehaviour
 {
