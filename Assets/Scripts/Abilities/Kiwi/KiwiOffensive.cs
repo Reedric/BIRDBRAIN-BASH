@@ -1,4 +1,6 @@
+using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(BallInteract))]
 
@@ -6,9 +8,14 @@ using UnityEngine;
 /// Fire the Lazar - Kiwi fires a laser beam from its eyes to hit the ball, 
 /// which automatically counts as the next action required for the ball in the rally. 
 /// If spiking or blocking, increases the ball’s speed.
+/// 
+/// TODO: Find a way to temporarily increase ball speed
 /// </summary>
 public class KiwiOffensive : BirdAbility
 {
+    [SerializeField] private float cooldown = 15f;
+    private bool onCooldown = false;
+
     // Positions for the laser to originate from (could be empty GameObjects placed at the eyes in the Unity editor)
     [SerializeField] private Transform leftEyePosition;
     [SerializeField] private Transform rightEyePosition;
@@ -25,18 +32,24 @@ public class KiwiOffensive : BirdAbility
         ballInteract = GetComponent<BallInteract>();
     }
 
-    override protected void Activate()
+    public void OnOffensiveAbility(InputValue value)
     {
-        FireTheLazar();
+        StartCoroutine(FireTheLazar());
     }
 
-    private void FireTheLazar()
+    private IEnumerator FireTheLazar()
     {
+        if (onCooldown || !CanUseAbilities() || !PointInProgress()) yield break;
+        onCooldown = true;
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+
         Vector3 ballPosition = BallManager.Instance.gameObject.GetComponent<Transform>().position;
         GameObject leftLazer = CreateLazer(ballPosition, leftEyePosition.position);
         GameObject rightLazer = CreateLazer(ballPosition, rightEyePosition.position);
 
-        switch (GameManager.Instance.gameState)
+        switch (gameManager.gameState)
         {
             case GameManager.GameState.Served:
                 if (HasPossesion()) ballInteract.BumpBall(); // technically you han hit over on the serve, but whatevs
@@ -66,6 +79,9 @@ public class KiwiOffensive : BirdAbility
 
         Destroy(leftLazer, lazerDuration);
         Destroy(rightLazer, lazerDuration);
+
+        yield return new WaitForSeconds(cooldown);
+        onCooldown = false;
     }
 
     private GameObject CreateLazer(Vector3 ballPosition, Vector3 eyePosition)

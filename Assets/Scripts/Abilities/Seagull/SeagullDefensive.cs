@@ -9,14 +9,17 @@ public class SeagullDefensive : BirdAbility
 {
     [Header("Mine Mine Mine Ability")]
     public float dashSpeed = 100f; //how fast the dash is
+    public float cooldown = 15f; //cooldown in seconds
     public float shoveForce = 18f; //how much the seagull pushes others out of the way
     public float shoveRadius = 1.5f; //radius to shove objects around
     [HideInInspector] private bool isAbilityReady = true;
     private Rigidbody rb;
+    private PlayerInput playerInput; // Input for this specific player
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        playerInput = GetComponent<PlayerInput>();
         rb = GetComponent<Rigidbody>();
     }
 
@@ -26,15 +29,15 @@ public class SeagullDefensive : BirdAbility
         {
             return;
         }
-        if (GameManager.Instance.gameState == GameManager.GameState.PointStart && GameManager.Instance.server == gameObject)
+        if (gameManager.gameState == GameManager.GameState.PointStart && gameManager.server == gameObject)
         {
             return;
         }
-        if (GameManager.Instance.gameState == GameManager.GameState.Served && GameManager.Instance.server == gameObject)
+        if (gameManager.gameState == GameManager.GameState.Served && gameManager.server == gameObject)
         {
             return;
         }
-        if (BirdAbilityRuleService.Instance.CanUseAbility(gameObject))
+        if (!CanUseAbilities())
         {
             return;
         }
@@ -74,7 +77,7 @@ public class SeagullDefensive : BirdAbility
         AudioManager.PlayBirdSound(BirdType.SEAGULL, SoundType.DEFENSIVE, 1.0f);
 
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
 
         // Trigger defensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
@@ -139,6 +142,9 @@ public class SeagullDefensive : BirdAbility
 
         //Unfreeze Y movments
         rb.constraints = RigidbodyConstraints.FreezeRotation;
+
+        //Start cooldown
+        StartCoroutine(CooldownRoutine());
     }
 
     private void ShoveNearbyObjects()
@@ -167,8 +173,21 @@ public class SeagullDefensive : BirdAbility
         }
     }
 
-    override protected void Activate()
+    //Update is called once per frame
+    void Update()
     {
-        ActivateAbility();
+        if (playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame()) //for testing can change later
+        {
+            ActivateAbility();
+        }
+    }
+
+    private IEnumerator CooldownRoutine()
+    {
+        // Wait for the cooldown time
+        yield return new WaitForSeconds(cooldown);
+
+        // After waiting, the ability is ready again
+        isAbilityReady = true;
     }
 }
