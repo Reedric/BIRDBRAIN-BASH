@@ -218,7 +218,7 @@ public class HUDManager : MonoBehaviour
 
         BirdHUDData data = GetBirdHUDData(birdType);
         if (data != null)
-            data.displayName = "[CPU] " + data.displayName;
+            data.displayName = "CPU " + data.displayName;
 
         if (cards[playerIndex].cardRoot != null)
             cards[playerIndex].cardRoot.SetActive(true);
