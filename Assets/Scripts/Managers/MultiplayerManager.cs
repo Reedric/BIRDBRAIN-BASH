@@ -1,9 +1,11 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using UnityEngine.InputSystem.Users;
 
 public class MultiplayerManager : MonoBehaviour
 {
@@ -13,10 +15,16 @@ public class MultiplayerManager : MonoBehaviour
     [SerializeField] private GameObject aiPrefab; // Prefab for an AI player
     [SerializeField] private RawImage[] playerIndicators; // Ready up indicators for post-game
 
+    // How long to wait for a controller to be connected before giving up
+    [SerializeField] private float controllerWaitTimeout = 10f;
+
     private CharacterManager cManager; // Instance of character manager
     private static MultiplayerManager instance; // Singleton reference to the manager
     private List<bool> isKBMInput; // List of inputs for players (true is KBM, false is Controller) [Only ONE KBM allowed]
     private List<BirdType> selectedBirds; // List of birds each player selected
+
+    // Track PlayerInput per player index so we can re-pair on reconnect
+    private Dictionary<int, PlayerInput> playerInputMap = new();
 
     // HUDManager.Instance is null during Awake() because script execution order isn't guaranteed.
     // We store pending AI registrations here and flush them in Start() once HUDManager exists.
@@ -28,6 +36,7 @@ public class MultiplayerManager : MonoBehaviour
         if (instance != null && instance != this)
         {
             Destroy(gameObject);
+            return;
         }
         else
         {
@@ -38,6 +47,10 @@ public class MultiplayerManager : MonoBehaviour
         cManager = GetComponent<CharacterManager>();
         instance.isKBMInput = DataTransferManager.isKBMInput;
         instance.selectedBirds = DataTransferManager.selectedBirds;
+
+        // Subscribe to device changes to handle disconnects and reconnects
+        InputSystem.onDeviceChange += OnDeviceChange;
+
         InitializePlayers();
     }
 
@@ -57,6 +70,46 @@ public class MultiplayerManager : MonoBehaviour
             HUDManager.Instance?.RegisterAICard(playerIndex, birdType);
         }
         pendingAIRegistrations.Clear();
+    }
+
+    void OnDestroy()
+    {
+        // Always unsubscribe to avoid stale callbacks after scene unload
+        InputSystem.onDeviceChange -= OnDeviceChange;
+    }
+
+    // Handles controller disconnect and reconnect events
+    private void OnDeviceChange(InputDevice device, InputDeviceChange change)
+    {
+        if (device is not Gamepad gamepad) return;
+
+        switch (change)
+        {
+            case InputDeviceChange.Disconnected:
+                Debug.LogWarning($"[MultiplayerManager] Gamepad disconnected: {gamepad.displayName}");
+                // todo: pause game, show reconnect UI here
+                break;
+
+            case InputDeviceChange.Reconnected:
+                Debug.Log($"[MultiplayerManager] Gamepad reconnected: {gamepad.displayName}");
+                TryRepairGamepad(gamepad);
+                break;
+        }
+    }
+
+    // Re-pairs a reconnected gamepad to its original PlayerInput if it lost its device
+    private void TryRepairGamepad(Gamepad gamepad)
+    {
+        foreach (var (playerIndex, playerInput) in playerInputMap)
+        {
+            // If this PlayerInput has no active gamepad device, pair the reconnected one
+            if (playerInput != null && !playerInput.devices.Any(d => d is Gamepad))
+            {
+                InputUser.PerformPairingWithDevice(gamepad, playerInput.user);
+                Debug.Log($"[MultiplayerManager] Re-paired {gamepad.displayName} to Player {playerIndex + 1}");
+                return;
+            }
+        }
     }
 
     void InitializePlayers()
@@ -90,13 +143,25 @@ public class MultiplayerManager : MonoBehaviour
             }
             else
             {
-                player = InitializeControllerPlayer(birdPrefab);
+                // Controller init can fail if no pad is connected yet — handle gracefully
+                player = InitializeControllerPlayer(birdPrefab, playerCount);
+            }
+
+            // Guard: if player failed to initialize (e.g. no controller found), skip safely
+            if (player == null)
+            {
+                Debug.LogError($"[MultiplayerManager] Failed to initialize player {playerCount + 1} — skipping.");
+                playerCount++;
+                continue;
             }
 
             // Give the player the necessary scripts to move and interact with the ball
             MakePlayer(player.gameObject, playerCount);
             player.actions.FindActionMap("Player").Enable();
             player.actions.FindActionMap("UI").Enable();
+
+            // Track for reconnect handling
+            playerInputMap[playerCount] = player;
 
             // Increment player count
             playerCount++;
@@ -110,7 +175,7 @@ public class MultiplayerManager : MonoBehaviour
         // Now add AI players, if necessary
         while (playerCount < 4)
         {
-            // Spawn AI and give it the apporpriate components
+            // Spawn AI and give it the appropriate components
             MakeAI(playerCount);
 
             // Increment player count
@@ -132,15 +197,17 @@ public class MultiplayerManager : MonoBehaviour
         );
     }
 
-    PlayerInput InitializeControllerPlayer(GameObject prefab)
+    // Now takes playerCount for logging, and starts a retry coroutine if no pad is found
+    PlayerInput InitializeControllerPlayer(GameObject prefab, int playerCount)
     {
         // Get an available gamepad if possible
         Gamepad controller = AvailableGamepad();
 
-        // If there is no available gamepad, throw an error (change this to wait until a valid controller is connected)
+        // If there is no available gamepad, start a wait coroutine instead of hard erroring
         if (controller == null)
         {
-            Debug.LogError("Not enough controllers for the amount of players selected.");
+            Debug.LogWarning($"[MultiplayerManager] No available gamepad for Player {playerCount + 1}. Starting wait coroutine.");
+            StartCoroutine(WaitForControllerAndInitialize(prefab, playerCount));
             return null;
         }
 
@@ -150,6 +217,44 @@ public class MultiplayerManager : MonoBehaviour
             controlScheme: "Gamepad",
             pairWithDevice: controller
         );
+    }
+
+    // Polls for a controller to become available, up to controllerWaitTimeout seconds
+    private IEnumerator WaitForControllerAndInitialize(GameObject prefab, int playerCount)
+    {
+        float elapsed = 0f;
+
+        while (elapsed < controllerWaitTimeout)
+        {
+            Gamepad controller = AvailableGamepad();
+            if (controller != null)
+            {
+                Debug.Log($"[MultiplayerManager] Controller found for Player {playerCount + 1} after {elapsed:F1}s wait.");
+
+                // Initialize player input now that a controller is available
+                PlayerInput player = PlayerInput.Instantiate(
+                    prefab,
+                    controlScheme: "Gamepad",
+                    pairWithDevice: controller
+                );
+
+                // Give the player the necessary scripts to move and interact with the ball
+                MakePlayer(player.gameObject, playerCount);
+                player.actions.FindActionMap("Player").Enable();
+                player.actions.FindActionMap("UI").Enable();
+
+                // Track for reconnect handling
+                playerInputMap[playerCount] = player;
+
+                yield break;
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // If we reach here, no controller was found in time
+        Debug.LogError($"[MultiplayerManager] Timed out waiting for controller for Player {playerCount + 1}.");
     }
 
     Gamepad AvailableGamepad()

@@ -80,6 +80,13 @@ public class AIBehavior : MonoBehaviour
     private bool attemptedHitThisVolley = false;
     private bool willAttemptHit = false;
 
+    private bool movementEnamored = false;
+
+    public void SetEnamored(bool enamored)
+    {
+        movementEnamored = enamored;
+    }
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -430,7 +437,7 @@ public class AIBehavior : MonoBehaviour
     // Move the AI towards the ball or not
     private void MoveAI(bool towardsBall)
     {
-        if (movementDisabled) return;
+        if (movementDisabled || movementEnamored) return;
         
         // Initialize target for AI
         Vector3 target = new Vector3(5, 0, 0);

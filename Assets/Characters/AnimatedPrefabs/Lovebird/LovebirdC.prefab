@@ -5751,7 +5751,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxGroundSpeed: 4
   maxAirSpeed: 3
-  jumpForce: 3
+  jumpForce: 5
   rotationSpeed: 10
   rotationOffsetEuler: {x: 0, y: 0, z: 0}
   animator: {fileID: 0}
