@@ -400,6 +400,7 @@ public class MultiplayerManager : MonoBehaviour
         // Get the ai component and assign the fields
         AIBehavior aIBehavior = ai.GetComponent<AIBehavior>();
         aIBehavior.onLeft = playerCount < 2 ? true : false;
+        aIBehavior.SetAIDifficulty(playerCount < 2 ? AIBehavior.AIDifficulty.Hard : AIBehavior.AIDifficulty.Medium);        
 
         // Set ai transform
         ai.transform.position = playerSpawnpoints[playerCount].position;

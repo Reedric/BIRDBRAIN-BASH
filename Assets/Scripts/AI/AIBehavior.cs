@@ -927,4 +927,10 @@ public class AIBehavior : MonoBehaviour
     {
         return !abilitiesSilenced;
     }
+
+    // Setter for the difficulty field
+    public void SetAIDifficulty(AIDifficulty difficulty)
+    {
+        aiDifficulty = difficulty;
+    }
 }
