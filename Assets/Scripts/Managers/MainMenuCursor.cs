@@ -47,9 +47,12 @@ public class MainMenuCursor : MonoBehaviour
         // Ensure the hardware mouse stays hidden (in case of alt-tabbing)
         if (Cursor.visible) Cursor.visible = false;
 
-        // Check for Gamepad
-        Gamepad pad = Gamepad.current;
-        if (pad == null) return; 
+        // Only read from Gamepad.all[0] so that Player 1 is always the first connected
+        // controller — this matches how CharacterSelectManager assigns players via
+        // Gamepad.all[index], preventing ordering mismatches between scenes and
+        // ensuring controllers 2/3/4 cannot move or click the main menu cursor.
+        if (Gamepad.all.Count == 0) return;
+        Gamepad pad = Gamepad.all[0];
 
         // Back to menu (B Button)
         if (pad.bButton.wasPressedThisFrame)

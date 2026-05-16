@@ -160,6 +160,7 @@ public class GameManager : MonoBehaviour
                 rb.useGravity = true;
             }
         }
+
         // Reset all positions and velocities for all players
         instance.leftPlayer1.transform.position = instance.leftPlayer1Origin;
         instance.leftPlayer2.transform.position = instance.leftPlayer2Origin;
@@ -170,22 +171,26 @@ public class GameManager : MonoBehaviour
         instance.leftPlayer2.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
         instance.rightPlayer1.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
         instance.rightPlayer2.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
-        BallManager.Instance.gameObject.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
+
+        // Reset ball physics completely
+        Rigidbody ballRb = BallManager.Instance.gameObject.GetComponent<Rigidbody>();
+        ballRb.linearVelocity = Vector3.zero;
+        ballRb.angularVelocity = Vector3.zero;
+        ballRb.useGravity = false;
 
         // Set server's and ball's position
         if (instance.leftAttack)
         {
             instance.server.transform.position = instance.leftServeLocation;
-            BallManager.Instance.gameObject.transform.position = instance.leftServeLocation + new Vector3(1, 0, 0);
+            BallManager.Instance.gameObject.transform.position =
+                instance.leftServeLocation + new Vector3(1, 0, 0);
         }
         else
         {
             instance.server.transform.position = instance.rightServeLocation;
-            BallManager.Instance.gameObject.transform.position = instance.rightServeLocation - new Vector3(1, 0, 0);
+            BallManager.Instance.gameObject.transform.position =
+                instance.rightServeLocation - new Vector3(1, 0, 0);
         }
-
-        // Disable gravity for the ball
-        BallManager.Instance.gameObject.GetComponent<Rigidbody>().useGravity = false;
 
         // Reset the game manager fields
         instance.gameState = GameState.PointStart;

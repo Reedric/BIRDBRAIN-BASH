@@ -23,6 +23,11 @@ public class MultiplayerManager : MonoBehaviour
     private List<bool> isKBMInput; // List of inputs for players (true is KBM, false is Controller) [Only ONE KBM allowed]
     private List<BirdType> selectedBirds; // List of birds each player selected
 
+    // True when the match was launched from the main menu Demo button (0 human players).
+    // Detected by an empty isKBMInput list — all 4 slots are Hard AI, but player 1's
+    // gamepad can still open the pause menu so the demo can be exited.
+    private bool isDemoMode = false;
+
     // Track PlayerInput per player index so we can re-pair on reconnect
     private Dictionary<int, PlayerInput> playerInputMap = new();
 
@@ -48,6 +53,9 @@ public class MultiplayerManager : MonoBehaviour
         instance.isKBMInput = DataTransferManager.isKBMInput;
         instance.selectedBirds = DataTransferManager.selectedBirds;
 
+        // An empty isKBMInput list means the demo button was pressed — no human players
+        isDemoMode = (isKBMInput == null || isKBMInput.Count == 0);
+
         // Subscribe to device changes to handle disconnects and reconnects
         InputSystem.onDeviceChange += OnDeviceChange;
 
@@ -70,6 +78,27 @@ public class MultiplayerManager : MonoBehaviour
             HUDManager.Instance?.RegisterAICard(playerIndex, birdType);
         }
         pendingAIRegistrations.Clear();
+    }
+
+    void Update()
+    {
+        // In demo mode there are no PlayerInput instances, so the normal input pipeline won't
+        // route any button presses. Poll player 1's gamepad directly here so they can still
+        // open the pause menu to exit the demo without quitting the whole application.
+        if (!isDemoMode) return;
+
+        Gamepad pad = Gamepad.all.Count > 0 ? Gamepad.all[0] : null;
+        if (pad == null) return;
+
+        if (pad.startButton.wasPressedThisFrame)
+        {
+            // Player 1's gamepad (Gamepad.all[0]) always owns the pause menu in demo mode
+            PauseMenu.Instance.pausedPlayerID = 0;
+            if (PauseMenu.Instance.GameIsPaused)
+                PauseMenu.Instance.Resume();
+            else
+                PauseMenu.Instance.Pause();
+        }
     }
 
     void OnDestroy()
@@ -116,7 +145,8 @@ public class MultiplayerManager : MonoBehaviour
     {
         int playerCount = 0;
 
-        // Initialize the players to play
+        // In demo mode isKBMInput is empty, so this loop is skipped entirely and
+        // all four slots fall through to the MakeAI loop below.
         foreach (bool kbm in isKBMInput)
         {
             // set the bird type that was chosen on the selection screen, if available
@@ -172,7 +202,8 @@ public class MultiplayerManager : MonoBehaviour
         // Instantiate readied up for score manager
         ScoreManager.Instance.readiedUp = new bool[playerCount];
 
-        // Now add AI players, if necessary
+        // Now add AI players, if necessary.
+        // In demo mode playerCount starts at 0, so all four slots are filled with AI here.
         while (playerCount < 4)
         {
             // Spawn AI and give it the appropriate components
@@ -400,7 +431,16 @@ public class MultiplayerManager : MonoBehaviour
         // Get the ai component and assign the fields
         AIBehavior aIBehavior = ai.GetComponent<AIBehavior>();
         aIBehavior.onLeft = playerCount < 2 ? true : false;
-        aIBehavior.SetAIDifficulty(playerCount < 2 ? AIBehavior.AIDifficulty.Hard : AIBehavior.AIDifficulty.Medium);        
+
+        // Determine AI difficulty based on player count and slot:
+        // - Demo mode (0 humans)  -> all 4 AIs are Hard (screensaver spectacle)
+        // - 1 gamepad player      -> slot 1 is their left-team ally  -> Hard; all others -> Medium
+        // - 3 gamepad players     -> slot 3 is player 2's right-team ally -> Hard; no other AIs exist
+        // - 2 gamepad players     -> all AIs are opponents (slots 2 & 3) -> Medium
+        int humanCount = isKBMInput.Count(kbm => !kbm);
+        bool isAllyAI = (humanCount == 1 && playerCount == 1) ||
+                        (humanCount == 3 && playerCount == 3);
+        aIBehavior.SetAIDifficulty((isDemoMode || isAllyAI) ? AIBehavior.AIDifficulty.Hard : AIBehavior.AIDifficulty.Medium);
 
         // Set ai transform
         ai.transform.position = playerSpawnpoints[playerCount].position;
@@ -410,7 +450,14 @@ public class MultiplayerManager : MonoBehaviour
         // Assign the ai to its respective spot for the game manager
         FollowObject fo;
         GameManager gameManager = GameManager.Instance;
-        if (playerCount == 1)
+        if (playerCount == 0)
+        {
+            // Slot 0 is only ever an AI in demo mode (0 human players) — assign leftPlayer1 explicitly
+            // so GameManager.Start() doesn't throw an UnassignedReferenceException.
+            gameManager.leftPlayer1 = ai;
+            fo = GameObject.Find("PlayerOneFollow").GetComponent<FollowObject>();
+        }
+        else if (playerCount == 1)
         {
             gameManager.leftPlayer2 = ai;
             fo = GameObject.Find("PlayerTwoFollow").GetComponent<FollowObject>();

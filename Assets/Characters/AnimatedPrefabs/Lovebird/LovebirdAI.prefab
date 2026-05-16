@@ -5649,7 +5649,7 @@ MonoBehaviour:
   animator: {fileID: 3174459180659872943}
   maxGroundSpeed: 4
   maxAirSpeed: 3
-  jumpForce: 5
+  jumpForce: 6
   rotationSpeed: 10
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
