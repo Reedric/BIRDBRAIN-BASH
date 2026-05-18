@@ -1,5 +1,10 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
+using System.Collections.Generic;
+
+// TODO: AI Difficulty, Final Set Reduced Points, Team Select
+// Also TODO: Find some way to get the settings to the ScoreManager
 
 [RequireComponent(typeof(UIDocument))]
 public class MatchSettingsMenu : MonoBehaviour
@@ -21,6 +26,11 @@ public class MatchSettingsMenu : MonoBehaviour
     private Label _bestOfSetsText;
     [SerializeField] private int _bestOfSets = 3;
     [SerializeField] private int MaxBestOfSets = 7;
+
+    // Bot difficulty elements
+    private Button _botDifficultyArrowLeft;
+    private Button _botDifficultyArrowRight;
+    private Label _botDifficultyText;
 
     private void Awake()
     {
@@ -44,16 +54,20 @@ public class MatchSettingsMenu : MonoBehaviour
         PPSArrowRight.clicked += OnPPSArrowRightClicked;
         _bestOfSetsArrowLeft.clicked += OnBestOfSetsArrowLeftClicked;
         _bestOfSetsArrowRight.clicked += OnBestOfSetsArrowRightClicked;
-        
+        _botDifficultyArrowLeft.clicked += OnBotDifficultyArrowLeftClicked;
+        _botDifficultyArrowRight.clicked += OnBotDifficultyArrowRightClicked;
+
+        // Initialize displays
         UpdatePPSDisplay();
         UpdateBestOfSetsDisplay();
+        UpdateBotDifficultyDisplay();
     }
 
     private void OnGoButtonClicked()
     {
         // Start the match with the selected settings
         Debug.Log($"Starting match with {_pps} points per set and best of {_bestOfSets} sets.");
-        
+        SceneManager.LoadScene("Game");
     }
 
     private void OnPPSArrowLeftClicked()
@@ -67,7 +81,7 @@ public class MatchSettingsMenu : MonoBehaviour
 
     private void OnPPSArrowRightClicked()
     {
-        if (_pps <= MaxPPS) {
+        if (_pps < MaxPPS) {
             _pps++;
             UpdatePPSDisplay();
         }
@@ -84,7 +98,7 @@ public class MatchSettingsMenu : MonoBehaviour
 
     private void OnBestOfSetsArrowRightClicked()
     {
-        if (_bestOfSets <= MaxBestOfSets)
+        if (_bestOfSets < MaxBestOfSets)
         {
             _bestOfSets++;
             UpdateBestOfSetsDisplay();
@@ -100,4 +114,34 @@ public class MatchSettingsMenu : MonoBehaviour
     {
         _bestOfSetsText.text = _bestOfSets.ToString();
     }
+
+    // Want to have the difficuties cycle
+    private void OnBotDifficultyArrowLeftClicked()
+    {
+        
+    }
+
+    private void OnBotDifficultyArrowRightClicked()
+    {
+        
+    }
+
+    private void UpdateBotDifficultyDisplay()
+    {
+        
+    }
+
+    private enum BotDifficulty
+    {
+        Easy,
+        Medium,
+        Hard
+    }
+
+    private readonly Dictionary<BotDifficulty, string> _botDifficultyLookup = new()
+    {
+        { BotDifficulty.Easy, "Easy" },
+        { BotDifficulty.Medium, "Medium" },
+        { BotDifficulty.Hard, "Hard" }
+    };
 }
