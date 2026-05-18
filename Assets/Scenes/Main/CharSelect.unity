@@ -247,7 +247,7 @@ MonoBehaviour:
   kiwiSounds:
   - {fileID: 8300000, guid: 2b642a7f1184e9f4d86fb27196940707, type: 3}
   macawSounds:
-  - {fileID: 8300000, guid: 9bcf4b11a18905841bf8fefd27f76a87, type: 3}
+  - {fileID: 8300000, guid: a82aaec9527c4284d9d3beee3b5c52fe, type: 3}
   owlSounds:
   - {fileID: 8300000, guid: f7901d6e3fa546f469cee6feb21be0ab, type: 3}
   scoringSounds:
@@ -1995,7 +1995,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d0881116f8ad5940a0c7f881b90eaf8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  birdIndex: 14
+  birdIndex: 15
   highlightImage: {fileID: 0}
   highlightColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &488551192
@@ -4555,6 +4555,171 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1468803803}
   m_CullTransparentMesh: 1
+--- !u!1 &1505430141
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1505430142}
+  - component: {fileID: 1505430147}
+  - component: {fileID: 1505430146}
+  - component: {fileID: 1505430145}
+  - component: {fileID: 1505430144}
+  - component: {fileID: 1505430143}
+  m_Layer: 5
+  m_Name: Macaw
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1505430142
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1505430141}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.94000006, y: 0.94000006, z: 0.32254905}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 2030710869}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -353, y: -354}
+  m_SizeDelta: {x: 150, y: 150}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1505430143
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1505430141}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b18c1e56d4b6d408cdde921248ffa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSpeed: 1
+  verticalEnabled: 0
+  verticalAmplitude: 20
+  verticalSpeed: 1
+  verticalPhaseShift: 0
+  horizontalEnabled: 0
+  horizontalAmplitude: 10
+  horizontalSpeed: 1.5
+  horizontalPhaseShift: 1.5707964
+  rotationEnabled: 1
+  rotationAmplitude: 4
+  rotationSpeed: 0.85
+  rotationPhaseShift: 0
+  scaleEnabled: 0
+  scaleAmplitude: 0.01
+  scaleSpeed: 0.4
+  scalePhaseShift: 0
+  squishMode: 0
+  squishPhaseOffset: 1.5707964
+--- !u!114 &1505430144
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1505430141}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d0881116f8ad5940a0c7f881b90eaf8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  birdIndex: 14
+  highlightImage: {fileID: 0}
+  highlightColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &1505430145
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1505430141}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 1505430146}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &1505430146
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1505430141}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Texture: {fileID: 2800000, guid: 9e45c017c69cd68478f6a64cdc841d60, type: 3}
+  m_UVRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+--- !u!222 &1505430147
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1505430141}
+  m_CullTransparentMesh: 1
 --- !u!1 &1518615006
 GameObject:
   m_ObjectHideFlags: 0
@@ -5665,7 +5830,7 @@ MonoBehaviour:
   blue2Name: {fileID: 1596772759}
   pink1Name: {fileID: 1718734310}
   pink2Name: {fileID: 1389631583}
-  availableBirds: 00000000070000000500000009000000030000000600000008000000040000000a00000001000000020000000c0000000b0000000d0000000f000000
+  availableBirds: 00000000070000000500000009000000030000000600000008000000040000000a00000001000000020000000c0000000b0000000d0000000e0000000f000000
   numberOfPlayers: 1
   mainCanvas: {fileID: 1933689300}
   cursor1Prefab: {fileID: 1592670345}
@@ -5691,6 +5856,7 @@ MonoBehaviour:
   chickenTexture: {fileID: 614617403}
   ostrichTexture: {fileID: 1734531602}
   eagleTexture: {fileID: 420900230}
+  macawTexture: {fileID: 1505430146}
   randomTexture: {fileID: 488551193}
   p1Ready: {fileID: 1437344202}
   p2Ready: {fileID: 1454632524}
@@ -5701,6 +5867,10 @@ MonoBehaviour:
   cursorShrinkDuration: 0.07
   cursorBounceDuration: 0.14
   cursorBounceOvershoot: 1.15
+  iconShrinkDuration: 0.08
+  iconBounceDuration: 0.2
+  iconPressScale: 0.75
+  iconBounceOvershoot: 1.15
 --- !u!1 &1962441903
 GameObject:
   m_ObjectHideFlags: 0
@@ -5870,6 +6040,7 @@ RectTransform:
   - {fileID: 1734531599}
   - {fileID: 488551189}
   - {fileID: 420900227}
+  - {fileID: 1505430142}
   m_Father: {fileID: 1518615007}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}

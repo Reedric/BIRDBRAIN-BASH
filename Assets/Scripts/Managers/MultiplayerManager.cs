@@ -360,6 +360,9 @@ public class MultiplayerManager : MonoBehaviour
             case BirdType.OWL:
                 if (!isPlayer) return cManager.OwlAI;
                 return isKBM ? cManager.OwlKBM : cManager.OwlC;
+            case BirdType.MACAW:
+                if (!isPlayer) return cManager.MacawAI;
+                return isKBM ? cManager.MacawKBM : cManager.MacawC;
             default:
                 if (!isPlayer) return cManager.PenguinAI;
                 return isKBM ? cManager.PenguinKBM : cManager.PenguinC;
