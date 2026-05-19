@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;      
 using System.Collections;
 using System.Collections.Generic;
 
@@ -30,7 +32,30 @@ public class MainMenu : MonoBehaviour
     public void PlayButton()
     {
         if (mainMenuPanel  != null) mainMenuPanel.SetActive(false);
-        if (numPlayersPanel != null) numPlayersPanel.SetActive(true);
+        if (numPlayersPanel != null)
+        {
+            numPlayersPanel.SetActive(true);
+            StartCoroutine(SelectFirstButtonNextFrame(numPlayersPanel)); // prevent bleed-through
+        }
+    }
+
+    /// <summary>
+    /// Clears the EventSystem selection for one frame, then re-selects the first
+    /// button on the new panel. This prevents the "A" press that opened this panel
+    /// from instantly firing a button here too.
+    /// </summary>
+    private IEnumerator SelectFirstButtonNextFrame(GameObject panel)
+    {
+        // Deselect everything so the current A-press doesn't carry over
+        EventSystem.current.SetSelectedGameObject(null);
+
+        // Wait one frame for the button-press event to fully clear
+        yield return null;
+
+        // Now safely select the first interactable button on the new panel
+        Button firstButton = panel.GetComponentInChildren<Button>();
+        if (firstButton != null)
+            EventSystem.current.SetSelectedGameObject(firstButton.gameObject);
     }
 
     /// <summary>
