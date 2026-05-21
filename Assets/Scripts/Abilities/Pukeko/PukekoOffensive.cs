@@ -11,13 +11,15 @@ public class PukekoOffensiveAbility : BirdAbility
     [Header("Pukeko Offensive Settings")]
     [SerializeField] private float cooldown = 40f;
     [SerializeField] private float silenceDuration = 3f;
-    [SerializeField] private float pushBackForce = 2f;
+    [SerializeField] private float pushBackForce = 8f; // increased from 2f — impulse needs more weight
+
+    [Header("Effects")]
+    [SerializeField] private GameObject squawkParticlesPrefab; // Assign prefab in inspector
 
     [Header("Cone Settings")]
     [SerializeField] private float coneAngle = 45f;
     [SerializeField] private float coneRange = 5f;
     [SerializeField] private int coneRayCount = 10;
-
     public Animator animator; // Assign in inspector
 
     private bool onCooldown = false;
@@ -42,7 +44,35 @@ public class PukekoOffensiveAbility : BirdAbility
     {
         int playerID = GetComponent<BallInteract>().playerID;
         HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+        Vector3 firingForward = Quaternion.Euler(-GetComponent<CharacterMovement>().rotationOffsetEuler) * transform.forward;
+        firingForward.y = 0f;
+        firingForward.Normalize();
 
+        if (squawkParticlesPrefab != null)
+        {
+            Quaternion facingRotation = Quaternion.LookRotation(firingForward, Vector3.up);
+
+            // Rotate particles so emission matches bird facing
+            float sideRotation = _onLeft ? -90f : 90f;
+
+            Quaternion correctedRotation =
+                facingRotation * Quaternion.Euler(0f, sideRotation, 0f);
+
+            GameObject particles =
+                Instantiate(squawkParticlesPrefab, transform.position, correctedRotation);
+
+            ParticleSystem[] allSystems = particles.GetComponentsInChildren<ParticleSystem>(true);
+            foreach (ParticleSystem ps in allSystems)
+            {
+                var main = ps.main;
+                main.loop = false;
+                main.stopAction = ParticleSystemStopAction.Destroy;
+                ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                ps.Play(true);
+            }
+
+            Destroy(particles, 10f);
+        }
         // Trigger offensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
@@ -56,8 +86,8 @@ public class PukekoOffensiveAbility : BirdAbility
         {
             float angle = -coneAngle / 2 + coneAngle / (coneRayCount - 1) * i;
 
-            // mirror direction for right-side players
-            Vector3 baseDirection = _onLeft ? transform.forward : -transform.forward;
+            // Use the bird's actual facing direction so the cone follows the player orientation
+            Vector3 baseDirection = firingForward;
             Vector3 direction = Quaternion.Euler(0, angle, 0) * baseDirection;
 
             int hitCount = Physics.RaycastNonAlloc(transform.position, direction, hits, coneRange);
@@ -65,22 +95,6 @@ public class PukekoOffensiveAbility : BirdAbility
 
             for (int j = 0; j < hitCount; j++)
             {
-                float xSign = _onLeft ? 1f : -1f; // ✅ Fix 1: mirror visualization too
-                LineRenderer cone = new GameObject("Cone").AddComponent<LineRenderer>();
-                cone.positionCount = 2;
-                cone.SetPosition(0, transform.position);
-                for (int k = 0; k <= coneRayCount; k++)
-                {
-                    float x = xSign * Mathf.Sin(Mathf.Deg2Rad * (angle + coneAngle / 2 * k / coneRayCount)) * coneRange;
-                    float y = Mathf.Cos(Mathf.Deg2Rad * (angle + coneAngle / 2 * k / coneRayCount)) * coneRange;
-                    cone.SetPosition(1, transform.position + new Vector3(x, y, 0));
-                }
-                cone.loop = true;
-                cone.startWidth = 0.1f;
-                cone.endWidth = 0.1f;
-                cone.material = new Material(Shader.Find("Sprites/Default")) { color = Color.red };
-                Destroy(cone.gameObject, 0.5f);
-
                 if (hits[j].collider.CompareTag("Player") && hits[j].collider.gameObject != gameObject)
                 {
                     GameObject target = hits[j].collider.gameObject;
@@ -99,6 +113,14 @@ public class PukekoOffensiveAbility : BirdAbility
                     // Skip allies (same side as the caster)
                     if (targetIsOnLeft == _onLeft) continue;
 
+                    // Ostrich is immune to silence!
+                    BallInteract birdPlayer = target.GetComponent<BallInteract>();
+                    BirdType birdType = birdPlayer != null
+                        ? birdPlayer.GetBirdType()
+                        : target.GetComponent<AIBehavior>().GetBirdType();
+
+                    if (birdType == BirdType.OSTRICH) continue;
+
                     BuffsDebuffs.Instance.ApplyEffect(
                         BuffsDebuffs.EffectType.Silence,
                         target,
@@ -106,10 +128,10 @@ public class PukekoOffensiveAbility : BirdAbility
                         targetIsOnLeft
                     );
 
-                    // Apply push back force
+                    // Push enemy directly away from the bird's facing direction
                     if (hits[j].collider.TryGetComponent<Rigidbody>(out var rb))
                     {
-                        Vector3 pushDirection = (hits[j].collider.transform.position - transform.position).normalized;
+                        Vector3 pushDirection = firingForward;
                         rb.AddForce(pushDirection * pushBackForce, ForceMode.Impulse);
                     }
                 }

@@ -11,7 +11,10 @@ public class PelicanDefensive : BirdAbility
     public BallInteract ballInteract;
     private bool onCooldown = false;
     private bool isBallEaten = false;
+    private bool wasServing = false; // tracks whether we ate during a serve
+    private Coroutine holdCoroutine;
     private PlayerInput playerInput;
+    private GameManager.GameState stateWhenEaten;
 
     public void Start()
     {
@@ -23,54 +26,102 @@ public class PelicanDefensive : BirdAbility
     {
         if (playerInput == null) return;
 
-        // If pressed defensive ability button, activate ability
-        if (!onCooldown && playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame() && CanUseAbilities())
-        {
-            EatTheBall();
-        }
+        bool defensivePressed = playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame();
 
-        if (isBallEaten && playerInput.actions.FindAction("Serve").WasPressedThisFrame())
+        // If pressed defensive ability button, activate ability
+        if (defensivePressed && CanUseAbilities())
         {
-            BallManager.Instance.gameObject.SetActive(true);
-            isBallEaten = false;
+            if (isBallEaten)
+                SpitBall();
+            else if (!onCooldown)
+                EatTheBall();
         }
 
         if (isBallEaten)
         {
             BallManager.Instance.gameObject.transform.position = transform.position + new Vector3(0, 1f, 0);
         }
-        
     }
 
     public void EatTheBall()
     {
+        GameManager gameManager = GameManager.Instance;
+        bool isServing = gameManager.gameState == GameManager.GameState.PointStart
+                         && gameManager.server == gameObject;
+
+        bool isValidState = gameManager.gameState == GameManager.GameState.Served
+                            || gameManager.gameState == GameManager.GameState.Spiked
+                            || gameManager.gameState == GameManager.GameState.Bumped;
+                            
+        if (!isValidState)
+        {
+            Debug.Log($"[Pelican] Tried to eat in invalid state: {gameManager.gameState}");
+            return;
+        }
+
+        // Store what state we ate in so release knows what hit to register
+        stateWhenEaten = gameManager.gameState;
+
+        if (isServing)
+            ballInteract.ServeBall();
+
         int playerID = GetComponent<BallInteract>().playerID;
         HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
-        
-        GameManager gameManager = GameManager.Instance;
-        bool validState = gameManager.gameState == GameManager.GameState.PointStart;
-        if (validState && gameManager.server == gameObject)
+
+        // Play defensive sound
+        AudioManager.PlayBirdSound(BirdType.PELICAN, SoundType.DEFENSIVE, 1.0f);
+
+        // Trigger defensive ability animation if animator exists
+        var myBallInteract = GetComponent<BallInteract>();
+        if (myBallInteract != null && myBallInteract.animator != null)
         {
-            // Play defensive sound
-            AudioManager.PlayBirdSound(BirdType.PELICAN, SoundType.DEFENSIVE, 1.0f);
-
-            // Trigger defensive ability animation if animator exists
-            var myBallInteract = GetComponent<BallInteract>();
-            if (myBallInteract != null && myBallInteract.animator != null)
-            {
-                myBallInteract.animator.SetTrigger("DefensiveAbility");
-            }
-
-            ballInteract.ServeBall();
-            BallManager.Instance.gameObject.SetActive(false);
-            isBallEaten = true;
-
-            StartCoroutine(Cooldown());
-            StartCoroutine(HoldTime());
+            myBallInteract.animator.SetTrigger("DefensiveAbility");
         }
+
+        BallManager.Instance.gameObject.SetActive(false);
+        isBallEaten = true;
+        wasServing = isServing;
+
+        holdCoroutine = StartCoroutine(HoldTime());
+        StartCoroutine(Cooldown());
     }
 
-    
+    private void SpitBall()
+    {
+        // Use the stored reference — NOT StopCoroutine(HoldTime()) which creates a new instance
+        if (holdCoroutine != null) StopCoroutine(holdCoroutine);
+        ReleaseBall();
+    }
+
+    private void ReleaseBall()
+    {
+        if (!isBallEaten) return;
+        isBallEaten = false;
+        wasServing = false;
+        StartCoroutine(ReleaseBallCoroutine());
+    }
+
+    private IEnumerator ReleaseBallCoroutine()
+    {
+        // Position and re-enable the ball first
+        BallManager.Instance.gameObject.transform.position = transform.position + new Vector3(0, 1f, 0);
+        BallManager.Instance.gameObject.SetActive(true);
+
+        // Wait one frame so physics and state catch up before registering the hit
+        yield return null;
+
+        // Advance to the next hit based on what state the ball was eaten in
+        switch (stateWhenEaten)
+        {
+            case GameManager.GameState.Served:
+            case GameManager.GameState.Spiked:
+                ballInteract.BumpBall();   // eaten while ball incoming from enemy -> release as bump
+                break;
+            case GameManager.GameState.Bumped:
+                ballInteract.SetBall();    // eaten after ally bumped -> release as set
+                break;
+        }
+    }
 
     // Cools down cooldown seconds
     public IEnumerator Cooldown()
@@ -83,8 +134,6 @@ public class PelicanDefensive : BirdAbility
     public IEnumerator HoldTime()
     {
         yield return new WaitForSeconds(holdLength);
-        BallManager.Instance.gameObject.SetActive(true);
-        isBallEaten = false;
-        ballInteract.ServeBall();
+        ReleaseBall();
     }
 }

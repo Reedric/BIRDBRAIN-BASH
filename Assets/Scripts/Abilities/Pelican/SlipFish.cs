@@ -48,6 +48,14 @@ public class SlipFish : MonoBehaviour
         if (affectedPlayers.Contains(opponent)) yield break;
         affectedPlayers.Add(opponent);
 
+        // Ostrich is immune to stun!
+        BallInteract birdPlayer = opponent.GetComponent<BallInteract>();
+        BirdType birdType = birdPlayer != null
+            ? birdPlayer.GetBirdType()
+            : opponent.GetComponent<AIBehavior>().GetBirdType();
+
+        if (birdType == BirdType.OSTRICH) yield break;
+
         // Apply stun VFX and audio via BuffsDebuffs.
         BuffsDebuffs.Instance.ApplyEffect(
             BuffsDebuffs.EffectType.Stun,
