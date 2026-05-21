@@ -165,7 +165,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxGroundSpeed: 9
-  maxAirSpeed: 4.5
+  maxAirSpeed: 5
   jumpForce: 1
   rotationSpeed: 10
   rotationOffsetEuler: {x: 0, y: 0, z: 0}

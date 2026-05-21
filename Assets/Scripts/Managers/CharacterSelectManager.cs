@@ -50,6 +50,7 @@ public class CharacterSelectManager : MonoBehaviour
     public RawImage chickenTexture;
     public RawImage ostrichTexture;
     public RawImage eagleTexture;
+    public RawImage macawTexture;
     public RawImage randomTexture;
 
     [Header("Ready Indicators")]
@@ -73,6 +74,14 @@ public class CharacterSelectManager : MonoBehaviour
 
     [Range(1.0f, 1.5f)]
     public float cursorBounceOvershoot = 1.15f;
+
+    [Header("Bird Icon Bounce")]
+    [SerializeField] private float iconShrinkDuration = 0.08f;
+    [SerializeField] private float iconBounceDuration = 0.2f;
+    [SerializeField] private float iconPressScale = 0.75f;
+    [SerializeField] private float iconBounceOvershoot = 1.15f;
+
+    private Coroutine[] iconBounceCoroutines = new Coroutine[4];
 
     // per-player data maintained while on the select screen
     private List<int> chosenBirdIndices = new();
@@ -139,6 +148,9 @@ public class CharacterSelectManager : MonoBehaviour
 
         ResizePlayerLists(numberOfPlayers);
         SetupPlayerInputStates();
+
+        // Subscribe to device changes to handle disconnects and reconnects during character select
+        InputSystem.onDeviceChange += OnDeviceChange;
     }
 
     private void Start()
@@ -152,6 +164,12 @@ public class CharacterSelectManager : MonoBehaviour
         if (p3Ready != null) p3Ready.enabled = false;
         if (p4Ready != null) p4Ready.enabled = false;
         if (goButton != null) goButton.enabled = false;
+    }
+
+    private void OnDestroy()
+    {
+        // Always unsubscribe to avoid stale callbacks after scene unload
+        InputSystem.onDeviceChange -= OnDeviceChange;
     }
 
     private void Update()
@@ -172,6 +190,44 @@ public class CharacterSelectManager : MonoBehaviour
         }
     }
 
+    // Handles controller disconnect and reconnect events during character select
+    private void OnDeviceChange(InputDevice device, InputDeviceChange change)
+    {
+        if (device is not Gamepad gamepad) return;
+
+        switch (change)
+        {
+            case InputDeviceChange.Disconnected:
+                Debug.LogWarning($"[CharacterSelectManager] Gamepad disconnected: {gamepad.displayName}");
+                // Find the player whose device this was and clear it so UpdatePlayerInput doesn't
+                // read from a stale device reference, freezing their cursor silently
+                foreach (PlayerInputState state in playerInputStates)
+                {
+                    if (state.device == gamepad)
+                    {
+                        state.device = null;
+                        Debug.LogWarning($"[CharacterSelectManager] Cleared device for Player {state.playerIndex + 1} — awaiting reconnect.");
+                        break;
+                    }
+                }
+                break;
+
+            case InputDeviceChange.Reconnected:
+                Debug.Log($"[CharacterSelectManager] Gamepad reconnected: {gamepad.displayName}");
+                // Re-pair the reconnected gamepad to whichever player lost their device
+                foreach (PlayerInputState state in playerInputStates)
+                {
+                    if (!state.isKBM && state.device == null)
+                    {
+                        state.device = gamepad;
+                        Debug.Log($"[CharacterSelectManager] Re-paired {gamepad.displayName} to Player {state.playerIndex + 1}");
+                        break;
+                    }
+                }
+                break;
+        }
+    }
+
     /// <summary>
     /// EJ: For now, I'm just assuming player 0 is KBM and the rest are gamepads 
     /// just because alexa told me there's only one KBM allowed, but this can be changed to be more flexible if needed. 
@@ -189,7 +245,21 @@ public class CharacterSelectManager : MonoBehaviour
             for (int i = 0; i < numberOfPlayers; ++i)
             {
                 bool kbm = DataTransferManager.isKBMInput[i];
-                InputDevice dev = kbm ? (InputDevice)Keyboard.current : (gamepadIndex < Gamepad.all.Count ? (InputDevice)Gamepad.all[gamepadIndex++] : null);
+                InputDevice dev;
+                if (kbm)
+                {
+                    dev = Keyboard.current;
+                }
+                else if (gamepadIndex < Gamepad.all.Count)
+                {
+                    dev = Gamepad.all[gamepadIndex++];
+                }
+                else
+                {
+                    // No gamepad available for this player slot — log clearly instead of silently assigning null
+                    Debug.LogWarning($"[CharacterSelectManager] No gamepad available for Player {i + 1}. Their cursor will be inactive until a controller is connected.");
+                    dev = null;
+                }
                 playerInputStates.Add(new PlayerInputState(i, kbm, dev));
             }
             isKBMInput = new List<bool>(DataTransferManager.isKBMInput);
@@ -198,7 +268,17 @@ public class CharacterSelectManager : MonoBehaviour
         {
             for (int i = 0; i < numberOfPlayers; ++i)
             {
-                InputDevice dev = i < Gamepad.all.Count ? (InputDevice)Gamepad.all[i] : null;
+                InputDevice dev;
+                if (i < Gamepad.all.Count)
+                {
+                    dev = Gamepad.all[i];
+                }
+                else
+                {
+                    // No gamepad available for this player slot — log clearly instead of silently assigning null
+                    Debug.LogWarning($"[CharacterSelectManager] No gamepad available for Player {i + 1}. Their cursor will be inactive until a controller is connected.");
+                    dev = null;
+                }
                 playerInputStates.Add(new PlayerInputState(i, false, dev));
             }
             isKBMInput.Clear();
@@ -218,6 +298,8 @@ public class CharacterSelectManager : MonoBehaviour
             if (prefab == null)
             {
                 Debug.LogWarning($"Cursor prefab for player {i + 1} not assigned in CharacterSelectManager!");
+                // Push a null placeholder so playerCursors stays index-aligned with playerInputStates
+                playerCursors.Add(null);
                 continue;
             }
 
@@ -283,7 +365,10 @@ public class CharacterSelectManager : MonoBehaviour
         if (playerIndex < 0 || playerIndex >= playerCursors.Count) return;
         if (playerIndex >= playerInputStates.Count) return;
 
+        // Guard against null placeholder slots (cursor prefab was missing for this player)
         Transform cursor = playerCursors[playerIndex];
+        if (cursor == null) return;
+
         Vector2 screenPos = playerInputStates[playerIndex].cursorPosition;
 
         // With the pivot set to (0, 1) the RectTransform's anchor point IS the
@@ -303,6 +388,9 @@ public class CharacterSelectManager : MonoBehaviour
     private void PlayCursorPressAnimation(int playerIndex)
     {
         if (playerIndex < 0 || playerIndex >= playerCursors.Count) return;
+
+        // Guard against null placeholder slots (cursor prefab was missing for this player)
+        if (playerCursors[playerIndex] == null) return;
 
         if (cursorAnimCoroutines[playerIndex] != null)
         {
@@ -347,8 +435,6 @@ public class CharacterSelectManager : MonoBehaviour
         cursorAnimCoroutines[playerIndex] = null;
     }
 
-    // -------------------------------------------------------------------------
-
     private void HandlePlayerButtonPress(int playerIndex)
     {
         if (playerIndex >= playerInputStates.Count) return;
@@ -381,11 +467,11 @@ public class CharacterSelectManager : MonoBehaviour
         numberOfPlayers = Mathf.Clamp(count, 1, 4);
 
         while (chosenBirdIndices.Count < numberOfPlayers) chosenBirdIndices.Add(0);
-        while (isKBMInput.Count < numberOfPlayers)       isKBMInput.Add(true);
-        while (playerReady.Count < numberOfPlayers)       playerReady.Add(false);
+        while (isKBMInput.Count < numberOfPlayers)        isKBMInput.Add(true);
+        while (playerReady.Count < numberOfPlayers)        playerReady.Add(false);
         while (chosenBirdIndices.Count > numberOfPlayers) chosenBirdIndices.RemoveAt(chosenBirdIndices.Count - 1);
-        while (isKBMInput.Count > numberOfPlayers)        isKBMInput.RemoveAt(isKBMInput.Count - 1);
-        while (playerReady.Count > numberOfPlayers)       playerReady.RemoveAt(playerReady.Count - 1);
+        while (isKBMInput.Count > numberOfPlayers)         isKBMInput.RemoveAt(isKBMInput.Count - 1);
+        while (playerReady.Count > numberOfPlayers)        playerReady.RemoveAt(playerReady.Count - 1);
     }
 
     /// <summary>
@@ -492,6 +578,50 @@ public class CharacterSelectManager : MonoBehaviour
             _ => null
         };
         if (nameText != null) nameText.text = birdName;
+
+        // Trigger bounce on the player icon
+        if (playerIcon != null)
+        {
+            if (iconBounceCoroutines[playerIndex] != null)
+                StopCoroutine(iconBounceCoroutines[playerIndex]);
+            iconBounceCoroutines[playerIndex] = StartCoroutine(BirdIconBounceRoutine(playerIndex, playerIcon.GetComponent<RectTransform>()));
+        }
+    }
+
+    private IEnumerator BirdIconBounceRoutine(int playerIndex, RectTransform iconRect)
+    {
+        if (iconRect == null) yield break;
+
+        Vector3 originalScale = iconRect.localScale;
+
+        // Phase 1 — shrink down
+        float elapsed = 0f;
+        while (elapsed < iconShrinkDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / iconShrinkDuration);
+            float s = Mathf.Lerp(1f, iconPressScale, t);
+            iconRect.localScale = originalScale * s;
+            yield return null;
+        }
+        iconRect.localScale = originalScale * iconPressScale;
+
+        // Phase 2 — bounce back with overshoot
+        // sin(t * π) peaks at t = 0.5, giving a smooth overshoot arc
+        elapsed = 0f;
+        while (elapsed < iconBounceDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / iconBounceDuration);
+            float baseScale = Mathf.Lerp(iconPressScale, 1f, t);
+            float overshoot = Mathf.Sin(t * Mathf.PI) * (iconBounceOvershoot - 1f);
+            float s = baseScale + overshoot;
+            iconRect.localScale = originalScale * s;
+            yield return null;
+        }
+
+        iconRect.localScale = originalScale; // snap clean
+        iconBounceCoroutines[playerIndex] = null;
     }
 
     private RawImage GetPlayerIcon(int playerIndex)
@@ -524,6 +654,7 @@ public class CharacterSelectManager : MonoBehaviour
             BirdType.CHICKEN => chickenTexture,
             BirdType.OSTRICH => ostrichTexture,
             BirdType.EAGLE => eagleTexture,
+            BirdType.MACAW => macawTexture,
             BirdType.OTHER => randomTexture,
             _ => null
         };

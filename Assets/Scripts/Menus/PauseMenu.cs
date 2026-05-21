@@ -39,20 +39,17 @@ public class PauseMenu : MonoBehaviour
         GameIsPaused = false;
         pausedPlayerID = -1;
 
-        // Enable UI for all players
-        GameManager.Instance.leftPlayer1.GetComponent<PlayerInput>().actions.FindActionMap("UI").Enable();
-        if (GameManager.Instance.leftPlayer2.GetComponent<PlayerInput>() != null)
-        {
-            GameManager.Instance.leftPlayer2.GetComponent<PlayerInput>().actions.FindActionMap("UI").Enable();
-        }
-        if (GameManager.Instance.rightPlayer1.GetComponent<PlayerInput>() != null)
-        {
-            GameManager.Instance.rightPlayer1.GetComponent<PlayerInput>().actions.FindActionMap("UI").Enable();
-        }
-        if (GameManager.Instance.rightPlayer2.GetComponent<PlayerInput>() != null)
-        {
-            GameManager.Instance.rightPlayer2.GetComponent<PlayerInput>().actions.FindActionMap("UI").Enable();
-        }
+        // Enable UI for all players — guarded against null because AI birds have no PlayerInput
+        // (demo mode spawns 4 AIs, none of which carry a PlayerInput component)
+        PlayerInput pi1 = GameManager.Instance.leftPlayer1?.GetComponent<PlayerInput>();
+        PlayerInput pi2 = GameManager.Instance.leftPlayer2?.GetComponent<PlayerInput>();
+        PlayerInput pi3 = GameManager.Instance.rightPlayer1?.GetComponent<PlayerInput>();
+        PlayerInput pi4 = GameManager.Instance.rightPlayer2?.GetComponent<PlayerInput>();
+
+        if (pi1 != null) pi1.actions.FindActionMap("UI").Enable();
+        if (pi2 != null) pi2.actions.FindActionMap("UI").Enable();
+        if (pi3 != null) pi3.actions.FindActionMap("UI").Enable();
+        if (pi4 != null) pi4.actions.FindActionMap("UI").Enable();
 
         AudioManager.PlayDefaultBackground();
     }
@@ -66,42 +63,51 @@ public class PauseMenu : MonoBehaviour
         Time.timeScale = 0f;
         GameIsPaused = true;
 
-        // Enable UI for the player that paused it
+        // Enable UI for the player that paused it — guarded against null because AI birds have no
+        // PlayerInput (demo mode spawns 4 AIs, none of which carry a PlayerInput component).
+        // If no PlayerInput exists on any slot the pause UI still shows, the game still freezes,
+        // but we simply skip the input-routing logic that would crash.
         BallInteract lp1 = GameManager.Instance.leftPlayer1.GetComponent<BallInteract>();
         BallInteract lp2 = GameManager.Instance.leftPlayer2.GetComponent<BallInteract>();
         BallInteract rp1 = GameManager.Instance.rightPlayer1.GetComponent<BallInteract>();
         BallInteract rp2 = GameManager.Instance.rightPlayer2.GetComponent<BallInteract>();
+
+        PlayerInput pi1 = GameManager.Instance.leftPlayer1.GetComponent<PlayerInput>();
+        PlayerInput pi2 = GameManager.Instance.leftPlayer2.GetComponent<PlayerInput>();
+        PlayerInput pi3 = GameManager.Instance.rightPlayer1.GetComponent<PlayerInput>();
+        PlayerInput pi4 = GameManager.Instance.rightPlayer2.GetComponent<PlayerInput>();
+
         if (lp1.playerID == pausedPlayerID)
         {
-            GameManager.Instance.leftPlayer1.GetComponent<PlayerInput>().ActivateInput();
-            if (lp2 != null) GameManager.Instance.leftPlayer2.GetComponent<PlayerInput>().DeactivateInput();
-            if (rp1 != null) GameManager.Instance.rightPlayer1.GetComponent<PlayerInput>().DeactivateInput();
-            if (rp2 != null) GameManager.Instance.rightPlayer2.GetComponent<PlayerInput>().DeactivateInput();
-            AssignUIActions(GameManager.Instance.leftPlayer1.GetComponent<PlayerInput>());
+            if (pi1 != null) pi1.ActivateInput();
+            if (pi2 != null) pi2.DeactivateInput();
+            if (pi3 != null) pi3.DeactivateInput();
+            if (pi4 != null) pi4.DeactivateInput();
+            if (pi1 != null) AssignUIActions(pi1);
         }
         else if (lp2 != null && lp2.playerID == pausedPlayerID) // Assume that if player 2, player 1 exists
         {
-            GameManager.Instance.leftPlayer1.GetComponent<PlayerInput>().DeactivateInput();
-            GameManager.Instance.leftPlayer2.GetComponent<PlayerInput>().ActivateInput();
-            if (rp1 != null) GameManager.Instance.rightPlayer1.GetComponent<PlayerInput>().DeactivateInput();
-            if (rp2 != null) GameManager.Instance.rightPlayer2.GetComponent<PlayerInput>().DeactivateInput();
-            AssignUIActions(GameManager.Instance.leftPlayer2.GetComponent<PlayerInput>());
+            if (pi1 != null) pi1.DeactivateInput();
+            if (pi2 != null) pi2.ActivateInput();
+            if (pi3 != null) pi3.DeactivateInput();
+            if (pi4 != null) pi4.DeactivateInput();
+            if (pi2 != null) AssignUIActions(pi2);
         }
         else if (rp1 != null && rp1.playerID == pausedPlayerID) // Assume that if player 3, player 1 and 2 exists
         {
-            GameManager.Instance.leftPlayer1.GetComponent<PlayerInput>().DeactivateInput();
-            GameManager.Instance.leftPlayer2.GetComponent<PlayerInput>().DeactivateInput();
-            GameManager.Instance.rightPlayer1.GetComponent<PlayerInput>().ActivateInput();
-            if (rp2 != null) GameManager.Instance.rightPlayer2.GetComponent<PlayerInput>().DeactivateInput();
-            AssignUIActions(GameManager.Instance.rightPlayer1.GetComponent<PlayerInput>());
+            if (pi1 != null) pi1.DeactivateInput();
+            if (pi2 != null) pi2.DeactivateInput();
+            if (pi3 != null) pi3.ActivateInput();
+            if (pi4 != null) pi4.DeactivateInput();
+            if (pi3 != null) AssignUIActions(pi3);
         }
         else if (rp2 != null && rp2.playerID == pausedPlayerID) // Assume that if player 4, player 1, 2, and 3 exists
         {
-            GameManager.Instance.leftPlayer1.GetComponent<PlayerInput>().DeactivateInput();
-            GameManager.Instance.leftPlayer2.GetComponent<PlayerInput>().DeactivateInput();
-            GameManager.Instance.rightPlayer1.GetComponent<PlayerInput>().DeactivateInput();
-            GameManager.Instance.rightPlayer2.GetComponent<PlayerInput>().ActivateInput();
-            AssignUIActions(GameManager.Instance.rightPlayer2.GetComponent<PlayerInput>());
+            if (pi1 != null) pi1.DeactivateInput();
+            if (pi2 != null) pi2.DeactivateInput();
+            if (pi3 != null) pi3.DeactivateInput();
+            if (pi4 != null) pi4.ActivateInput();
+            if (pi4 != null) AssignUIActions(pi4);
         }
     }
 
