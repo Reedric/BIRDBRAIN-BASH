@@ -52899,6 +52899,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   burrowDuration: 2
   speedBoost: 2
+  jumpOutForce: 10
   cooldown: 12
 --- !u!23 &1707259123
 MeshRenderer:
@@ -77798,7 +77799,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 64539880712058927, guid: fa022a8398cc7d4469439c183cd09bca, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.34
+      value: 2.93
       objectReference: {fileID: 0}
     - target: {fileID: 3652912293590085706, guid: fa022a8398cc7d4469439c183cd09bca, type: 3}
       propertyPath: m_LocalPosition.x
@@ -77858,7 +77859,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4177670073196505840, guid: fa022a8398cc7d4469439c183cd09bca, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -77900,6 +77901,7 @@ MonoBehaviour:
   cooldown: 40
   silenceDuration: 3
   pushBackForce: 2
+  squawkParticlesPrefab: {fileID: 4245388119993889209, guid: e5db778e55249f14fbdcaadeba270ffb, type: 3}
   coneAngle: 90
   coneRange: 10
   coneRayCount: 10
