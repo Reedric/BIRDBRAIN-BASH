@@ -41,40 +41,19 @@ public class ToucanDefensive : BirdAbility
         {
             GameObject leftPlayer1 = gameManager.leftPlayer1;
             GameObject leftPlayer2 = gameManager.leftPlayer2;
-            if (leftPlayer1 != this)
-            {
-                teammate = leftPlayer1;
-            } else
-            {
-                teammate = leftPlayer2;
-            }
-        } else
+            teammate = leftPlayer1 != gameObject ? leftPlayer1 : leftPlayer2;
+        }
+        else
         {
             GameObject rightPlayer1 = gameManager.rightPlayer1;
             GameObject rightPlayer2 = gameManager.rightPlayer2;
-            if (rightPlayer1 != this)
-            {
-                teammate = rightPlayer1;
-            } else
-            {
-                teammate = rightPlayer2;
-            }
+            teammate = rightPlayer1 != gameObject ? rightPlayer1 : rightPlayer2;
         }
 
         // Applies buff to player and teammate
-        GetComponent<CharacterMovement>().BuffStats(buffAmount, buffLength);
-        try // Human teammate
-        {
-            teammate.GetComponent<CharacterMovement>().BuffStats(buffAmount, buffLength);
-        }
-        catch (NullReferenceException) // AI teammate
-        {
-            teammate.GetComponent<AIBehavior>().BuffStats(buffAmount, buffLength);
-        }
-        catch (Exception) // Idk how you get here, ggs ig
-        {
-            Debug.LogError("Something went wrong when buffing teammate stats for Toucan Defensive...");
-        }
+        BuffsDebuffs.Instance.ApplyEffect(BuffsDebuffs.EffectType.Buff, gameObject, buffLength, _onLeft);
+        if (teammate != null)
+            BuffsDebuffs.Instance.ApplyEffect(BuffsDebuffs.EffectType.Buff, teammate, buffLength, _onLeft);
 
         int playerID = GetComponent<BallInteract>().playerID;
         HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
@@ -85,10 +64,8 @@ public class ToucanDefensive : BirdAbility
         // Trigger defensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
-        {
             myBallInteract.animator.SetTrigger("DefensiveAbility");
-        }
-        
+
         StartCoroutine(Cooldown());
     }
 

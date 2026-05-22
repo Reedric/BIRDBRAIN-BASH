@@ -110,6 +110,14 @@ public class GameManager : MonoBehaviour
         NextPoint();
     }
 
+    // Returns true if a point is actively being played
+    public static bool PointInProgress()
+    {
+        return instance.gameState != GameState.PointStart
+            && instance.gameState != GameState.PointEnd
+            && instance.gameState != GameState.GameOver;
+    }
+
     // Rotate server when the team who did not serve whens a point
     public static void RotateServer()
     {

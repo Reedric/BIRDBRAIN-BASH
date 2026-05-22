@@ -45763,6 +45763,7 @@ MonoBehaviour:
   lineUptime: 3
   lineWidth: 0.5
   threshold: 1
+  lineDrawDuration: 0.3
   lineMaterial: {fileID: 2100000, guid: 7b7d23b94b972f24eb43b7a7d0257c60, type: 2}
 --- !u!4 &1470770776 stripped
 Transform:
@@ -52899,8 +52900,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   burrowDuration: 2
   speedBoost: 2
-  jumpOutForce: 10
+  jumpOutForce: 5
   cooldown: 12
+  burrowMarkerPrefab: {fileID: 6897839624328568988, guid: 53bb69e064103c44593c8b1aa27ba020, type: 3}
+  markerOffset: {x: 0, y: 0.05, z: 0}
 --- !u!23 &1707259123
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -64272,6 +64275,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cooldown: 33
   lineDuration: 8
+  lineDrawDuration: 0.6
   lineColor: {r: 1, g: 0, b: 0, a: 1}
   lineWidth: 0.2
   animator: {fileID: 0}
@@ -77859,7 +77863,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4177670073196505840, guid: fa022a8398cc7d4469439c183cd09bca, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
