@@ -43,6 +43,21 @@ public class PelicanDefensive : BirdAbility
         }
     }
 
+    // Returns true when the ball is on the same side of the court as the pelican.
+    // Mirrors the sign-of-X trick used in BallInteract.CanHit().
+    private bool IsOnOwnSide()
+    {
+        return BallManager.Instance.transform.position.x * transform.position.x >= 0;
+    }
+
+    // Returns true when the pelican is within interaction range of the ball.
+    // Delegates to BallInteract.IsPlayerNearBall() so the same contactPoint
+    // and interactionRadius Inspector values are reused — no separate tuning needed.
+    private bool BallInEatRange()
+    {
+        return ballInteract.IsPlayerNearBall();
+    }
+
     public void EatTheBall()
     {
         GameManager gameManager = GameManager.Instance;
@@ -56,6 +71,20 @@ public class PelicanDefensive : BirdAbility
         if (!isValidState)
         {
             Debug.Log($"[Pelican] Tried to eat in invalid state: {gameManager.gameState}");
+            return;
+        }
+
+        // Pelican must be on their own side of the court
+        if (!IsOnOwnSide())
+        {
+            Debug.Log("[Pelican] Tried to eat from enemy side of court.");
+            return;
+        }
+
+        // Pelican must be close enough to the ball
+        if (!BallInEatRange())
+        {
+            Debug.Log("[Pelican] Ball is too far away to eat.");
             return;
         }
 
