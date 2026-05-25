@@ -33,7 +33,7 @@ public class PukekoOffensiveAbility : BirdAbility
 
     public void OnOffensiveAbility()
     {
-        if (!onCooldown)
+        if (!onCooldown && CanUseAbilities() && PointInProgress())
         {
             onCooldown = true;
             StartCoroutine(SonicSquawk());

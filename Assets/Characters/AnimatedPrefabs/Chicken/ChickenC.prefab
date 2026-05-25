@@ -269,6 +269,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   slowFallMultiplier: 0.85
+  apexHoverDuration: 1.5
+  apexVelocityThreshold: 2
 --- !u!114 &2723895433308184011
 MonoBehaviour:
   m_ObjectHideFlags: 0
