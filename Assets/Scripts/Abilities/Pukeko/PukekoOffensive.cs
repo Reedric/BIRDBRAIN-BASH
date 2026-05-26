@@ -9,7 +9,6 @@ using System.Collections;
 public class PukekoOffensiveAbility : BirdAbility
 {
     [Header("Pukeko Offensive Settings")]
-    [SerializeField] private float cooldown = 40f;
     [SerializeField] private float silenceDuration = 3f;
     [SerializeField] private float pushBackForce = 2f;
 
@@ -20,28 +19,23 @@ public class PukekoOffensiveAbility : BirdAbility
 
     public Animator animator; // Assign in inspector
 
-    private bool onCooldown = false;
-    private RaycastHit[] hits;
+    private RaycastHit[] hits; // Pre-allocate to avoid garbage collection as long as possible
 
     void Awake()
     {
         hits = new RaycastHit[coneRayCount];
-        _onLeft = GetComponent<BallInteract>().onLeft;
     }
 
-    public void OnOffensiveAbility()
+    override protected void Activate()
     {
-        if (!onCooldown)
-        {
-            onCooldown = true;
-            StartCoroutine(SonicSquawk());
-        }
+        SonicSquawk();
+        Debug.Log("Pukeko Offensive Activated");
     }
 
-    private IEnumerator SonicSquawk()
+    private void SonicSquawk()
     {
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         // Trigger offensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
@@ -57,21 +51,19 @@ public class PukekoOffensiveAbility : BirdAbility
             float angle = -coneAngle / 2 + coneAngle / (coneRayCount - 1) * i;
 
             // mirror direction for right-side players
-            Vector3 baseDirection = _onLeft ? transform.forward : -transform.forward;
-            Vector3 direction = Quaternion.Euler(0, angle, 0) * baseDirection;
+            Vector3 direction = Quaternion.Euler(0, angle, 0) * transform.forward;
 
             int hitCount = Physics.RaycastNonAlloc(transform.position, direction, hits, coneRange);
             Debug.DrawRay(transform.position, direction * coneRange, Color.blue, 40f);
 
             for (int j = 0; j < hitCount; j++)
             {
-                float xSign = _onLeft ? 1f : -1f; // ✅ Fix 1: mirror visualization too
                 LineRenderer cone = new GameObject("Cone").AddComponent<LineRenderer>();
                 cone.positionCount = 2;
                 cone.SetPosition(0, transform.position);
                 for (int k = 0; k <= coneRayCount; k++)
                 {
-                    float x = xSign * Mathf.Sin(Mathf.Deg2Rad * (angle + coneAngle / 2 * k / coneRayCount)) * coneRange;
+                    float x = Mathf.Sin(Mathf.Deg2Rad * (angle + coneAngle / 2 * k / coneRayCount)) * coneRange;
                     float y = Mathf.Cos(Mathf.Deg2Rad * (angle + coneAngle / 2 * k / coneRayCount)) * coneRange;
                     cone.SetPosition(1, transform.position + new Vector3(x, y, 0));
                 }
@@ -83,30 +75,11 @@ public class PukekoOffensiveAbility : BirdAbility
 
                 if (hits[j].collider.CompareTag("Player") && hits[j].collider.gameObject != gameObject)
                 {
-                    GameObject target = hits[j].collider.gameObject;
+                    // Apply silence effect to the bird
+                    if (hits[j].collider.TryGetComponent<BirdAbility>(out var birdAbility))
+                        StartCoroutine(ApplySilence(silenceDuration, birdAbility));
 
-                    bool targetIsOnLeft = false;
-                    BallInteract targetBallInteract = target.GetComponent<BallInteract>();
-                    if (targetBallInteract != null)
-                        targetIsOnLeft = targetBallInteract.onLeft;
-                    else
-                    {
-                        AIBehavior targetAI = target.GetComponent<AIBehavior>();
-                        if (targetAI != null)
-                            targetIsOnLeft = targetAI.onLeft;
-                    }
-
-                    // Skip allies (same side as the caster)
-                    if (targetIsOnLeft == _onLeft) continue;
-
-                    BuffsDebuffs.Instance.ApplyEffect(
-                        BuffsDebuffs.EffectType.Silence,
-                        target,
-                        silenceDuration,
-                        targetIsOnLeft
-                    );
-
-                    // Apply push back force
+                    // Apply push back force to the bird
                     if (hits[j].collider.TryGetComponent<Rigidbody>(out var rb))
                     {
                         Vector3 pushDirection = (hits[j].collider.transform.position - transform.position).normalized;
@@ -115,8 +88,12 @@ public class PukekoOffensiveAbility : BirdAbility
                 }
             }
         }
-        
-        yield return new WaitForSeconds(cooldown);
-        onCooldown = false;
+    }
+
+    public IEnumerator ApplySilence(float duration, BirdAbility bird)
+    {
+        bird.SetAbilitiesDisabled(true);
+        yield return new WaitForSeconds(duration);
+        bird.SetAbilitiesDisabled(false);
     }
 }

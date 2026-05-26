@@ -11,35 +11,20 @@ public class PelicanOffensive : BirdAbility
     [Header("Mouth Offset")]
     [SerializeField] private float mouthForwardOffset = 1.0f;
     [SerializeField] private float mouthUpOffset = 1.5f;
-    [SerializeField] private float cooldown = 30f; // Cooldown in seconds (30 because the fish disappears after 15s, so 15s cooldown after that)
 
     [SerializeField] private float slipFishSpeed = 15f; // Speed at which the fish is spit out
     [SerializeField] private float fishLifetime = 15f;
     [SerializeField] private GameObject fishPrefab; // assign in inspector until there's a permanent spot for it
-    private bool onCooldown = false;
-    private PlayerInput playerInput;
-    private void Awake()
-    {
-        playerInput = GetComponent<PlayerInput>();
-        _onLeft = GetComponent<BallInteract>().onLeft;
-    }
 
-    private void Update()
+    override protected void Activate()
     {
-        // If pressed offensive ability button, activate ability
-        if (playerInput.actions.FindAction("Offensive Ability").WasPressedThisFrame() && !onCooldown
-            && CanUseAbilities() && PointInProgress())
-        {
-            SlipFish();
-        }
+        SlipFish();
     }
 
     private void SlipFish()
     {
-        if (onCooldown) return;
-
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         // Play offensive sound
         AudioManager.PlayBirdSound(BirdType.PELICAN, SoundType.OFFENSIVE, 1.0f);
@@ -58,7 +43,6 @@ public class PelicanOffensive : BirdAbility
         // opponentIsOnLeft value to BuffsDebuffs.ApplyEffect when it stuns on collision)
         SlipFish slipFish = fish.GetComponent<SlipFish>();
         slipFish.pelican = gameObject;
-        slipFish.pelicanIsOnLeft = _onLeft;
 
         // Account for rotation offset
         Vector3 forward = Quaternion.Euler(-GetComponent<CharacterMovement>().rotationOffsetEuler) * transform.forward;
@@ -70,14 +54,5 @@ public class PelicanOffensive : BirdAbility
         }
 
         Destroy(fish, fishLifetime);
-
-        onCooldown = true;
-        StartCoroutine(Cooldown());
-    }
-
-    private IEnumerator Cooldown()
-    {
-        yield return new WaitForSeconds(cooldown);
-        onCooldown = false;
     }
 }

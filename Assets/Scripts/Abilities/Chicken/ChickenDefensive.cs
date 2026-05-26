@@ -7,7 +7,7 @@ using UnityEngine;
 /// Slow Falling - anytime Chicken jumps, instead of falling he glides down to the ground
 /// (similar to Minecraft chickens) (passive)
 /// </summary>
-public class ChickenDefensive : BirdAbility
+public class ChickenDefensive : PassiveAbility
 {
     [Header("Chicken Defensive Settings")]
     [SerializeField] private float slowFallMultiplier = 0.5f; // Adjust this for how much you want to slow the fall

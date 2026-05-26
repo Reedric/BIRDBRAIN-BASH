@@ -193,6 +193,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 8612fe484065c804097315eedc3bb8b3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8989351267453207418}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 8612fe484065c804097315eedc3bb8b3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4781685300435146535}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 8612fe484065c804097315eedc3bb8b3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -1665325790540334180}
   m_SourcePrefab: {fileID: 100100000, guid: 8612fe484065c804097315eedc3bb8b3, type: 3}
 --- !u!4 &2716539890050765479 stripped
 Transform:
@@ -5232,6 +5238,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 086e35687ed9668449053553276ca739, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  abilitySlot: 0
+  cooldownTime: 20
   debuffLength: 5
   debuffAmount: 2
   debuffWindowLength: 20
@@ -5247,8 +5255,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb7edfc66bc6f9043adb8e366d30220c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  abilitySlot: 1
+  cooldownTime: 15
   dashSpeed: 100
-  cooldown: 15
   shoveForce: 18
   shoveRadius: 1.5
 --- !u!114 &8989351267453207418
@@ -5264,3 +5273,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   readyIndicator: {fileID: 0}
+--- !u!114 &4781685300435146535
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3384672889945442333}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d8776b00f5834d4f9f26b44f0a3eae8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &-1665325790540334180
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3384672889945442333}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5218fa23fafadc54d807b4f114cfd911, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilityController: {fileID: 4781685300435146535}

@@ -9,29 +9,22 @@ using UnityEngine.InputSystem;
 public class LovebirdOffensive : BirdAbility
 {
     public float DebuffLength = 4.0f; // Time in seconds the debuff lasts
-    public int cooldown = 20; // Time in seconds the cooldown lasts
     public float walkSpeed = 2.0f; // How fast the opponents walk towards you
     public ParticleSystem hearts; // Hearts effect for opponents
     public float heartsOffset = 1.15f; // How much the hearts will be offset above the opponent
-    private bool _onCooldown = false;
     private bool _debuffActive = false;
     private List<ParticleSystem> _hearts = new();
-    private PlayerInput playerInput;
+    private bool _onLeft;
+    private List<GameObject> opponents = new();
 
     void Start()
     {
         _onLeft = GetComponent<BallInteract>().onLeft;
-        playerInput = GetComponent<PlayerInput>();
     }
 
-    void Update()
+    override protected void Activate()
     {
-        // If offensive ability pressed, debuff enemy
-        if (!_onCooldown && PointInProgress() && CanUseAbilities()
-            && playerInput.actions.FindAction("Offensive Ability").WasPressedThisFrame())
-        {
-            DebuffEnemy();
-        }
+        DebuffEnemy();
 
         // If the debuff is active, moves the opponents towards the net
         if (_debuffActive)
@@ -64,11 +57,8 @@ public class LovebirdOffensive : BirdAbility
 
     public void DebuffEnemy()
     {
-        _onCooldown = true;
-        StartCoroutine(Cooldown());
-
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         // Play offensive sound
         AudioManager.PlayBirdSound(BirdType.LOVEBIRD, SoundType.OFFENSIVE, 1.0f);
@@ -145,12 +135,6 @@ public class LovebirdOffensive : BirdAbility
         {
             Destroy(heart);
         }
-    }
-
-    private IEnumerator Cooldown()
-    {
-        yield return new WaitForSeconds(cooldown);
-        _onCooldown = false;
     }
 }
 

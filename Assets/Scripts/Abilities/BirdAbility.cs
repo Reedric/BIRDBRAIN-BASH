@@ -1,37 +1,35 @@
 using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine.InputSystem;
 
-public class BirdAbility : MonoBehaviour
+/// <summary>
+/// Base class for bird abilities. Handles cooldown management and activation logic.
+/// </summary>
+public abstract class BirdAbility : MonoBehaviour 
 {
-    private bool abilitiesDisabled = false;
-    protected GameManager gameManager = GameManager.Instance;
-    protected List<GameObject> opponents = new();
-    protected bool _onLeft;
-    private bool isStunned = false;
+    public AbilitySlot AbilitySlot;
 
-    void Start()
+    [SerializeField] protected float _cooldownTime;
+    
+    private float _cooldownRemaining;
+    private bool _abilitiesDisabled;
+
+    public bool IsReady => _cooldownRemaining <= 0 && !_abilitiesDisabled;
+
+    public void TickCooldown(float deltaTime)
     {
-        _onLeft = GetComponent<PlayerInput>().playerIndex < 2;
+        if (_cooldownRemaining > 0) _cooldownRemaining -= deltaTime;
     }
 
-    public void DisableAbilities(bool disabledOrNot)
+    public bool TryActivate()
     {
-        abilitiesDisabled = disabledOrNot;
+        if (!IsReady) return false;
+        if (!BirdAbilityRuleService.Instance.CanUseAbility(gameObject)) return false;
+
+        Activate();
+        _cooldownRemaining = _cooldownTime;
+        return true;
     }
 
-    public bool CanUseAbilities()
-    {
-        return !abilitiesDisabled;
-    }
+    protected abstract void Activate();
 
-    public bool PointInProgress()
-    {
-        // If the point has just started, cannot use ability
-        if (GameManager.Instance.gameState == GameManager.GameState.PointStart) return false;
-
-        // If the point has just ended, cannot use ability, else we are good to go
-        return GameManager.Instance.gameState != GameManager.GameState.PointEnd;
-    }
+    public void SetAbilitiesDisabled(bool disabled) { _abilitiesDisabled = disabled; }
 }

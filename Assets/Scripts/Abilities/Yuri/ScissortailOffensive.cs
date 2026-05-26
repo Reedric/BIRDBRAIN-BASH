@@ -7,13 +7,9 @@ public class ScissortailOffensive : BirdAbility
     [SerializeField] private float cooldown = 8f;
     private bool onCooldown = false;
 
-    public void OnOffensiveAbility(InputValue value)
+    override protected void Activate()
     {
-        // If we can use the ability (off cooldown, not silenced, and spikable), do the ability
-        if (!onCooldown && CanUseAbilities() && GameManager.Instance.gameState == GameManager.GameState.Set)
-        {
-            StartCoroutine(ScissorShot());
-        }
+        StartCoroutine(ScissorShot());
     }
 
     private IEnumerator ScissorShot()
@@ -51,11 +47,11 @@ public class ScissortailOffensive : BirdAbility
             Vector3 changeTo;
             if (ballRb.linearVelocity.z > 0)
             {
-                changeTo = _onLeft ? new Vector3(8, 0, -4) : new Vector3(-8, 0, -4);
+                changeTo = transform.position.x < 0 ? new Vector3(8, 0, -4) : new Vector3(-8, 0, -4);
             }
             else
             {
-                changeTo = _onLeft ? new Vector3(8, 0, 4) : new Vector3(-8, 0, 4);
+                changeTo = transform.position.x < 0 ? new Vector3(8, 0, 4) : new Vector3(-8, 0, 4);
             }
             Vector3 unitVelocity = changeTo - BallManager.Instance.gameObject.transform.position;
             unitVelocity.Normalize();

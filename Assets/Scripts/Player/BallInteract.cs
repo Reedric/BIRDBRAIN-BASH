@@ -155,6 +155,11 @@ public class BallInteract : MonoBehaviour
                     {
                         SetBall();
                     }
+                    // Else if the player is close enough to the ball and wants to spike, spike the ball
+                    else if (IsPlayerNearBall() && playerInput.actions.FindAction("Offensive Action").WasPressedThisFrame())
+                    {
+                        SpikeBall();
+                    }
                     break;
                 // Ball has just been set
                 case GameManager.GameState.Set:

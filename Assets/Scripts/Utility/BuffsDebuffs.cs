@@ -224,55 +224,14 @@ public class BuffsDebuffs : MonoBehaviour
                 break;
 
             case EffectType.Silence:
-                // Players: DisableAbilities only gates CanUseAbilities(), so movement and ball hitting are unaffected.
-                // AI: SilenceAbilities sets a separate flag that does NOT touch CanAct(),
-                // so the AI can still move and hit the ball while silenced.
-                ability?.DisableAbilities(enable);
-                ai?.SilenceAbilities(enable);
+                ability?.SetAbilitiesDisabled(enable);
+                ai?.DisableAbilities(enable);
                 break;
 
             case EffectType.Stun:
-                if (enable)
-                {
-                    // Snapshot originals before overwriting
-                    float origGround  = movement != null ? movement.maxGroundSpeed : 0f;
-                    float origAir     = movement != null ? movement.maxAirSpeed    : 0f;
-                    float origJump    = movement != null ? movement.jumpForce      : 0f;
-                    float origAiGround = ai != null ? ai.maxGroundSpeed : 0f;
-                    float origAiAir   = ai != null ? ai.maxAirSpeed    : 0f;
-
-                    stunOriginalValues[bird] = (origGround, origAir, origJump, origAiGround, origAiAir);
-
-                    if (movement != null)
-                    {
-                        movement.maxGroundSpeed = 1f;
-                        movement.maxAirSpeed    = 1f;
-                        movement.jumpForce     = 1f;
-                    }
-                    if (ai != null)
-                    {
-                        ai.maxGroundSpeed = 1f;
-                        ai.maxAirSpeed    = 1f;
-                    }
-                }
-                else
-                {
-                    if (stunOriginalValues.TryGetValue(bird, out var orig))
-                    {
-                        if (movement != null)
-                        {
-                            movement.maxGroundSpeed = orig.groundSpeed;
-                            movement.maxAirSpeed    = orig.airSpeed;
-                            movement.jumpForce      = orig.jumpForce;
-                        }
-                        if (ai != null)
-                        {
-                            ai.maxGroundSpeed = orig.aiGroundSpeed;
-                            ai.maxAirSpeed    = orig.aiAirSpeed;
-                        }
-                        stunOriginalValues.Remove(bird);
-                    }
-                }
+                movement?.controlMovement(!enable, !enable);
+                ability?.SetAbilitiesDisabled(enable);
+                ai?.DisableAbilities(enable);
                 break;
         }
     }
