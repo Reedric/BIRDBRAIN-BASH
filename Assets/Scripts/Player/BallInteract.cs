@@ -79,7 +79,6 @@ public class BallInteract : MonoBehaviour
                 animator = GetComponentInParent<Animator>();
             }
         }
-
     }
 
     // If the player is near the ball
@@ -148,6 +147,7 @@ public class BallInteract : MonoBehaviour
                         BumpBall();
                     }
                     break;
+
                 // Ball has just been bumped
                 case GameManager.GameState.Bumped:
                     // If the player is close enough to the ball and is pressing the set button, set the ball
@@ -155,12 +155,13 @@ public class BallInteract : MonoBehaviour
                     {
                         SetBall();
                     }
-                    // Else if the player is close enough to the ball and wants to spike, spike the ball
+                    // Allow spiking directly after a bump (2-hit sequence: bump -> spike)
                     else if (IsPlayerNearBall() && playerInput.actions.FindAction("Offensive Action").WasPressedThisFrame())
                     {
                         SpikeBall();
                     }
                     break;
+
                 // Ball has just been set
                 case GameManager.GameState.Set:
                     // If the player is close enough to the ball and is pressing the spike button, spike the ball
@@ -169,6 +170,7 @@ public class BallInteract : MonoBehaviour
                         SpikeBall();
                     }
                     break;
+
                 // Ball is ready to be served
                 case GameManager.GameState.PointStart:
                     // Reset block touch
@@ -256,9 +258,9 @@ public class BallInteract : MonoBehaviour
     // Bump the ball
     public void BumpBall()
     {
-        // Check if the player is too far off the ground to bump it
+        // Check if the player is too far off the ground to bump it -> adjusted to be more lenient
         float groundDist = transform.position.y - baseHeight;
-        if (groundDist > 1.0f) return;
+        if (groundDist > 5.0f) return;
 
         // Set bump to location to front middle of whatever side of the court is bumping
         bumpToLocation = new Vector3(2f, 0f, 0f);
@@ -432,7 +434,6 @@ public class BallInteract : MonoBehaviour
 
         // handle vfx
         HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, onLeft);
-        
 
         // Update game manager fields
         GameManager.Instance.gameState = GameManager.GameState.Served;

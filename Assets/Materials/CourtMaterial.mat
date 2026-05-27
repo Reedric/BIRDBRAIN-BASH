@@ -125,7 +125,7 @@ Material:
     - _GlossyReflections: 0
     - _Max: 1.58
     - _Metallic: 0
-    - _Min: 0.64
+    - _Min: 1.67
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _QueueControl: 0

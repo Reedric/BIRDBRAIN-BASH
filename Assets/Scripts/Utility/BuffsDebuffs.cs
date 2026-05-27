@@ -51,11 +51,12 @@ public class BuffsDebuffs : MonoBehaviour
     {
         if (bird == null) return;
 
+        // Reject any effect that tries to start outside of an active point
+        if (!GameManager.PointInProgress()) return;
+
         if (!activeEffects.ContainsKey(bird))
             activeEffects[bird] = new Dictionary<EffectType, Coroutine>();
 
-        // If this effect type is already running, stop it and undo its gameplay changes
-        // before restarting, so stats/flags don't stack or get stuck.
         if (activeEffects[bird].ContainsKey(type))
         {
             StopCoroutine(activeEffects[bird][type]);
@@ -247,8 +248,17 @@ public class BuffsDebuffs : MonoBehaviour
                 ApplyGameplayEffect(kvp.Key, bird, false);
             }
         }
-
         activeEffects.Clear();
+
+        // Actually destroy the spawned VFX — previously the dict was cleared
+        // but the GameObjects were left alive, causing infinite particle replay
+        foreach (var bird in activeVFX.Keys)
+        {
+            foreach (var vfx in activeVFX[bird].Values)
+            {
+                if (vfx != null) Destroy(vfx);
+            }
+        }
         activeVFX.Clear();
         stunOriginalValues.Clear();
     }

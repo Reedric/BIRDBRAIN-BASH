@@ -1,9 +1,11 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using UnityEngine.InputSystem.Users;
 
 public class MultiplayerManager : MonoBehaviour
 {
@@ -13,10 +15,21 @@ public class MultiplayerManager : MonoBehaviour
     [SerializeField] private GameObject aiPrefab; // Prefab for an AI player
     [SerializeField] private RawImage[] playerIndicators; // Ready up indicators for post-game
 
+    // How long to wait for a controller to be connected before giving up
+    [SerializeField] private float controllerWaitTimeout = 10f;
+
     private CharacterManager cManager; // Instance of character manager
     private static MultiplayerManager instance; // Singleton reference to the manager
     private List<bool> isKBMInput; // List of inputs for players (true is KBM, false is Controller) [Only ONE KBM allowed]
     private List<BirdType> selectedBirds; // List of birds each player selected
+
+    // True when the match was launched from the main menu Demo button (0 human players).
+    // Detected by an empty isKBMInput list — all 4 slots are Hard AI, but player 1's
+    // gamepad can still open the pause menu so the demo can be exited.
+    private bool isDemoMode = false;
+
+    // Track PlayerInput per player index so we can re-pair on reconnect
+    private Dictionary<int, PlayerInput> playerInputMap = new();
 
     // HUDManager.Instance is null during Awake() because script execution order isn't guaranteed.
     // We store pending AI registrations here and flush them in Start() once HUDManager exists.
@@ -28,6 +41,7 @@ public class MultiplayerManager : MonoBehaviour
         if (instance != null && instance != this)
         {
             Destroy(gameObject);
+            return;
         }
         else
         {
@@ -38,6 +52,13 @@ public class MultiplayerManager : MonoBehaviour
         cManager = GetComponent<CharacterManager>();
         instance.isKBMInput = DataTransferManager.isKBMInput;
         instance.selectedBirds = DataTransferManager.selectedBirds;
+
+        // An empty isKBMInput list means the demo button was pressed — no human players
+        isDemoMode = (isKBMInput == null || isKBMInput.Count == 0);
+
+        // Subscribe to device changes to handle disconnects and reconnects
+        InputSystem.onDeviceChange += OnDeviceChange;
+
         InitializePlayers();
     }
 
@@ -59,11 +80,73 @@ public class MultiplayerManager : MonoBehaviour
         pendingAIRegistrations.Clear();
     }
 
+    void Update()
+    {
+        // In demo mode there are no PlayerInput instances, so the normal input pipeline won't
+        // route any button presses. Poll player 1's gamepad directly here so they can still
+        // open the pause menu to exit the demo without quitting the whole application.
+        if (!isDemoMode) return;
+
+        Gamepad pad = Gamepad.all.Count > 0 ? Gamepad.all[0] : null;
+        if (pad == null) return;
+
+        if (pad.startButton.wasPressedThisFrame)
+        {
+            // Player 1's gamepad (Gamepad.all[0]) always owns the pause menu in demo mode
+            PauseMenu.Instance.pausedPlayerID = 0;
+            if (PauseMenu.Instance.GameIsPaused)
+                PauseMenu.Instance.Resume();
+            else
+                PauseMenu.Instance.Pause();
+        }
+    }
+
+    void OnDestroy()
+    {
+        // Always unsubscribe to avoid stale callbacks after scene unload
+        InputSystem.onDeviceChange -= OnDeviceChange;
+    }
+
+    // Handles controller disconnect and reconnect events
+    private void OnDeviceChange(InputDevice device, InputDeviceChange change)
+    {
+        if (device is not Gamepad gamepad) return;
+
+        switch (change)
+        {
+            case InputDeviceChange.Disconnected:
+                Debug.LogWarning($"[MultiplayerManager] Gamepad disconnected: {gamepad.displayName}");
+                // todo: pause game, show reconnect UI here
+                break;
+
+            case InputDeviceChange.Reconnected:
+                Debug.Log($"[MultiplayerManager] Gamepad reconnected: {gamepad.displayName}");
+                TryRepairGamepad(gamepad);
+                break;
+        }
+    }
+
+    // Re-pairs a reconnected gamepad to its original PlayerInput if it lost its device
+    private void TryRepairGamepad(Gamepad gamepad)
+    {
+        foreach (var (playerIndex, playerInput) in playerInputMap)
+        {
+            // If this PlayerInput has no active gamepad device, pair the reconnected one
+            if (playerInput != null && !playerInput.devices.Any(d => d is Gamepad))
+            {
+                InputUser.PerformPairingWithDevice(gamepad, playerInput.user);
+                Debug.Log($"[MultiplayerManager] Re-paired {gamepad.displayName} to Player {playerIndex + 1}");
+                return;
+            }
+        }
+    }
+
     void InitializePlayers()
     {
         int playerCount = 0;
 
-        // Initialize the players to play
+        // In demo mode isKBMInput is empty, so this loop is skipped entirely and
+        // all four slots fall through to the MakeAI loop below.
         foreach (bool kbm in isKBMInput)
         {
             // set the bird type that was chosen on the selection screen, if available
@@ -90,13 +173,25 @@ public class MultiplayerManager : MonoBehaviour
             }
             else
             {
-                player = InitializeControllerPlayer(birdPrefab);
+                // Controller init can fail if no pad is connected yet — handle gracefully
+                player = InitializeControllerPlayer(birdPrefab, playerCount);
+            }
+
+            // Guard: if player failed to initialize (e.g. no controller found), skip safely
+            if (player == null)
+            {
+                Debug.LogError($"[MultiplayerManager] Failed to initialize player {playerCount + 1} — skipping.");
+                playerCount++;
+                continue;
             }
 
             // Give the player the necessary scripts to move and interact with the ball
             MakePlayer(player.gameObject, playerCount);
             player.actions.FindActionMap("Player").Enable();
             player.actions.FindActionMap("UI").Enable();
+
+            // Track for reconnect handling
+            playerInputMap[playerCount] = player;
 
             // Increment player count
             playerCount++;
@@ -107,10 +202,11 @@ public class MultiplayerManager : MonoBehaviour
         // Instantiate readied up for score manager
         ScoreManager.Instance.readiedUp = new bool[playerCount];
 
-        // Now add AI players, if necessary
+        // Now add AI players, if necessary.
+        // In demo mode playerCount starts at 0, so all four slots are filled with AI here.
         while (playerCount < 4)
         {
-            // Spawn AI and give it the apporpriate components
+            // Spawn AI and give it the appropriate components
             MakeAI(playerCount);
 
             // Increment player count
@@ -132,15 +228,17 @@ public class MultiplayerManager : MonoBehaviour
         );
     }
 
-    PlayerInput InitializeControllerPlayer(GameObject prefab)
+    // Now takes playerCount for logging, and starts a retry coroutine if no pad is found
+    PlayerInput InitializeControllerPlayer(GameObject prefab, int playerCount)
     {
         // Get an available gamepad if possible
         Gamepad controller = AvailableGamepad();
 
-        // If there is no available gamepad, throw an error (change this to wait until a valid controller is connected)
+        // If there is no available gamepad, start a wait coroutine instead of hard erroring
         if (controller == null)
         {
-            Debug.LogError("Not enough controllers for the amount of players selected.");
+            Debug.LogWarning($"[MultiplayerManager] No available gamepad for Player {playerCount + 1}. Starting wait coroutine.");
+            StartCoroutine(WaitForControllerAndInitialize(prefab, playerCount));
             return null;
         }
 
@@ -150,6 +248,44 @@ public class MultiplayerManager : MonoBehaviour
             controlScheme: "Gamepad",
             pairWithDevice: controller
         );
+    }
+
+    // Polls for a controller to become available, up to controllerWaitTimeout seconds
+    private IEnumerator WaitForControllerAndInitialize(GameObject prefab, int playerCount)
+    {
+        float elapsed = 0f;
+
+        while (elapsed < controllerWaitTimeout)
+        {
+            Gamepad controller = AvailableGamepad();
+            if (controller != null)
+            {
+                Debug.Log($"[MultiplayerManager] Controller found for Player {playerCount + 1} after {elapsed:F1}s wait.");
+
+                // Initialize player input now that a controller is available
+                PlayerInput player = PlayerInput.Instantiate(
+                    prefab,
+                    controlScheme: "Gamepad",
+                    pairWithDevice: controller
+                );
+
+                // Give the player the necessary scripts to move and interact with the ball
+                MakePlayer(player.gameObject, playerCount);
+                player.actions.FindActionMap("Player").Enable();
+                player.actions.FindActionMap("UI").Enable();
+
+                // Track for reconnect handling
+                playerInputMap[playerCount] = player;
+
+                yield break;
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // If we reach here, no controller was found in time
+        Debug.LogError($"[MultiplayerManager] Timed out waiting for controller for Player {playerCount + 1}.");
     }
 
     Gamepad AvailableGamepad()
@@ -224,6 +360,9 @@ public class MultiplayerManager : MonoBehaviour
             case BirdType.OWL:
                 if (!isPlayer) return cManager.OwlAI;
                 return isKBM ? cManager.OwlKBM : cManager.OwlC;
+            case BirdType.MACAW:
+                if (!isPlayer) return cManager.MacawAI;
+                return isKBM ? cManager.MacawKBM : cManager.MacawC;
             default:
                 if (!isPlayer) return cManager.PenguinAI;
                 return isKBM ? cManager.PenguinKBM : cManager.PenguinC;
@@ -296,6 +435,16 @@ public class MultiplayerManager : MonoBehaviour
         AIBehavior aIBehavior = ai.GetComponent<AIBehavior>();
         aIBehavior.onLeft = playerCount < 2 ? true : false;
 
+        // Determine AI difficulty based on player count and slot:
+        // - Demo mode (0 humans)  -> all 4 AIs are Hard (screensaver spectacle)
+        // - 1 gamepad player      -> slot 1 is their left-team ally  -> Hard; all others -> Medium
+        // - 3 gamepad players     -> slot 3 is player 2's right-team ally -> Hard; no other AIs exist
+        // - 2 gamepad players     -> all AIs are opponents (slots 2 & 3) -> Medium
+        int humanCount = isKBMInput.Count(kbm => !kbm);
+        bool isAllyAI = (humanCount == 1 && playerCount == 1) ||
+                        (humanCount == 3 && playerCount == 3);
+        aIBehavior.SetAIDifficulty((isDemoMode || isAllyAI) ? AIBehavior.AIDifficulty.Hard : AIBehavior.AIDifficulty.Medium);
+
         // Set ai transform
         ai.transform.position = playerSpawnpoints[playerCount].position;
         ai.transform.rotation = playerSpawnpoints[playerCount].rotation;
@@ -304,7 +453,14 @@ public class MultiplayerManager : MonoBehaviour
         // Assign the ai to its respective spot for the game manager
         FollowObject fo;
         GameManager gameManager = GameManager.Instance;
-        if (playerCount == 1)
+        if (playerCount == 0)
+        {
+            // Slot 0 is only ever an AI in demo mode (0 human players) — assign leftPlayer1 explicitly
+            // so GameManager.Start() doesn't throw an UnassignedReferenceException.
+            gameManager.leftPlayer1 = ai;
+            fo = GameObject.Find("PlayerOneFollow").GetComponent<FollowObject>();
+        }
+        else if (playerCount == 1)
         {
             gameManager.leftPlayer2 = ai;
             fo = GameObject.Find("PlayerTwoFollow").GetComponent<FollowObject>();

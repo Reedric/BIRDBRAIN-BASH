@@ -6,22 +6,30 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(Transform))]
 
-/// <summary>
-/// Stealth Burrowing - Kiwi burrows underground, becoming faster while also ignoring field effects.
-/// When the ability ends, Kiwi jumps out of the ground 
-/// </summary>
 public class KiwiDefensive : BirdAbility
 {
     [Header("Burrowing Settings")]
     [SerializeField] private float burrowDuration = 2f;
     [SerializeField] private float speedBoost = 2f;
+    [SerializeField] private float jumpOutForce = 10f;
+    [SerializeField] private float cooldown = 12f;
+
+    [Header("Burrow VFX")]
+    [SerializeField] private GameObject burrowMarkerPrefab;
+    [SerializeField] private Vector3 markerOffset = new Vector3(0f, 0.05f, 0f); // sits just above ground
+
+    private bool onCooldown = false;
+    private bool isBurrowed = false;
+    private bool _cancelRequested = false;
+
+    private GameObject _activeBurrowMarker;
 
     private MeshRenderer meshRenderer;
     private CharacterMovement characterMovement;
     private Rigidbody rb;
 
-    private void Awake() 
-    { 
+    private void Awake()
+    {
         meshRenderer = GetComponent<MeshRenderer>();
         characterMovement = GetComponent<CharacterMovement>();
         rb = GetComponent<Rigidbody>();
@@ -29,22 +37,77 @@ public class KiwiDefensive : BirdAbility
 
     override protected void Activate()
     {
-        StartCoroutine(StealthBurrowing());
+        if (isBurrowed)
+            _cancelRequested = true;
+        else
+            StartCoroutine(StealthBurrowing());
     }
 
     private IEnumerator StealthBurrowing()
     {
-        // Need some type of animation or visual for burrowing but for now the bird will just go invisible
-        meshRenderer.enabled = false; // makes bird invisible
+        if (onCooldown || !GameManager.PointInProgress()) yield break;
+        onCooldown = true;
+        isBurrowed = true;
+        _cancelRequested = false;
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
+
+        // Burrow down
+        meshRenderer.enabled = false;
         rb.useGravity = false;
-        transform.Translate(Vector3.down * 3f); // moves bird under play area to avoid field obstacles
+
+        // Store surface position before going underground
+        Vector3 surfacePosition = transform.position;
+
+        transform.Translate(Vector3.down * 3f);
         characterMovement.maxAirSpeed += speedBoost;
 
-        yield return new WaitForSeconds(burrowDuration);
+        // Spawn the dirt marker at the captured surface position
+        if (burrowMarkerPrefab != null)
+        {
+            Vector3 markerPos = surfacePosition + markerOffset;
+            _activeBurrowMarker = Instantiate(burrowMarkerPrefab, markerPos, Quaternion.identity);
+        }
 
+        // Wait for either the full duration or a cancel request
+        float elapsed = 0f;
+        while (elapsed < burrowDuration && !_cancelRequested)
+        {
+            elapsed += Time.deltaTime;
+
+            // Keep the marker pinned to the kiwi's XZ position in case they move
+            if (_activeBurrowMarker != null)
+            {
+                Vector3 markerPos = new Vector3(
+                    transform.position.x,
+                    transform.position.y + 3f + markerOffset.y, // surface = kiwi Y + burrow depth
+                    transform.position.z
+                );
+                _activeBurrowMarker.transform.position = markerPos;
+            }
+
+            yield return null;
+        }
+
+        // Destroy the marker before surfacing
+        if (_activeBurrowMarker != null)
+        {
+            Destroy(_activeBurrowMarker);
+            _activeBurrowMarker = null;
+        }
+
+        // Jump out
+        isBurrowed = false;
         meshRenderer.enabled = true;
         rb.useGravity = true;
         transform.Translate(Vector3.up * 5f);
         characterMovement.maxAirSpeed -= speedBoost;
+
+        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+        rb.AddForce(Vector3.up * jumpOutForce, ForceMode.Impulse);
+
+        yield return new WaitForSeconds(cooldown);
+        onCooldown = false;
     }
 }

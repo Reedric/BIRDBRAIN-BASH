@@ -23,10 +23,10 @@ public class EagleOffensive : BirdAbility
 
     override protected void Activate()
     {
-        StartCoroutine(StunOpponents());
+        StunOpponents();
     }
 
-    private IEnumerator StunOpponents()
+    private void StunOpponents()
     {
         GameManager gameManager = GameManager.Instance;
 
@@ -63,43 +63,22 @@ public class EagleOffensive : BirdAbility
         {
             if (opponent == null) continue;
 
-            BirdAbility[] abilities = opponent.GetComponents<BirdAbility>();
-            if (abilities.Length > 0)
-            {
-                foreach (BirdAbility ability in abilities)
-                {
-                    ability.SetAbilitiesDisabled(true);
-                }
-                opponent.GetComponent<CharacterMovement>().controlMovement(false, false);
+            // ostrich is immune to stun!
+            BallInteract birdPlayer = opponent.GetComponent<BallInteract>();
+            BirdType birdType = birdPlayer != null
+                ? birdPlayer.GetBirdType()
+                : opponent.GetComponent<AIBehavior>().GetBirdType();
 
-            }
-            else
-            {
-                opponent.GetComponent<AIBehavior>().enabled = false;
-            }
-        }
+            if (birdType == BirdType.OSTRICH) continue;
 
-        yield return new WaitForSeconds(stunDuration);
-
-        
-        foreach (GameObject opponent in opponents)
-        {
-            if (opponent == null) continue;
-
-            BirdAbility[] abilities = opponent.GetComponents<BirdAbility>();
-            if (abilities.Length > 0)
-            {
-                foreach (BirdAbility ability in abilities)
-                {
-                    ability.SetAbilitiesDisabled(false);
-                }
-                opponent.GetComponent<CharacterMovement>().controlMovement(true, true);
-
-            }
-            else
-            {
-                opponent.GetComponent<AIBehavior>().enabled = true;
-            }
+            // BuffsDebuffs handles everything: VFX, audio, disabling movement +
+            // abilities (for both player and AI), and re-enabling after stunDuration.
+            BuffsDebuffs.Instance.ApplyEffect(
+                BuffsDebuffs.EffectType.Stun,
+                opponent,
+                stunDuration,
+                opponentIsOnLeft
+            );
         }
     }
 }

@@ -172,6 +172,12 @@ public class HUDManager : MonoBehaviour
     [SerializeField] private Texture eagleOffensiveIcon;
     [SerializeField] private Texture eagleDefensiveIcon;
 
+    [Header("Macaw")]
+    [SerializeField] private string macawDisplayName = "Macaw";
+    [SerializeField] private Texture macawPlayerIcon;
+    [SerializeField] private Texture macawOffensiveIcon;
+    [SerializeField] private Texture macawDefensiveIcon;
+
 
     private static HUDManager instance;
     public static HUDManager Instance => instance;
@@ -217,8 +223,8 @@ public class HUDManager : MonoBehaviour
         if (playerIndex < 0 || playerIndex >= cards.Length || cards[playerIndex] == null) return;
 
         BirdHUDData data = GetBirdHUDData(birdType);
-        if (data != null)
-            data.displayName = "[CPU] " + data.displayName;
+        // if (data != null)
+            // data.displayName = "CPU " + data.displayName;
 
         if (cards[playerIndex].cardRoot != null)
             cards[playerIndex].cardRoot.SetActive(true);
@@ -388,6 +394,7 @@ public class HUDManager : MonoBehaviour
             BirdType.CHICKEN     => new BirdHUDData { displayName = chickenDisplayName,     playerIcon = chickenPlayerIcon,     offensiveIcon = chickenOffensiveIcon,     defensiveIcon = chickenDefensiveIcon },
             BirdType.OSTRICH     => new BirdHUDData { displayName = ostrichDisplayName,     playerIcon = ostrichPlayerIcon,     offensiveIcon = ostrichOffensiveIcon,     defensiveIcon = ostrichDefensiveIcon },
             BirdType.EAGLE       => new BirdHUDData { displayName = eagleDisplayName,       playerIcon = eaglePlayerIcon,       offensiveIcon = eagleOffensiveIcon,       defensiveIcon = eagleDefensiveIcon },
+            BirdType.MACAW       => new BirdHUDData { displayName = macawDisplayName,       playerIcon = macawPlayerIcon,       offensiveIcon = macawOffensiveIcon,       defensiveIcon = macawDefensiveIcon },
             _                    => null
         };
     }

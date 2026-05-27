@@ -35,21 +35,21 @@ public class LovebirdOffensive : BirdAbility
                 BallInteract birdPlayer = opponent.GetComponent<BallInteract>();
                 BirdType birdType;
                 if (birdPlayer == null)
-                {
                     birdType = opponent.GetComponent<AIBehavior>().GetBirdType();
-                }
                 else
-                {
-                    birdType = opponent.GetComponent<BallInteract>().GetBirdType();
-                }
+                    birdType = birdPlayer.GetBirdType();
+
                 if (birdType != BirdType.OSTRICH)
                 {
-                    // Gets a normalized direction vector from the opponent to the Lovebird
-                    Vector3 dir = this.transform.position - opponent.transform.position;
-                    dir.Normalize();
+                    Vector3 diff = this.transform.position - opponent.transform.position;
 
-                    // Moves opponent towards the Lovebird
-                    opponent.transform.position += dir * walkSpeed / 300;
+                    // Always face the lovebird (Y axis only, no tilting)
+                    Vector3 lookDir = new Vector3(diff.x, 0f, diff.z);
+                    if (lookDir != Vector3.zero)
+                        opponent.transform.rotation = Quaternion.LookRotation(lookDir);
+
+                    // Stronger, irresistible pull
+                    opponent.transform.position += diff.normalized * walkSpeed * Time.deltaTime * 2f;
                 }
             }
         }
@@ -66,9 +66,7 @@ public class LovebirdOffensive : BirdAbility
         // Trigger offensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
-        {
             myBallInteract.animator.SetTrigger("OffensiveAbility");
-        }
 
         // Gets opponents
         GameManager gameManager = GameManager.Instance;
@@ -76,40 +74,38 @@ public class LovebirdOffensive : BirdAbility
         {
             opponents.Add(gameManager.rightPlayer1);
             opponents.Add(gameManager.rightPlayer2);
-        } else
+        }
+        else
         {
             opponents.Add(gameManager.leftPlayer1);
             opponents.Add(gameManager.leftPlayer2);
         }
 
-        // Disables manual movement for AI and Players
+        // disable movement but NOT BallInteract
         foreach (GameObject opponent in opponents)
         {
-            try
+            BirdType birdType;
+            BallInteract birdPlayer = opponent.GetComponent<BallInteract>();
+            if (birdPlayer != null)
+                birdType = birdPlayer.GetBirdType();
+            else
+                birdType = opponent.GetComponent<AIBehavior>().GetBirdType();
+
+            if (birdType != BirdType.OSTRICH)
             {
-                if (opponent.GetComponent<BallInteract>().GetBirdType() != BirdType.OSTRICH) 
-                {
+                if (opponent.GetComponent<CharacterMovement>())
                     opponent.GetComponent<CharacterMovement>().enabled = false;
-                    ParticleSystem heart = Instantiate(hearts, opponent.transform);
-                    heart.transform.position += new Vector3(0f, heartsOffset, 0f);
-                    heart.Play();
-                    _hearts.Add(heart);
-                }
-            }
-            catch (NullReferenceException)
-            {
-                if (opponent.GetComponent<AIBehavior>().GetBirdType() != BirdType.OSTRICH)
-                {
-                    opponent.GetComponent<AIBehavior>().enabled = false;
-                    ParticleSystem heart = Instantiate(hearts, opponent.transform);
-                    heart.transform.position += new Vector3(0f, heartsOffset, 0f);
-                    heart.Play();
-                    _hearts.Add(heart);
-                }
+                if (opponent.GetComponent<AIBehavior>())
+                    opponent.GetComponent<AIBehavior>().SetEnamored(true);  // instead of .enabled = false
+
+                ParticleSystem heart = Instantiate(hearts, opponent.transform);
+                heart.transform.position += new Vector3(0f, heartsOffset, 0f);
+                heart.Play();
+                _hearts.Add(heart);
             }
         }
-        _debuffActive = true;
 
+        _debuffActive = true;
         StartCoroutine(DebuffTimer());
     }
 
@@ -118,23 +114,19 @@ public class LovebirdOffensive : BirdAbility
         yield return new WaitForSeconds(DebuffLength);
         _debuffActive = false;
 
-        //Re-enables manual movement for AI and Players
         foreach (GameObject opponent in opponents)
         {
             if (opponent.GetComponent<CharacterMovement>())
-            {
                 opponent.GetComponent<CharacterMovement>().enabled = true;
-            }
             if (opponent.GetComponent<AIBehavior>())
-            {
-                opponent.GetComponent<AIBehavior>().enabled = true;
-            }
+                opponent.GetComponent<AIBehavior>().SetEnamored(false);  // ← instead of .enabled = true
         }
 
         foreach (ParticleSystem heart in _hearts)
-        {
             Destroy(heart);
-        }
+
+        opponents.Clear();
+        _hearts.Clear();
     }
 }
 

@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 8768468}
   - component: {fileID: 8768470}
   - component: {fileID: 8768469}
+  - component: {fileID: 8768471}
   m_Layer: 5
   m_Name: Background
   m_TagString: Untagged
@@ -146,8 +147,8 @@ RectTransform:
   m_GameObject: {fileID: 8768467}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 1.13, y: 1, z: 1.13}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 771148939}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -191,6 +192,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8768467}
   m_CullTransparentMesh: 1
+--- !u!114 &8768471
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8768467}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b18c1e56d4b6d408cdde921248ffa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSpeed: 1
+  verticalEnabled: 0
+  verticalAmplitude: 20
+  verticalSpeed: 1
+  verticalPhaseShift: 0
+  horizontalEnabled: 1
+  horizontalAmplitude: 75
+  horizontalSpeed: 0.07
+  horizontalPhaseShift: 0
+  rotationEnabled: 0
+  rotationAmplitude: 15
+  rotationSpeed: 0.8
+  rotationPhaseShift: 0
+  scaleEnabled: 0
+  scaleAmplitude: 0.15
+  scaleSpeed: 1.2
+  scalePhaseShift: 3.1415927
+  squishMode: 0
+  squishPhaseOffset: 1.5707964
 --- !u!1 &95601547
 GameObject:
   m_ObjectHideFlags: 0
@@ -344,6 +376,7 @@ GameObject:
   - component: {fileID: 291979467}
   - component: {fileID: 291979469}
   - component: {fileID: 291979468}
+  - component: {fileID: 291979470}
   m_Layer: 5
   m_Name: Title
   m_TagString: Untagged
@@ -470,6 +503,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 291979466}
   m_CullTransparentMesh: 1
+--- !u!114 &291979470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 291979466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b18c1e56d4b6d408cdde921248ffa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSpeed: 1
+  verticalEnabled: 0
+  verticalAmplitude: 20
+  verticalSpeed: 1
+  verticalPhaseShift: 0
+  horizontalEnabled: 0
+  horizontalAmplitude: 10
+  horizontalSpeed: 1.5
+  horizontalPhaseShift: 1.5707964
+  rotationEnabled: 1
+  rotationAmplitude: 2
+  rotationSpeed: 0.15
+  rotationPhaseShift: 0
+  scaleEnabled: 0
+  scaleAmplitude: 0.15
+  scaleSpeed: 1.2
+  scalePhaseShift: 3.1415927
+  squishMode: 0
+  squishPhaseOffset: 1.5707964
 --- !u!1 &369755718
 GameObject:
   m_ObjectHideFlags: 0
@@ -1115,7 +1179,7 @@ VideoPlayer:
   m_TargetMaterialRenderer: {fileID: 0}
   m_TargetMaterialProperty: <noninit>
   m_RenderMode: 2
-  m_AspectRatio: 2
+  m_AspectRatio: 5
   m_DataSource: 0
   m_TimeUpdateMode: 2
   m_PlaybackSpeed: 1
@@ -1143,7 +1207,7 @@ Transform:
   m_GameObject: {fileID: 1143560008}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 698.98535, y: 540, z: 1.4210514}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1631,15 +1695,15 @@ RectTransform:
   m_GameObject: {fileID: 2080813723}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.62, y: 0.62, z: 0.62}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1487335378}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 200, y: 0}
-  m_SizeDelta: {x: 1000, y: 700}
+  m_AnchoredPosition: {x: 274, y: 0}
+  m_SizeDelta: {x: 1920, y: 1080}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2080813725
 MonoBehaviour:

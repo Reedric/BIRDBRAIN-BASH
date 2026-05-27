@@ -72,7 +72,8 @@ public class CrowDefensive : BirdAbility
     void CrowDefBuff()
     {
         Debug.Log("Buff activated");
-        GetComponent<CharacterMovement>().BuffStats(buffAmount, buffLength);
+        BuffsDebuffs.Instance.ApplyEffect(BuffsDebuffs.EffectType.Buff, gameObject, buffLength,
+            gameObject == GameManager.Instance.leftPlayer1 || gameObject == GameManager.Instance.leftPlayer2);
         buffActive = true;
         int playerID = GetComponent<BallInteract>().playerID;
         HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);

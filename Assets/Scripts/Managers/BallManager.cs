@@ -42,6 +42,16 @@ public class BallManager : MonoBehaviour
         offCourse = false;
     }
 
+    void FixedUpdate()
+    {
+        // Freeze ball during serve setup
+        if (GameManager.Instance.gameState == GameManager.GameState.PointStart)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+    }
+
     // Calls whenever the character collides with another collider or rigidbody
     void OnCollisionEnter(Collision other)
     {

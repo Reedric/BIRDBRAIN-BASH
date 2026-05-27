@@ -34,10 +34,6 @@ public class SeagullDefensive : BirdAbility
         {
             return;
         }
-        if (BirdAbilityRuleService.Instance.CanUseAbility(gameObject))
-        {
-            return;
-        }
         if (CanDashToBall())
         {
             StartCoroutine(DashToBall());

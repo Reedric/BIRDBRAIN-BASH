@@ -39,7 +39,7 @@ public class MacawDefensive : BirdAbility
     {
         if (currentAbility == null) return;
 
-        currentAbility.TryActivate();
+        currentAbility.TryActivate(AbilitySlot.Defensive);
     }
 
     // TODO: find better way to do this to not clog update

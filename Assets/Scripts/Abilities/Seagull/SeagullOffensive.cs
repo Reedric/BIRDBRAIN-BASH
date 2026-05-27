@@ -106,23 +106,4 @@ public class SeagullOffensive : BirdAbility
         yield return new WaitForSeconds(debuffWindowLength);
         _debuffWindow = false;
     }
-
-    // Could be deleted? Have to check
-    private bool CanMock()
-    {
-        // If abilities are disabled for the seagull, cannot mock
-        if (!BirdAbilityRuleService.Instance.CanUseAbility(gameObject)) return false;
-
-        // If the point hasn't just ended or point not about to start return false
-        if (!GameManager.Instance.gameState.Equals(GameManager.GameState.PointStart) && GameManager.Instance.gameState.Equals(GameManager.GameState.PointEnd))
-        {
-            return false;
-        }
-
-        // Get which side just scored the point
-        bool leftJustScored = ScoreManager.Instance.side1ServeIndicator.activeInHierarchy;
-
-        // Return true if they equal
-        return _onLeft == leftJustScored;
-    }
 }
