@@ -204,14 +204,30 @@ public class ScoreManager : MonoBehaviour
         // Set game manager state to end of point
         GameManager.Instance.gameState = GameManager.GameState.PointEnd;
 
-        if (side1Score >= 15 && side1Score - side2Score >= 2)
+        // Read settings (use defaults if GameSettings not present)
+        int pointsPerSet = 15;
+        int finalSetPoints = 15;
+        int bestOf = 3;
+        
+        if (GameSettings.Instance != null)
+        {
+            pointsPerSet = GameSettings.Instance.PointsPerSet > 0 ? GameSettings.Instance.PointsPerSet : pointsPerSet;
+            finalSetPoints = GameSettings.Instance.FinalSetPoints > 0 ? GameSettings.Instance.FinalSetPoints : finalSetPoints;
+            bestOf = GameSettings.Instance.BestOfSets > 0 ? GameSettings.Instance.BestOfSets : bestOf;
+        }
+
+        int totalSetsPlayed = side1SetsWon + side2SetsWon;
+        bool isFinalSet = totalSetsPlayed == bestOf - 1;
+        int targetPoints = isFinalSet ? finalSetPoints : pointsPerSet;
+
+        if (side1Score >= targetPoints && side1Score - side2Score >= 2)
         {
             Debug.Log("side 1 wins! final score: " + side1Score + " to " + side2Score);
             side1SetsWon++;
             side1SetUI.text = side1SetsWon.ToString();
             CheckMatchWin();
         } 
-        else if (side2Score >= 15 && side2Score - side1Score >= 2)
+        else if (side2Score >= targetPoints && side2Score - side1Score >= 2)
         {
             Debug.Log("side 2 wins! final score: " + side1Score + " to " + side2Score);
             side2SetsWon++;
@@ -226,13 +242,20 @@ public class ScoreManager : MonoBehaviour
     //Checks if the Match is won, Best of 3 format
     void CheckMatchWin()
     {
-        if (side1SetsWon == 2)
+        int bestOf = 3;
+        if (GameSettings.Instance != null)
+        {
+            bestOf = GameSettings.Instance.BestOfSets > 0 ? GameSettings.Instance.BestOfSets : bestOf;
+        }
+        int setsToWin = bestOf / 2 + 1;
+
+        if (side1SetsWon >= setsToWin)
         {
             Debug.Log("Side 1 wins the match!");
             inPlay = false;
             StartCoroutine(TransitionToEnd(true));
         }
-        else if (side2SetsWon == 2)
+        else if (side2SetsWon >= setsToWin)
         {
             Debug.Log("Side 2 wins the match!");
             inPlay = false;
