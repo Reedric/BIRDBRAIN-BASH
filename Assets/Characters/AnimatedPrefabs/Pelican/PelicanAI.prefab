@@ -5607,9 +5607,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6dca93e819a6fc47a03b72b82e10caf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManager: {fileID: 0}
+  birdType: 0
   onLeft: 0
-  ballManager: {fileID: 0}
   interactionRadius: 3
   animator: {fileID: 3971563219526740688}
   maxGroundSpeed: 1
@@ -5618,6 +5617,17 @@ MonoBehaviour:
   rotationSpeed: 10
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
+  rotationOffsetEuler: {x: 0, y: 0, z: 0}
+  aiDifficulty: 1
+  easyBumpChance: 0.35
+  easySetChance: 0.5
+  easySpikeChance: 0.5
+  mediumBumpChance: 0.6
+  mediumSetChance: 0.75
+  mediumSpikeChance: 0.75
+  hardBumpChance: 0.7
+  hardSetChance: 0.9
+  hardSpikeChance: 0.9
 --- !u!114 &-3779008797536581838
 MonoBehaviour:
   m_ObjectHideFlags: 0

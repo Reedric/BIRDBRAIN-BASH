@@ -11,6 +11,7 @@ public class OwlOffensive : BirdAbility
     [SerializeField] private float cooldown = 25f + 8f; // 8s line duration + 25s cooldown
     private bool onCooldown = false;
     [SerializeField] private float lineDuration = 8f;
+    [SerializeField] private float lineDrawDuration = 0.6f; // How long the draw animation takes
     [SerializeField] private Color lineColor = Color.red;
     [SerializeField] private float lineWidth = 0.2f;
     public Animator animator; // Assign in inspector
@@ -62,19 +63,37 @@ public class OwlOffensive : BirdAbility
         lineRenderer.endWidth = lineWidth;
         lineRenderer.positionCount = 2;
         lineRenderer.SetPosition(0, start);
-        lineRenderer.SetPosition(1, end);
+        lineRenderer.SetPosition(1, start); // begin at start — tip will lerp to end
 
+        // Collider is added after the draw animation so it only blocks once fully drawn
         BoxCollider lineCollider = line.AddComponent<BoxCollider>();
         lineCollider.isTrigger = false;
+        lineCollider.enabled = false;
         lineCollider.size = new Vector3(Vector3.Distance(start, end), 20f, 0f);
         lineCollider.center = new Vector3(end.x / 2, 10f, 0f); // moves the collider up so its not underground
 
         onCooldown = true;
+
+        // Animate the line tip smoothly from start to end
+        float elapsed = 0f;
+        while (elapsed < lineDrawDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, elapsed / lineDrawDuration); // SmoothStep eases in and out
+            lineRenderer.SetPosition(1, Vector3.Lerp(start, end, t));
+            yield return null;
+        }
+
+        // Snap to exact end position and enable the collider now that the line is fully drawn
+        lineRenderer.SetPosition(1, end);
+        lineCollider.enabled = true;
+
+        // Hold the line for the remaining duration
         float time = 0f;
         while (time < lineDuration)
         {
             time += Time.deltaTime;
-            yield return null; // this waits for one frame, so essentually unity update but in a coroutine
+            yield return null; // this waits for one frame, so essentially unity update but in a coroutine
             
             // If point ended, destroy line
             if (GameManager.Instance.gameState == GameManager.GameState.PointEnd)
@@ -84,7 +103,7 @@ public class OwlOffensive : BirdAbility
         }
         
         // EJ: For anyone happening to be editing this code make sure the line is destroyed
-        // EJ :Its a procedural asset and wont be automatically destroyed creating a memory leak
+        // EJ: Its a procedural asset and wont be automatically destroyed creating a memory leak
         Destroy(line);
 
         yield return new WaitForSeconds(cooldown - lineDuration);

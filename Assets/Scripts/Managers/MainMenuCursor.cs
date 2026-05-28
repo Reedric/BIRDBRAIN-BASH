@@ -23,6 +23,10 @@ public class MainMenuCursor : MonoBehaviour
     [Header("Controller Settings")]
     public float cursorSpeed = 1000f;
 
+    [Header("Panels")]
+    [Tooltip("Assign the NumPlayers panel here so the cursor knows when to use B to proceed.")]
+    [SerializeField] private GameObject numPlayersPanel;
+
     private Transform playerCursor;
     private Coroutine cursorAnimCoroutine;
     private Vector2 cursorPosition;
@@ -47,14 +51,31 @@ public class MainMenuCursor : MonoBehaviour
         // Ensure the hardware mouse stays hidden (in case of alt-tabbing)
         if (Cursor.visible) Cursor.visible = false;
 
-        // Check for Gamepad
-        Gamepad pad = Gamepad.current;
-        if (pad == null) return; 
+        // Only read from Gamepad.all[0] so that Player 1 is always the first connected
+        // controller — this matches how CharacterSelectManager assigns players via
+        // Gamepad.all[index], preventing ordering mismatches between scenes and
+        // ensuring controllers 2/3/4 cannot move or click the main menu cursor.
+        if (Gamepad.all.Count == 0) return;
+        Gamepad pad = Gamepad.all[0];
 
-        // Back to menu (B Button)
-        if (pad.bButton.wasPressedThisFrame)
+        // B Button does nothing on the main menu — there is no previous screen to go back to.
+        // (Previously this incorrectly called NavigateToPlay(), jumping straight to CharSelect.)
+
+        // On the NumPlayers panel, B confirms and proceeds to CharSelect.
+        // A is intentionally blocked from progressing — it should only interact with
+        // main menu buttons, not advance through the NumPlayers screen.
+        bool numPlayersActive = numPlayersPanel != null && numPlayersPanel.activeInHierarchy;
+
+        if (numPlayersActive)
         {
-            NavigateToPlay();
+            if (pad.bButton.wasPressedThisFrame)
+            {
+                NavigateToPlay();
+                return;
+            }
+
+            // Block A from clicking anything on the NumPlayers panel
+            UpdateCursorPosition();
             return;
         }
 
@@ -71,7 +92,7 @@ public class MainMenuCursor : MonoBehaviour
 
         RectTransform rt = playerCursor.GetComponent<RectTransform>();
         if (rt != null)
-            rt.pivot = new Vector2(0.5f, 0.5f); // Center pivot for better clicking accuracy
+            rt.pivot = new Vector2(0f, 1f); // Top-left pivot for pointer-style cursor accuracy
     }
 
     private void UpdateControllerInput(Gamepad pad)

@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;      
 using System.Collections;
+using System.Collections.Generic;
 
 public class MainMenu : MonoBehaviour
 {
@@ -16,6 +19,11 @@ public class MainMenu : MonoBehaviour
     [SerializeField] private Animator creditsAnimator;
     [SerializeField] private float creditsDuration = 30f;
 
+    [Header("Demo Mode")]
+    [Tooltip("The gameplay scene to load directly when entering demo/screensaver mode. " +
+             "Should be the actual match scene, not CharSelect or HowToPlay.")]
+    [SerializeField] private string gameSceneName = "Game";
+
     private bool isShowingCredits = false;
 
     /// <summary>
@@ -24,7 +32,44 @@ public class MainMenu : MonoBehaviour
     public void PlayButton()
     {
         if (mainMenuPanel  != null) mainMenuPanel.SetActive(false);
-        if (numPlayersPanel != null) numPlayersPanel.SetActive(true);
+        if (numPlayersPanel != null)
+        {
+            numPlayersPanel.SetActive(true);
+            StartCoroutine(SelectFirstButtonNextFrame(numPlayersPanel)); // prevent bleed-through
+        }
+    }
+
+    /// <summary>
+    /// Clears the EventSystem selection for one frame, then re-selects the first
+    /// button on the new panel. This prevents the "A" press that opened this panel
+    /// from instantly firing a button here too.
+    /// </summary>
+    private IEnumerator SelectFirstButtonNextFrame(GameObject panel)
+    {
+        // Deselect everything so the current A-press doesn't carry over
+        EventSystem.current.SetSelectedGameObject(null);
+
+        // Wait one frame for the button-press event to fully clear
+        yield return null;
+
+        // Now safely select the first interactable button on the new panel
+        Button firstButton = panel.GetComponentInChildren<Button>();
+        if (firstButton != null)
+            EventSystem.current.SetSelectedGameObject(firstButton.gameObject);
+    }
+
+    /// <summary>
+    /// Starts demo/screensaver mode: skips CharSelect entirely and loads the game scene
+    /// with no human players. MultiplayerManager detects the empty isKBMInput list and
+    /// spawns 4 Hard-difficulty AI players. Player 1's gamepad can still open the pause menu.
+    /// </summary>
+    public void DemoButton()
+    {
+        // Empty list = 0 human players — MultiplayerManager uses this as the demo mode signal
+        DataTransferManager.isKBMInput = new List<bool>();
+        DataTransferManager.selectedBirds = new List<BirdType>();
+
+        SceneManager.LoadScene(gameSceneName);
     }
 
     public void Quit()

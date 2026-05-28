@@ -70,6 +70,14 @@ public class EagleOffensive : BirdAbility
         {
             if (opponent == null) continue;
 
+            // ostrich is immune to stun!
+            BallInteract birdPlayer = opponent.GetComponent<BallInteract>();
+            BirdType birdType = birdPlayer != null
+                ? birdPlayer.GetBirdType()
+                : opponent.GetComponent<AIBehavior>().GetBirdType();
+
+            if (birdType == BirdType.OSTRICH) continue;
+
             // BuffsDebuffs handles everything: VFX, audio, disabling movement +
             // abilities (for both player and AI), and re-enabling after stunDuration.
             BuffsDebuffs.Instance.ApplyEffect(

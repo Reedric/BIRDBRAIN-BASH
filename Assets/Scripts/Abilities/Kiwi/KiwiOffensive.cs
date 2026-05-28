@@ -39,8 +39,11 @@ public class KiwiOffensive : BirdAbility
 
     private IEnumerator FireTheLazar()
     {
-        if (onCooldown || !CanUseAbilities() || !PointInProgress()) yield break;
+        if (onCooldown || !CanUseAbilities() || !PointInProgress() || !HasPossesion() || IsOwnTeamServing()) yield break;  // add !HasPossesion()
         onCooldown = true;
+
+        // Play offensive sound
+        AudioManager.PlayBirdSound(BirdType.KIWI, SoundType.OFFENSIVE, 1.0f);
 
         int playerID = GetComponent<BallInteract>().playerID;
         HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
@@ -82,6 +85,19 @@ public class KiwiOffensive : BirdAbility
 
         yield return new WaitForSeconds(cooldown);
         onCooldown = false;
+    }
+
+    private bool IsOwnTeamServing()
+    {
+        bool onLeft = transform.position.x < 0;
+
+        // Block during point start (serve hasn't launched yet)
+        if (gameManager.gameState == GameManager.GameState.PointStart) return true;
+
+        // Block if ball was served by your own team
+        if (gameManager.gameState == GameManager.GameState.Served && gameManager.leftAttack == onLeft) return true;
+
+        return false;
     }
 
     private GameObject CreateLazer(Vector3 ballPosition, Vector3 eyePosition)

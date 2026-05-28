@@ -156,7 +156,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxGroundSpeed: 4
-  maxAirSpeed: 2
+  maxAirSpeed: 4
   jumpForce: 5
   rotationSpeed: 10
   rotationOffsetEuler: {x: 0, y: 0, z: 0}
@@ -228,6 +228,7 @@ MonoBehaviour:
   mainCanvas: {fileID: 0}
   displayTime: 4
   cooldown: 15
+  animator: {fileID: 0}
 --- !u!54 &4285232545970750994
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -268,6 +269,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   slowFallMultiplier: 0.85
+  apexHoverDuration: 1.5
+  apexVelocityThreshold: 2
 --- !u!114 &2723895433308184011
 MonoBehaviour:
   m_ObjectHideFlags: 0
