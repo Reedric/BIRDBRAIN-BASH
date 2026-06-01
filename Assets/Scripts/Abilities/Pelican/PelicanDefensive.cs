@@ -9,23 +9,11 @@ public class PelicanDefensive : BirdAbility
     public int holdLength; // Maximum amount of time in seconds the pelican can hold the ball in its mouth
     public BallInteract ballInteract;
     private bool isBallEaten = false;
-    private bool wasServing = false; // tracks whether we ate during a serve
     private Coroutine holdCoroutine;
-    private PlayerInput playerInput;
     private GameManager.GameState stateWhenEaten;
-
-    public void Start()
-    {
-        ballInteract = GetComponent<BallInteract>();
-        playerInput = GetComponent<PlayerInput>();
-    }
 
     override protected void Activate()
     {
-        if (playerInput == null) return;
-
-        bool defensivePressed = playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame();
-
         // If pressed defensive ability button, activate ability
         if (isBallEaten)
             SpitBall();
@@ -38,13 +26,6 @@ public class PelicanDefensive : BirdAbility
         }
     }
 
-    // Returns true when the ball is on the same side of the court as the pelican.
-    // Mirrors the sign-of-X trick used in BallInteract.CanHit().
-    private bool IsOnOwnSide()
-    {
-        return BallManager.Instance.transform.position.x * transform.position.x >= 0;
-    }
-
     // Returns true when the pelican is within interaction range of the ball.
     // Delegates to BallInteract.IsPlayerNearBall() so the same contactPoint
     // and interactionRadius Inspector values are reused — no separate tuning needed.
@@ -55,26 +36,20 @@ public class PelicanDefensive : BirdAbility
 
     public void EatTheBall()
     {
-        GameManager gameManager = GameManager.Instance;
-        bool isServing = gameManager.gameState == GameManager.GameState.PointStart
-                         && gameManager.server == gameObject;
 
-        bool isValidState = gameManager.gameState == GameManager.GameState.Served
-                            || gameManager.gameState == GameManager.GameState.Spiked
-                            || gameManager.gameState == GameManager.GameState.Bumped;
-                            
-        if (!isValidState)
-        {
-            Debug.Log($"[Pelican] Tried to eat in invalid state: {gameManager.gameState}");
-            return;
-        }
+        // Valid state handled in BirdAbilityRuleService, this statement no longer valid                    
+        // if (!isValidState)
+        // {
+        //     Debug.Log($"[Pelican] Tried to eat in invalid state: {gameManager.gameState}");
+        //     return;
+        // }
 
-        // Pelican must be on their own side of the court
-        if (!IsOnOwnSide())
-        {
-            Debug.Log("[Pelican] Tried to eat from enemy side of court.");
-            return;
-        }
+        // Pelican must be on their own side of the court -> NOW handled in BirdAbilityRuleService
+        // if (!IsOnOwnSide())
+        // {
+        //     Debug.Log("[Pelican] Tried to eat from enemy side of court.");
+        //     return;
+        // }
 
         // Pelican must be close enough to the ball
         if (!BallInEatRange())
@@ -84,10 +59,7 @@ public class PelicanDefensive : BirdAbility
         }
 
         // Store what state we ate in so release knows what hit to register
-        stateWhenEaten = gameManager.gameState;
-
-        if (isServing)
-            ballInteract.ServeBall();
+        stateWhenEaten = GameManager.Instance.gameState;
 
         int playerID = GetComponent<BallInteract>().playerID;
         HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
@@ -104,7 +76,6 @@ public class PelicanDefensive : BirdAbility
 
         BallManager.Instance.gameObject.SetActive(false);
         isBallEaten = true;
-        wasServing = isServing;
 
         holdCoroutine = StartCoroutine(HoldTime());
     }
@@ -120,7 +91,6 @@ public class PelicanDefensive : BirdAbility
     {
         if (!isBallEaten) return;
         isBallEaten = false;
-        wasServing = false;
         StartCoroutine(ReleaseBallCoroutine());
     }
 
@@ -137,6 +107,8 @@ public class PelicanDefensive : BirdAbility
         switch (stateWhenEaten)
         {
             case GameManager.GameState.Served:
+                ballInteract.ServeBall();  // eaten at beginning of point -> release as serve
+                break;
             case GameManager.GameState.Spiked:
                 ballInteract.BumpBall();   // eaten while ball incoming from enemy -> release as bump
                 break;

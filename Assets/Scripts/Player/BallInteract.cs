@@ -448,8 +448,8 @@ public class BallInteract : MonoBehaviour
     }
 
     public void BlockBall()
-        // Play the block sound for the bird
     {
+        // Play the block sound for the bird
         AudioManager.PlayBirdSound(birdType, SoundType.BLOCK, 1.0f);
         AudioManager.PlayBallPlayerInteractionSound();
 

@@ -30,14 +30,8 @@ public class BirdAbilityRuleService : MonoBehaviour
 
         if (gameManager == null) return false;
 
-        // Seagull offensive can ONLY be used when a point is not in progress
-        // All other abilities can only be used when a point is in progress
         BallInteract ballInteract = user.GetComponent<BallInteract>();
-        bool isSeagull = ballInteract.GetBirdType() == BirdType.SEAGULL;
-        if (!isSeagull && !GameManager.PointInProgress()) return false;
-        if (isSeagull && GameManager.PointInProgress()) return false;
 
-        // TODO:
         // if on defense, only allow defensive abilities
         if (OnDefense(ballInteract) && slot == AbilitySlot.Defensive) return true;
         // if on offense, only allow offensive abilities
@@ -51,10 +45,11 @@ public class BirdAbilityRuleService : MonoBehaviour
     {
         if (ballInteract == null) return false;
 
-        // Birds who abilities do not rely on game state or have their own special rules
-        if (ballInteract.GetBirdType() == BirdType.CROW) return true;
+        // Birds whose abilities do not rely on game state or have their own special rules
+        if (ballInteract.GetBirdType() == BirdType.CROW && GameManager.PointInProgress()) return true;
         if (ballInteract.GetBirdType() == BirdType.MACAW) return true;
-        if (ballInteract.GetBirdType() == BirdType.PELICAN) return true;
+        if (ballInteract.GetBirdType() == BirdType.PELICAN && GameManager.Instance.gameState == GameManager.GameState.PointStart
+            && ballInteract.Equals(GameManager.Instance.server.GetComponent<BallInteract>())) return true;
         if (ballInteract.GetBirdType() == BirdType.TOUCAN) return true;
         if (ballInteract.GetBirdType() == BirdType.KIWI) return true;
 
@@ -68,6 +63,9 @@ public class BirdAbilityRuleService : MonoBehaviour
         // If the ball was just spiked by the opposing team
         if (GameManager.Instance.gameState == GameManager.GameState.Spiked
             && GameManager.Instance.leftAttack != ballInteract.onLeft) return true;
+        // If the ball was just blocked by the opposing team
+        if (GameManager.Instance.gameState == GameManager.GameState.Blocked
+            && GameManager.Instance.leftAttack != ballInteract.onLeft) return true;
         // If the ball was just bumped by the ally team
         if (GameManager.Instance.gameState == GameManager.GameState.Bumped
             && GameManager.Instance.leftAttack == ballInteract.onLeft) return true;
@@ -80,25 +78,25 @@ public class BirdAbilityRuleService : MonoBehaviour
     {
         if (ballInteract == null) return false;
 
-        // Birds who abilities do not rely on game state or have their own special rules
+        // Birds whose abilities do not rely on game state or have their own special rules
         if (ballInteract.GetBirdType() == BirdType.OWL) return true;
         if (ballInteract.GetBirdType() == BirdType.EAGLE) return true;
         if (ballInteract.GetBirdType() == BirdType.CHICKEN) return true;
-        if (ballInteract.GetBirdType() == BirdType.CROW) return true;
+        if (ballInteract.GetBirdType() == BirdType.CROW && GameManager.PointInProgress()) return true;
+        if (ballInteract.GetBirdType() == BirdType.KIWI && GameManager.PointInProgress()) return true;
         if (ballInteract.GetBirdType() == BirdType.MACAW) return true;
         if (ballInteract.GetBirdType() == BirdType.LOVEBIRD) return true;
         if (ballInteract.GetBirdType() == BirdType.PELICAN) return true;
         if (ballInteract.GetBirdType() == BirdType.DODO) return true;
-
-        // Handle seagull separately
+        if (ballInteract.GetBirdType() == BirdType.PUKEKO && GameManager.PointInProgress()) return true;
         if (ballInteract.GetBirdType() == BirdType.SEAGULL
             && (GameManager.Instance.gameState == GameManager.GameState.PointEnd
             || GameManager.Instance.gameState == GameManager.GameState.PointStart)
-            && ScoreManager.Instance.side1ServeIndicator.activeInHierarchy == transform.position.x < 0) return true;
+            && ScoreManager.Instance.side1ServeIndicator.activeInHierarchy == (ballInteract.transform.position.x < 0)) return true;
 
         // If the ball is not on your side of the court (to prevent any spiking abilities from activating too early)
-        if (ballInteract.onLeft && BallManager.Instance.transform.position.x < 0) return false;
-        if (!ballInteract.onLeft && BallManager.Instance.transform.position.x > 0) return false;
+        if (ballInteract.onLeft && BallManager.Instance.transform.position.x > 0) return false;
+        if (!ballInteract.onLeft && BallManager.Instance.transform.position.x < 0) return false;
 
         // If the ball was just bumped by the ally team
         if (GameManager.Instance.gameState == GameManager.GameState.Bumped

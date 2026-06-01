@@ -14,12 +14,10 @@ public class SeagullOffensive : BirdAbility
     public int debuffWindowLength = 20;   // Seconds after a score the player can trigger the debuff
 
     private bool _debuffWindow = false;
-    private PlayerInput playerInput; // Input for this specific player
     private bool _onLeft;
 
     void Start()
     {
-        playerInput = GetComponent<PlayerInput>();
         _onLeft = GetComponent<BallInteract>().onLeft;
         EventManager.SubscribeScore(OnScore);
         GetComponent<CharacterMovement>().controlMovement(true, true);
@@ -86,7 +84,7 @@ public class SeagullOffensive : BirdAbility
         AudioManager.PlayBirdSound(BirdType.SEAGULL, SoundType.OFFENSIVE, 1.0f);
 
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, 5);
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
     }
 
     public bool OnScore(bool leftScored)

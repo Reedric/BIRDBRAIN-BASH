@@ -11,7 +11,6 @@ public class SeagullDefensive : BirdAbility
     public float dashSpeed = 100f; //how fast the dash is
     public float shoveForce = 18f; //how much the seagull pushes others out of the way
     public float shoveRadius = 1.5f; //radius to shove objects around
-    [HideInInspector] private bool isAbilityReady = true;
     private Rigidbody rb;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -19,53 +18,9 @@ public class SeagullDefensive : BirdAbility
     {
         rb = GetComponent<Rigidbody>();
     }
-
-    public void ActivateAbility()
-    {
-        if (!isAbilityReady)
-        {
-            return;
-        }
-        if (GameManager.Instance.gameState == GameManager.GameState.PointStart && GameManager.Instance.server == gameObject)
-        {
-            return;
-        }
-        if (GameManager.Instance.gameState == GameManager.GameState.Served && GameManager.Instance.server == gameObject)
-        {
-            return;
-        }
-        if (CanDashToBall())
-        {
-            StartCoroutine(DashToBall());
-        }
-    }
-
-    private bool CanDashToBall()
-    {
-        // Check if ball is on the player's side
-        bool onLeft = GetComponent<BallInteract>().onLeft;
-        float ballX = BallManager.Instance.gameObject.transform.position.x;
-        bool ballOnMySide = (onLeft && ballX < 0) || (!onLeft && ballX > 0);
-
-        if (!ballOnMySide)
-        {
-            return false;
-        }
-
-        // Allow dashing during any active play state where the ball is in motion
-        GameManager.GameState state = GameManager.Instance.gameState;
-        bool validState = state == GameManager.GameState.Spiked ||
-                        state == GameManager.GameState.Blocked ||
-                        state == GameManager.GameState.Bumped ||
-                        state == GameManager.GameState.Set;
-
-        return validState;
-    }
     
     private IEnumerator DashToBall()
     {
-        isAbilityReady = false;
-
         // Play defensive sound
         AudioManager.PlayBirdSound(BirdType.SEAGULL, SoundType.DEFENSIVE, 1.0f);
 
@@ -76,15 +31,7 @@ public class SeagullDefensive : BirdAbility
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract.animator != null)
         {
-            myBallInteract.animator.SetTrigger("DefensiveAbility");
-        }
-
-        //Check if ball is on the player's side
-        bool isBallOnSameSide = Mathf.Sign(BallManager.Instance.gameObject.transform.position.x) == Mathf.Sign(transform.position.x);
-        if (!isBallOnSameSide)
-        {
-            isAbilityReady = true; //ability remains ready
-            yield break;
+            // myBallInteract.animator.SetTrigger("DefensiveAbility");
         }
         
         float fixedY = 0.5f;
@@ -130,8 +77,9 @@ public class SeagullDefensive : BirdAbility
         //Ensure seagull is exactly on the landing spot at a fixed Y
         rb.MovePosition(new Vector3(BallManager.Instance.goingTo.x, fixedY, BallManager.Instance.goingTo.z));
 
-        BallInteract ballInteract = GetComponent<BallInteract>();
-        ballInteract.BumpBall();
+        while (Vector3.Distance(BallManager.Instance.transform.position, transform.position) > myBallInteract.interactionRadius) yield return null;
+        if (GameManager.Instance.gameState == GameManager.GameState.Bumped) myBallInteract.SetBall();
+        else myBallInteract.BumpBall();
 
         //Unfreeze Y movments
         rb.constraints = RigidbodyConstraints.FreezeRotation;
@@ -165,6 +113,6 @@ public class SeagullDefensive : BirdAbility
 
     override protected void Activate()
     {
-        ActivateAbility();
+        StartCoroutine(DashToBall());
     }
 }

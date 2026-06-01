@@ -5238,8 +5238,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 086e35687ed9668449053553276ca739, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  abilitySlot: 0
-  cooldownTime: 20
+  AbilitySlot: 0
+  _cooldownTime: 20
   debuffLength: 5
   debuffAmount: 2
   debuffWindowLength: 20
@@ -5255,8 +5255,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb7edfc66bc6f9043adb8e366d30220c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  abilitySlot: 1
-  cooldownTime: 15
+  AbilitySlot: 1
+  _cooldownTime: 15
   dashSpeed: 100
   shoveForce: 18
   shoveRadius: 1.5

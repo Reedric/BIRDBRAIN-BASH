@@ -32,7 +32,7 @@ public class KiwiOffensive : BirdAbility
 
     private void FireTheLazar()
     {
-        if (!GameManager.PointInProgress() || !HasPossesion() || IsOwnTeamServing()) return;  // add !HasPossesion()
+        if (!HasPossesion() || IsOwnTeamServing() || gameObject.Equals(GameManager.Instance.lastHit)) return;  // add !HasPossesion()
 
         // Play offensive sound
         AudioManager.PlayBirdSound(BirdType.KIWI, SoundType.OFFENSIVE, 1.0f);
@@ -47,7 +47,7 @@ public class KiwiOffensive : BirdAbility
         switch (GameManager.Instance.gameState)
         {
             case GameManager.GameState.Served:
-                if (HasPossesion()) ballInteract.BumpBall(); // technically you han hit over on the serve, but whatevs
+                if (HasPossesion()) ballInteract.BumpBall(); // technically you can hit over on the serve, but whatevs
                 break;
 
             case GameManager.GameState.Bumped:
@@ -55,17 +55,20 @@ public class KiwiOffensive : BirdAbility
                 break;
 
             case GameManager.GameState.Set:
-                if (HasPossesion()) {
+                if (HasPossesion())
+                {
                     BallManager.Instance.incSpikeSpeed();
                     ballInteract.SpikeBall();
                 }
                 break;
 
             case GameManager.GameState.Spiked:
-                if (HasPossesion()) {
+                if (HasPossesion() && IsBallCloseToNet())
+                {
                     BallManager.Instance.incSpikeSpeed();
                     ballInteract.BlockBall();
                 }
+                else if (HasPossesion()) ballInteract.BumpBall();
                 break;
                 
             default: // We're on defense
@@ -109,5 +112,10 @@ public class KiwiOffensive : BirdAbility
         bool onLeft = transform.position.x < 0;
         Vector3 ballPosition = BallManager.Instance.gameObject.GetComponent<Transform>().position;
         return onLeft == (ballPosition.x < 0);
+    }
+
+    private bool IsBallCloseToNet()
+    {
+        return Mathf.Abs(BallManager.Instance.transform.position.x) < 1.5f;
     }
 }

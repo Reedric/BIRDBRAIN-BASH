@@ -75,8 +75,10 @@ public class ScissortailDefensive : BirdAbility
         lr.enabled = true;
 
         // Snapshot positions at the moment of cast for the draw animation
-        Vector3 selfPos = gameObject.transform.position;
-        Vector3 allyPos = ally.transform.position;
+        Vector3 selfPos = gameObject.transform.Find("ContactPoint") == null // Use contact point (if it exists)
+            ? gameObject.transform.position : gameObject.transform.Find("ContactPoint").position; 
+        Vector3 allyPos = ally.transform.Find("ContactPoint") == null // Use contact point (if it exists)
+            ? ally.transform.position : ally.transform.Find("ContactPoint").position;
         Vector3 toAlly = allyPos - selfPos;
 
         // Slerp the tip outward from self toward ally — sweeps like a quill stroke
@@ -110,10 +112,11 @@ public class ScissortailDefensive : BirdAbility
             float distanceToLine = Vector3.Cross(line, toBall).magnitude;
 
             // If the ball is within the threshold range of the line ends ability
-            if (distanceToLine < threshold)
+            if (distanceToLine < threshold && GameManager.Instance.gameState != GameManager.GameState.Set)
             {
                 BallInteract interact = GetComponent<BallInteract>();
-                interact.BumpBall();
+                if (GameManager.Instance.gameState == GameManager.GameState.Bumped) interact.SetBall();
+                else interact.BumpBall();
                 break;
             }
             yield return null;

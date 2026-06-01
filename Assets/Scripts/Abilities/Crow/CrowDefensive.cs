@@ -24,12 +24,6 @@ public class CrowDefensive : BirdAbility
             oldScore = ScoreManager.Instance.side1Score + ScoreManager.Instance.side2Score;
             // Do not let the coins carry over into the next round (if they exist)
             ClearCurrCoins();
-            // Do not let the buff carry over into the next round (if active)
-            if (buffActive) 
-            {
-                GetComponent<CharacterMovement>().CancelBuffs();
-                buffActive = false;
-            }
         }
         // Coins needed to activate stat buff
         if (coinCount == 3) 

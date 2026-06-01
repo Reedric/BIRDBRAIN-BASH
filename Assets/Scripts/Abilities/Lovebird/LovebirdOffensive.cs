@@ -25,7 +25,10 @@ public class LovebirdOffensive : BirdAbility
     override protected void Activate()
     {
         DebuffEnemy();
-
+    }
+    
+    void Update()
+    {
         // If the debuff is active, moves the opponents towards the net
         if (_debuffActive)
         {

@@ -12,7 +12,6 @@ public class KiwiDefensive : BirdAbility
     [SerializeField] private float burrowDuration = 2f;
     [SerializeField] private float speedBoost = 2f;
     [SerializeField] private float jumpOutForce = 10f;
-    [SerializeField] private float cooldown = 12f;
 
     [Header("Burrow VFX")]
     [SerializeField] private GameObject burrowMarkerPrefab;
@@ -45,13 +44,11 @@ public class KiwiDefensive : BirdAbility
 
     private IEnumerator StealthBurrowing()
     {
-        if (onCooldown || !GameManager.PointInProgress()) yield break;
-        onCooldown = true;
         isBurrowed = true;
         _cancelRequested = false;
 
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
 
         // Burrow down
         meshRenderer.enabled = false;
@@ -106,8 +103,5 @@ public class KiwiDefensive : BirdAbility
 
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
         rb.AddForce(Vector3.up * jumpOutForce, ForceMode.Impulse);
-
-        yield return new WaitForSeconds(cooldown);
-        onCooldown = false;
     }
 }

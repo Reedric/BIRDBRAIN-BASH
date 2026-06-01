@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 using System.Collections;
 
 /// <summary>
@@ -131,12 +130,5 @@ public class PukekoOffensiveAbility : BirdAbility
                 }
             }
         }
-    }
-
-    public IEnumerator ApplySilence(float duration, BirdAbility bird)
-    {
-        bird.SetAbilitiesDisabled(true);
-        yield return new WaitForSeconds(duration);
-        bird.SetAbilitiesDisabled(false);
     }
 }

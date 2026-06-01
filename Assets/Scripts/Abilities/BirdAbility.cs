@@ -29,6 +29,7 @@ public abstract class BirdAbility : MonoBehaviour
         return true;
     }
 
+    // TODO: make this return bool, true means the cooldown will start, false means it won't (for abilities with multiple activations)
     protected abstract void Activate();
 
     public void SetAbilitiesDisabled(bool disabled) { _abilitiesDisabled = disabled; }

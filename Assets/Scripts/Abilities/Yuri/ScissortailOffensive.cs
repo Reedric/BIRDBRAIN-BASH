@@ -1,12 +1,8 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class ScissortailOffensive : BirdAbility
 {
-    [SerializeField] private float cooldown = 8f;
-    private bool onCooldown = false;
-
     override protected void Activate()
     {
         StartCoroutine(ScissorShot());
@@ -58,13 +54,8 @@ public class ScissortailOffensive : BirdAbility
             float ballSpeed = ballRb.linearVelocity.magnitude;
             ballRb.linearVelocity = unitVelocity * ballSpeed;
 
-            // Do the cooldown
-            onCooldown = true;
-            yield return new WaitForSeconds(cooldown);
-            onCooldown = false;
-
             int playerID = GetComponent<BallInteract>().playerID;
-            HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+            HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
         }
     }
 }
