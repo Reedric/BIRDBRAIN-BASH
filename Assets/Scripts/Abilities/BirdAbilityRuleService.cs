@@ -46,11 +46,12 @@ public class BirdAbilityRuleService : MonoBehaviour
         if (ballInteract == null) return false;
 
         // Birds whose abilities do not rely on game state or have their own special rules
+        if (ballInteract.GetBirdType() == BirdType.PENGUIN && GameManager.PointInProgress()) return true;
         if (ballInteract.GetBirdType() == BirdType.CROW && GameManager.PointInProgress()) return true;
         if (ballInteract.GetBirdType() == BirdType.MACAW) return true;
         if (ballInteract.GetBirdType() == BirdType.PELICAN && GameManager.Instance.gameState == GameManager.GameState.PointStart
             && ballInteract.Equals(GameManager.Instance.server.GetComponent<BallInteract>())) return true;
-        if (ballInteract.GetBirdType() == BirdType.TOUCAN) return true;
+        if (ballInteract.GetBirdType() == BirdType.TOUCAN && GameManager.PointInProgress()) return true;
         if (ballInteract.GetBirdType() == BirdType.KIWI) return true;
 
         // If the ball is not on your side of the court (to prevent any blocking abilities from blocking too early)
@@ -97,6 +98,8 @@ public class BirdAbilityRuleService : MonoBehaviour
         // If the ball is not on your side of the court (to prevent any spiking abilities from activating too early)
         if (ballInteract.onLeft && BallManager.Instance.transform.position.x > 0) return false;
         if (!ballInteract.onLeft && BallManager.Instance.transform.position.x < 0) return false;
+
+        // Check if this bird just hit the ball?
 
         // If the ball was just bumped by the ally team
         if (GameManager.Instance.gameState == GameManager.GameState.Bumped

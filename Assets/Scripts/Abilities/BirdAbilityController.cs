@@ -24,9 +24,9 @@ public class BirdAbilityController : MonoBehaviour
 
     public void UseAbility(AbilitySlot slot)
     {
-        Debug.Log(abilities[slot]);
+        // Debug.Log(abilities[slot]);
         if (!abilities.TryGetValue(slot, out var ability)) return;
-        Debug.Log("using ability.");
+        // Debug.Log("using ability.");
         ability.TryActivate(slot);
     }
 

@@ -77,7 +77,7 @@ public class BallManager : MonoBehaviour
         if (unblockableOwner != null)
         {
             unblockableOwner = null;
-            Debug.Log("BallManager: cleared unblockable spike owner after collision.");
+            // Debug.Log("BallManager: cleared unblockable spike owner after collision.");
         }
     }
 

@@ -15,7 +15,7 @@ public class EagleOffensive : BirdAbility
     private bool _onLeft;
     private List<GameObject> opponents = new();
 
-    private void Awake()
+    private void Start() // Changed this to Start from Awake as setting _onLeft in Awake caused a race condition
     {
         input = GetComponent<PlayerInput>();
         _onLeft = GetComponent<BallInteract>().onLeft;
@@ -44,7 +44,7 @@ public class EagleOffensive : BirdAbility
 
         // Play sound effect using AudioManager
         AudioManager.PlayBirdSound(BirdType.EAGLE, SoundType.OFFENSIVE, 1.0f);
-
+        Debug.LogFormat("On Left: {0}", _onLeft);
         if (_onLeft)
         {
             opponents.Add(gameManager.rightPlayer1);

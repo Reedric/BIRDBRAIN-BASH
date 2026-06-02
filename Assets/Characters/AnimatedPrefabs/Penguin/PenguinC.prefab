@@ -2660,7 +2660,10 @@ GameObject:
   - component: {fileID: 2782274372651219084}
   - component: {fileID: 6342948131313454296}
   - component: {fileID: 5875539000078385458}
-  - component: {fileID: 6784181990874536643}
+  - component: {fileID: -1818104885394808213}
+  - component: {fileID: -6656743548898723193}
+  - component: {fileID: 1752529230400778768}
+  - component: {fileID: 7523867240033479323}
   - component: {fileID: 6458781572301610545}
   m_Layer: 0
   m_Name: PenguinC
@@ -7714,7 +7717,7 @@ MonoBehaviour:
   spikeStat: 3
   birdType: 0
   playerID: 0
---- !u!114 &6784181990874536643
+--- !u!114 &-1818104885394808213
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -7723,21 +7726,60 @@ MonoBehaviour:
   m_GameObject: {fileID: 8379060495865577183}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f8d4e2e6aff8b4245811c0e5020de2c2, type: 3}
+  m_Script: {fileID: 11500000, guid: 7d8776b00f5834d4f9f26b44f0a3eae8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dashCooldown: 5
-  dashDuration: 1
-  dashSpeed: 10
-  rotationSpeed: 8
-  tempIce: {fileID: 176422398747366568, guid: ba7e377640dc02e4a81648792971a0d4, type: 3}
-  penguinHeight: 0
-  isDashing: 0
+--- !u!114 &-6656743548898723193
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8379060495865577183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5218fa23fafadc54d807b4f114cfd911, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilityController: {fileID: -1818104885394808213}
+--- !u!114 &1752529230400778768
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8379060495865577183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 762cf3d79ded1f848984f2212be2cf95, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  AbilitySlot: 0
+  _cooldownTime: 12
   ballCollider: {fileID: 0}
   iceCollider: {fileID: 7568666750104084953, guid: ba7e377640dc02e4a81648792971a0d4, type: 3}
   usingSnowBall: 0
+  tempIce: {fileID: 176422398747366568, guid: ba7e377640dc02e4a81648792971a0d4, type: 3}
   normalBallMaterial: {fileID: 2100000, guid: b3ab5e2311f51cc40a46064a5d86c382, type: 2}
   snowballMaterial: {fileID: 2100000, guid: fa18a3de483d16d49990c2123e869752, type: 2}
+--- !u!114 &7523867240033479323
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8379060495865577183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85812cdd10db01d46a76b0a9c374a1f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  AbilitySlot: 1
+  _cooldownTime: 5
+  dashDuration: 1
+  dashSpeed: 6
+  rotationSpeed: 8
+  isDashing: 0
 --- !u!114 &6458781572301610545
 MonoBehaviour:
   m_ObjectHideFlags: 0

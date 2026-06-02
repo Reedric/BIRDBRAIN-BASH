@@ -9,7 +9,7 @@ public class ToucanOffensive : BirdAbility
     override protected void Activate()
     {
         // Offensive ability activation (Toucan): allow activation regardless of CanHit()
-        if (GameManager.Instance.gameState == GameManager.GameState.Set)
+        if (CanSpike())
         {
             TacoTocoToca();
         }
@@ -29,5 +29,18 @@ public class ToucanOffensive : BirdAbility
 
         // Spike the ball
         GetComponent<BallInteract>().SpikeBall();
+    }
+
+    private bool CanSpike()
+    {
+        // If the toucan was the last one to hit, they cannot spike
+        if (GameManager.Instance.lastHit == gameObject) return false;
+
+        // If the ball is not on their side of the court, they cannot spike
+        if (transform.position.x * BallManager.Instance.transform.position.x < 0) return false;
+
+        // If the ball has just been set or bumped, then the toucan can hit the ball, otherwise, illegal state
+        return GameManager.Instance.gameState == GameManager.GameState.Bumped
+            || GameManager.Instance.gameState == GameManager.GameState.Set;
     }
 }
