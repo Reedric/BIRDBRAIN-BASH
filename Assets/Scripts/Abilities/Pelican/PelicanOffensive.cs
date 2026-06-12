@@ -16,16 +16,16 @@ public class PelicanOffensive : BirdAbility
     [SerializeField] private float fishLifetime = 15f;
     [SerializeField] private GameObject fishPrefab; // assign in inspector until there's a permanent spot for it
 
-    override protected void Activate()
+    override protected bool Activate()
     {
         SlipFish();
+
+        // Ability successfully activated
+        return true;
     }
 
     private void SlipFish()
     {
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
-
         // Play offensive sound
         AudioManager.PlayBirdSound(BirdType.PELICAN, SoundType.OFFENSIVE, 1.0f);
 
@@ -52,6 +52,9 @@ public class PelicanOffensive : BirdAbility
         {
             rb.linearVelocity = forward * (slipFishSpeed * 0.85f) + Vector3.up * (slipFishSpeed / 4);
         }
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         Destroy(fish, fishLifetime);
     }

@@ -10,7 +10,7 @@ public class DodoOffensive : BirdAbility
         if (animator == null) animator = GetComponent<Animator>();
     }
 
-    protected override void Activate()
+    protected override bool Activate()
     {
         // Play animation
         if (animator != null)
@@ -18,5 +18,8 @@ public class DodoOffensive : BirdAbility
 
         // Play sound effect using AudioManager
         AudioManager.PlayBirdSound(BirdType.DODO, SoundType.OFFENSIVE, 1.0f);
+
+        // Successfully activated ability
+        return true;
     }
 }

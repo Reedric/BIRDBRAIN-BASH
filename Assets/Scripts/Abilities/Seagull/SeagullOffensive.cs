@@ -23,9 +23,12 @@ public class SeagullOffensive : BirdAbility
         GetComponent<CharacterMovement>().controlMovement(true, true);
     }
 
-    override protected void Activate()
+    override protected bool Activate()
     {
         DebuffEnemy();
+
+        // Ability successfully activated
+        return true;
     }
 
     public void DebuffEnemy()
@@ -87,6 +90,7 @@ public class SeagullOffensive : BirdAbility
         HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
     }
 
+    // TODO: check if these two methods are necessary now with the refactor
     public bool OnScore(bool leftScored)
     {
         if ((leftScored && _onLeft) || (!leftScored && !_onLeft))

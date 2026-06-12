@@ -25,20 +25,17 @@ public class KiwiOffensive : BirdAbility
         ballInteract = GetComponent<BallInteract>();
     }
 
-    override protected void Activate()
+    override protected bool Activate()
     {
-        FireTheLazar();
+        return FireTheLazar();
     }
 
-    private void FireTheLazar()
+    private bool FireTheLazar()
     {
-        if (!HasPossesion() || IsOwnTeamServing() || gameObject.Equals(GameManager.Instance.lastHit)) return;  // add !HasPossesion()
+        if (!HasPossesion() || IsOwnTeamServing() || gameObject.Equals(GameManager.Instance.lastHit)) return false;  // add !HasPossesion()
 
         // Play offensive sound
         AudioManager.PlayBirdSound(BirdType.KIWI, SoundType.OFFENSIVE, 1.0f);
-
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         Vector3 ballPosition = BallManager.Instance.gameObject.GetComponent<Transform>().position;
         GameObject leftLazer = CreateLazer(ballPosition, leftEyePosition.position);
@@ -77,6 +74,12 @@ public class KiwiOffensive : BirdAbility
 
         Destroy(leftLazer, lazerDuration);
         Destroy(rightLazer, lazerDuration);
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
+
+        // Successfully activated ability
+        return true;
     }
 
     private bool IsOwnTeamServing()

@@ -35,11 +35,11 @@ public class MacawDefensive : BirdAbility
         PrimeRandomAbility();
     }
 
-    override protected void Activate()
+    override protected bool Activate()
     {
-        if (currentAbility == null) return;
+        if (currentAbility == null) return false;
 
-        currentAbility.TryActivate(AbilitySlot.Defensive);
+        return currentAbility.TryActivate(AbilitySlot.Defensive);
     }
 
     // TODO: find better way to do this to not clog update

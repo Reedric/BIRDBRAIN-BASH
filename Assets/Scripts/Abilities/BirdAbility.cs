@@ -24,13 +24,17 @@ public abstract class BirdAbility : MonoBehaviour
         if (!IsReady) return false;
         if (!BirdAbilityRuleService.Instance.CanUseAbility(gameObject, slot)) return false;
 
-        Activate();
-        _cooldownRemaining = _cooldownTime;
-        return true;
+        if (Activate())
+        {
+            _cooldownRemaining = _cooldownTime;
+            return true;
+        }
+        
+        return false;
     }
 
     // TODO: make this return bool, true means the cooldown will start, false means it won't (for abilities with multiple activations)
-    protected abstract void Activate();
+    protected abstract bool Activate();
 
     public void SetAbilitiesDisabled(bool disabled) { _abilitiesDisabled = disabled; }
 }

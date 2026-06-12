@@ -15,11 +15,8 @@ public class CrowOffensive : BirdAbility {
         ballInteract = GetComponent<BallInteract>();
     }
 
-    protected override void Activate()
+    protected override bool Activate()
     {
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
-
         // Play animation
         if (animator != null)
             animator.SetTrigger("OffensiveAbility");
@@ -28,6 +25,9 @@ public class CrowOffensive : BirdAbility {
         AudioManager.PlayBirdSound(BirdType.CROW, SoundType.OFFENSIVE, 1.0f);
 
         SilenceEnemies();
+
+        // Successfully activated ability
+        return true;
     }
 
     void SilenceEnemies()
@@ -70,5 +70,8 @@ public class CrowOffensive : BirdAbility {
                 opponentIsOnLeft
             );
         }
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
     }
 }

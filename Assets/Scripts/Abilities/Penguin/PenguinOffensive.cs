@@ -51,12 +51,14 @@ public class PenguinOffensive : BirdAbility
         }
     }
 
-    protected override void Activate()
+    protected override bool Activate()
     {
         if (!usingSnowBall)
         {
             StartSnowBall();
+            return true;
         }
+        return false;
     }
     void StartSnowBall()
     {
@@ -67,9 +69,6 @@ public class PenguinOffensive : BirdAbility
         iceTimer = iceLength;
 
         ballInteraction.SpikeBall();
-        
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         // New: stop any old coroutine before starting a new one
         if (spawnIceCoroutine != null)
@@ -83,6 +82,9 @@ public class PenguinOffensive : BirdAbility
 
         // Christofort: swap the dodgeball's material to the snowball material
         ApplySnowballMaterial();
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
     }
 
     void ApplySnowballMaterial()

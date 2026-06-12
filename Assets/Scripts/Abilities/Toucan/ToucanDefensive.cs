@@ -12,9 +12,12 @@ public class ToucanDefensive : BirdAbility
     public int buffLength; // Amount of time in seconds the buff lasts
     private bool _onLeft;
 
-    override protected void Activate()
+    override protected bool Activate()
     {
         TouCanDoIt();
+
+        // Ability successfully activated
+        return true;
     }
     
     public void Start()

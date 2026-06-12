@@ -27,15 +27,16 @@ public class PukekoOffensiveAbility : BirdAbility
         hits = new RaycastHit[coneRayCount];
     }
 
-    override protected void Activate()
+    override protected bool Activate()
     {
         SonicSquawk();
+
+        // Successfully activated ability
+        return true;
     }
 
     private void SonicSquawk()
     {
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
         Vector3 firingForward = Quaternion.Euler(-GetComponent<CharacterMovement>().rotationOffsetEuler) * transform.forward;
         firingForward.y = 0f;
         firingForward.Normalize();
@@ -130,5 +131,8 @@ public class PukekoOffensiveAbility : BirdAbility
                 }
             }
         }
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
     }
 }

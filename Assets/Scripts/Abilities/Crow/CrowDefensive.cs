@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -28,14 +29,21 @@ public class CrowDefensive : BirdAbility
         // Coins needed to activate stat buff
         if (coinCount == 3) 
         {
-            coinCount = 0;
-            CrowDefBuff();
+            TryActivate(AbilitySlot.Defensive);
         }
     }
-    protected override void Activate()
+    protected override bool Activate()
     {
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
+        // If collected all coins, activate ability
+        if (coinCount == 3)
+        {
+            coinCount = 0;
+            CrowDefBuff();
+            return true;
+        }
+
+        // If coins already on the court, do not allow respawning of coins
+        if (coins.Count > 0) return false;
 
         // Clear coins from the court if they exist from a previous ability use
         ClearCurrCoins();
@@ -54,6 +62,7 @@ public class CrowDefensive : BirdAbility
             randomSpawnPosition2 = new Vector3(Random.Range(.5f, 8), .5f, Random.Range(-4, 4));
             randomSpawnPosition3 = new Vector3(Random.Range(.5f, 8), .5f, Random.Range(-4, 4));
         }
+
         // Spawn three coins randomly on the court
         GameObject coin1 = Instantiate(coin, randomSpawnPosition1, Quaternion.identity);
         GameObject coin2 = Instantiate(coin, randomSpawnPosition2, Quaternion.identity);
@@ -61,7 +70,11 @@ public class CrowDefensive : BirdAbility
         coins.Add(coin1);
         coins.Add(coin2);
         coins.Add(coin3);
+
+        // Return that the ability has not officially been used
+        return false;
     }
+
     // Call stat buff
     void CrowDefBuff()
     {
@@ -72,6 +85,7 @@ public class CrowDefensive : BirdAbility
         int playerID = GetComponent<BallInteract>().playerID;
         HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
     }
+
     // Clear current coins on the field
     void ClearCurrCoins() 
     {
@@ -79,12 +93,13 @@ public class CrowDefensive : BirdAbility
             {
                 if (c != null) 
                 {
-                Destroy(c);
+                    Destroy(c);
                 }
             }
         coins.Clear();
         coinCount = 0;
     }
+
     // Coin collision detection
     void OnTriggerEnter(Collider other)
     {
@@ -97,5 +112,4 @@ public class CrowDefensive : BirdAbility
         // Play sound effect using AudioManager
         AudioManager.PlayBirdSound(BirdType.CROW, SoundType.DEFENSIVE, 1.0f);
     }
-
 }

@@ -6,21 +6,20 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(BallInteract))]
 public class ToucanOffensive : BirdAbility
 {
-    override protected void Activate()
+    override protected bool Activate()
     {
         // Offensive ability activation (Toucan): allow activation regardless of CanHit()
         if (CanSpike())
         {
             TacoTocoToca();
+            return true;
         }
+
+        return false;
     }
     // Activate the ability: next spike becomes unblockable
     public void TacoTocoToca()
     {
-
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
-
         // Play defensive sound
         AudioManager.PlayBirdSound(BirdType.TOUCAN, SoundType.OFFENSIVE, 1.0f);
 
@@ -29,6 +28,9 @@ public class ToucanOffensive : BirdAbility
 
         // Spike the ball
         GetComponent<BallInteract>().SpikeBall();
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
     }
 
     private bool CanSpike()

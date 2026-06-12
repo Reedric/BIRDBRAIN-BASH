@@ -18,12 +18,12 @@ public class ChickenOffensive : BirdAbility
         mainCanvas = GameObject.Find("Canvas").GetComponent<Canvas>();
     }
 
-    protected override void Activate()
+    protected override bool Activate()
     {
         if (eggSplashPrefab == null || mainCanvas == null)
         {
             Debug.LogWarning("ChickenOffensive missing prefab or opponent canvas!");
-            return;
+            return false;
         }
 
         //spawn the egg splat on the opponents side
@@ -49,7 +49,10 @@ public class ChickenOffensive : BirdAbility
         // Play sound effect using AudioManager
         AudioManager.PlayBirdSound(BirdType.CHICKEN, SoundType.OFFENSIVE, 1.0f);
 
-        //Destroy splash after displayTime
+        // Destroy splash after displayTime
         Destroy(splash, displayTime);
+        
+        // Successfully activated ability
+        return true;
     }
 }

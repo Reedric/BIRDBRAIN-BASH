@@ -61,9 +61,6 @@ public class ScissortailDefensive : BirdAbility
 
         AudioManager.PlayBirdSound(BirdType.SCISSORTAIL, SoundType.DEFENSIVE, 1.0f);
 
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
-
         // Trigger defensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
@@ -142,10 +139,16 @@ public class ScissortailDefensive : BirdAbility
         }
 
         lr.enabled = false;
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
     }
 
-    override protected void Activate()
+    override protected bool Activate()
     {
         StartCoroutine(Yuriful());
+
+        // Ability successfully activated
+        return true;
     }
 }

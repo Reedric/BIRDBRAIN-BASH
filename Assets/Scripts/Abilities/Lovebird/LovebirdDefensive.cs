@@ -19,9 +19,10 @@ public class LovebirdDefensive : BirdAbility
         rb = GetComponent<Rigidbody>();
     }
 
-    override protected void Activate()
+    override protected bool Activate()
     {
         StartCoroutine(RomanticRush());
+        return true;
     }
 
     // Finds which GameObject is the Ally to player
@@ -59,9 +60,6 @@ public class LovebirdDefensive : BirdAbility
             yield break;
         }
 
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
-
         // Play defensive sound
         AudioManager.PlayBirdSound(BirdType.LOVEBIRD, SoundType.DEFENSIVE, 1.0f);
 
@@ -80,5 +78,8 @@ public class LovebirdDefensive : BirdAbility
             rb.MovePosition(transform.position + dashSpeed * Time.deltaTime * direction);
             yield return null;
         }
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
     }
 }

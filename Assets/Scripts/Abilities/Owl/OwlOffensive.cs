@@ -13,9 +13,12 @@ public class OwlOffensive : BirdAbility
     [SerializeField] private float lineWidth = 0.2f;
     public Animator animator; // Assign in inspector
 
-    override protected void Activate()
+    override protected bool Activate()
     {
         CaptureCure();
+
+        // Ability successfully activated
+        return true;
     }
 
     private void CaptureCure()
@@ -29,9 +32,6 @@ public class OwlOffensive : BirdAbility
 
         // Play sound effect using AudioManager
         AudioManager.PlayBirdSound(BirdType.OWL, SoundType.OFFENSIVE, 1.0f);
-        
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         // Draw line in enemy court for lineDuration seconds, then remove line and start cooldown
         if (transform.position.x > 0) // Facing right, so line goes in right court
@@ -42,6 +42,9 @@ public class OwlOffensive : BirdAbility
         {
             StartCoroutine(DrawOffensiveLine(new Vector3(0, 0.1f, 0), new Vector3(9, 0.1f, 0)));
         }
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
     }
 
     private IEnumerator DrawOffensiveLine(Vector3 start, Vector3 end)

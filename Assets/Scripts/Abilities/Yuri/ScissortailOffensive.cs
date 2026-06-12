@@ -3,13 +3,20 @@ using UnityEngine;
 
 public class ScissortailOffensive : BirdAbility
 {
-    override protected void Activate()
+    private bool shotHappened; // Whether or not the ability happened for return purposes
+    override protected bool Activate()
     {
         StartCoroutine(ScissorShot());
+
+        Debug.Log(shotHappened);
+        return shotHappened; // This might not work due to race conditions but we will see
     }
 
     private IEnumerator ScissorShot()
     {
+        // Ability has not yet happened
+        shotHappened = false;
+
         // Get the ball's halfway point from the ground
         float ballMidHeight = BallManager.Instance.gameObject.transform.position.y / 2;
 
@@ -39,6 +46,9 @@ public class ScissortailOffensive : BirdAbility
         // If the ball actually reached the midpoint
         if (BallManager.Instance.gameObject.transform.position.y <= ballMidHeight)
         {
+            // Ability happened
+            shotHappened = true;
+
             // Ball should be at the halfway point, change its direction
             Vector3 changeTo;
             if (ballRb.linearVelocity.z > 0)

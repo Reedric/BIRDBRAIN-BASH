@@ -22,9 +22,12 @@ public class LovebirdOffensive : BirdAbility
         _onLeft = GetComponent<BallInteract>().onLeft;
     }
 
-    override protected void Activate()
+    override protected bool Activate()
     {
         DebuffEnemy();
+
+        // Ability successfully activated
+        return true;
     }
     
     void Update()
@@ -60,9 +63,6 @@ public class LovebirdOffensive : BirdAbility
 
     public void DebuffEnemy()
     {
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
-
         // Play offensive sound
         AudioManager.PlayBirdSound(BirdType.LOVEBIRD, SoundType.OFFENSIVE, 1.0f);
 
@@ -110,6 +110,8 @@ public class LovebirdOffensive : BirdAbility
 
         _debuffActive = true;
         StartCoroutine(DebuffTimer());
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
     }
 
     private IEnumerator DebuffTimer()

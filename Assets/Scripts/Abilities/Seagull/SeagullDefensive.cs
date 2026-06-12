@@ -24,14 +24,11 @@ public class SeagullDefensive : BirdAbility
         // Play defensive sound
         AudioManager.PlayBirdSound(BirdType.SEAGULL, SoundType.DEFENSIVE, 1.0f);
 
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
-
         // Trigger defensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract.animator != null)
         {
-            // myBallInteract.animator.SetTrigger("DefensiveAbility");
+            // myBallInteract.animator.SetTrigger("DefensiveAbility"); // Commented out as bumping and setting will call the animators
         }
         
         float fixedY = 0.5f;
@@ -83,6 +80,9 @@ public class SeagullDefensive : BirdAbility
 
         //Unfreeze Y movments
         rb.constraints = RigidbodyConstraints.FreezeRotation;
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
     }
 
     private void ShoveNearbyObjects()
@@ -111,8 +111,11 @@ public class SeagullDefensive : BirdAbility
         }
     }
 
-    override protected void Activate()
+    override protected bool Activate()
     {
         StartCoroutine(DashToBall());
+
+        // Ability successfully activated
+        return true;
     }
 }

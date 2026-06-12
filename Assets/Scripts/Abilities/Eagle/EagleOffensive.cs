@@ -21,9 +21,12 @@ public class EagleOffensive : BirdAbility
         _onLeft = GetComponent<BallInteract>().onLeft;
     }
 
-    override protected void Activate()
+    override protected bool Activate()
     {
         StunOpponents();
+
+        // Successfully activated ability
+        return true;
     }
 
     private void StunOpponents()
@@ -31,9 +34,6 @@ public class EagleOffensive : BirdAbility
         GameManager gameManager = GameManager.Instance;
 
         opponents.Clear();
-
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         // Trigger offensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
@@ -80,5 +80,8 @@ public class EagleOffensive : BirdAbility
                 opponentIsOnLeft
             );
         }
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
     }
 }

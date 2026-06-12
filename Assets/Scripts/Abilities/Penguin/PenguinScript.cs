@@ -137,7 +137,7 @@ public class PenguinScript : BirdAbility
         spawnPoint = BallManager.Instance.gameObject.transform.position;
     }
 
-    override protected void Activate() { } // just throwing this here to satisfy the abstract class requirement
+    override protected bool Activate() { return false; } // just throwing this here to satisfy the abstract class requirement
 
     void StartDash()
     {

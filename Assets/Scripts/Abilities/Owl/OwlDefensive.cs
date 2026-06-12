@@ -29,16 +29,16 @@ public class OwlDefensive : BirdAbility
         predictionPoints = new Vector3[lineSegments];
     }
 
-    override protected void Activate()
+    override protected bool Activate()
     {
         StartCoroutine(Investigation());
+
+        // Ability successfully activated
+        return true;
     }
 
     private IEnumerator Investigation()
     {
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
-        
         GameObject line = CreateLine();
         LineRenderer lineRenderer = line.GetComponent<LineRenderer>();
 
@@ -56,6 +56,9 @@ public class OwlDefensive : BirdAbility
             }
         }
         Destroy(line);
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
     }
 
     private GameObject CreateLine()

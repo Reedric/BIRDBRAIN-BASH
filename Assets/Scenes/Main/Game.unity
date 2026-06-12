@@ -46185,7 +46185,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilitySlot: 0
   _cooldownTime: 8
-  cooldown: 8
 --- !u!1 &1453741298
 GameObject:
   m_ObjectHideFlags: 0
@@ -78529,6 +78528,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -7048078205267838103, guid: fa022a8398cc7d4469439c183cd09bca, type: 3}
+      propertyPath: coneRange
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: -7048078205267838103, guid: fa022a8398cc7d4469439c183cd09bca, type: 3}
       propertyPath: squawkParticlesPrefab
       value: 

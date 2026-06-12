@@ -52,7 +52,7 @@ public class BirdAbilityRuleService : MonoBehaviour
         if (ballInteract.GetBirdType() == BirdType.PELICAN && GameManager.Instance.gameState == GameManager.GameState.PointStart
             && ballInteract.Equals(GameManager.Instance.server.GetComponent<BallInteract>())) return true;
         if (ballInteract.GetBirdType() == BirdType.TOUCAN && GameManager.PointInProgress()) return true;
-        if (ballInteract.GetBirdType() == BirdType.KIWI) return true;
+        if (ballInteract.GetBirdType() == BirdType.KIWI && GameManager.PointInProgress()) return true;
 
         // If the ball is not on your side of the court (to prevent any blocking abilities from blocking too early)
         if (ballInteract.onLeft && BallManager.Instance.transform.position.x > 0) return false;

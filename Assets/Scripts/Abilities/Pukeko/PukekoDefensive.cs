@@ -25,17 +25,16 @@ public class PukekoDefensive : BirdAbility
         ballInteract = GetComponent<BallInteract>();
     }
 
-    override protected void Activate()
+    override protected bool Activate()
     {
         StartCoroutine(PlayingDirty());
-        Debug.Log("Pukeko Defensive Activated");
+
+        // Ability successfully activated
+        return true;
     }
 
     private IEnumerator PlayingDirty()
     {
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
-        
         isDashing = true;
         characterMovement.controlMovement(false, false);
 
@@ -46,6 +45,9 @@ public class PukekoDefensive : BirdAbility
 
         isDashing = false;
         characterMovement.controlMovement(true, true);
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
     }
 
     // Detect collision with the ball during the dash

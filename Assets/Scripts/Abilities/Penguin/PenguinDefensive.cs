@@ -34,17 +34,19 @@ public class PenguinDefensive : BirdAbility
         }
     }
 
-    protected override void Activate()
+    protected override bool Activate()
     {
         if (cM.grounded)
         {
             StartCoroutine(StartDash());
+            return true;
         }
+
+        return false;
     }
 
     IEnumerator StartDash()
     {
-        Debug.Log("Starting dash....");
         cM.controlMovement(false, false); // christofort: makes canJump false
         isDashing = true;
 
@@ -66,23 +68,21 @@ public class PenguinDefensive : BirdAbility
         // Override CharacterMovement rotation to do belly slide
         cM.overrideRotation = true;
 
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
-
         // Play slide sound
         AudioManager.PlayBirdSound(BirdType.PENGUIN, SoundType.DEFENSIVE, 1.0f);
 
         // Do the dash for however long its supposed to be done
         yield return new WaitForSeconds(dashDuration);
 
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
+
         // End the dash
-        Debug.Log("Ending dash...");
         EndDash();
     }
 
     void EndDash()
     {
-        Debug.Log("Transitioning back upright...");
         isDashing = false;
         cM.controlMovement(true, true); // christofort: sets canJump back to True
 

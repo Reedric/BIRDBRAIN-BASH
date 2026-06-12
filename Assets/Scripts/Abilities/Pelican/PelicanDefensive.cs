@@ -12,17 +12,26 @@ public class PelicanDefensive : BirdAbility
     private Coroutine holdCoroutine;
     private GameManager.GameState stateWhenEaten;
 
-    override protected void Activate()
+    override protected bool Activate()
     {
-        // If pressed defensive ability button, activate ability
-        if (isBallEaten)
-            SpitBall();
-        else if (IsReady)
-            EatTheBall();
-
+        // If ball is eaten, release it and start cooldown
         if (isBallEaten)
         {
-            BallManager.Instance.gameObject.transform.position = transform.position + new Vector3(0, 1f, 0);
+            SpitBall();
+            return true;
+        }
+        else
+        {
+            EatTheBall();
+            return false; 
+        }
+    }
+
+    void Update()
+    {
+        if (isBallEaten)
+        {
+            BallManager.Instance.gameObject.transform.position = transform.position + new Vector3(0, 3f, 0);
         }
     }
 
@@ -36,21 +45,6 @@ public class PelicanDefensive : BirdAbility
 
     public void EatTheBall()
     {
-
-        // Valid state handled in BirdAbilityRuleService, this statement no longer valid                    
-        // if (!isValidState)
-        // {
-        //     Debug.Log($"[Pelican] Tried to eat in invalid state: {gameManager.gameState}");
-        //     return;
-        // }
-
-        // Pelican must be on their own side of the court -> NOW handled in BirdAbilityRuleService
-        // if (!IsOnOwnSide())
-        // {
-        //     Debug.Log("[Pelican] Tried to eat from enemy side of court.");
-        //     return;
-        // }
-
         // Pelican must be close enough to the ball
         if (!BallInEatRange())
         {
@@ -58,11 +52,15 @@ public class PelicanDefensive : BirdAbility
             return;
         }
 
+        // If pelican last interacted with baLl, they cannot interact with it again
+        if (GameManager.Instance.lastHit == gameObject)
+        {
+            Debug.Log("[Pelican] was the last hit, so they cannot eat the ball.");
+            return;
+        }
+
         // Store what state we ate in so release knows what hit to register
         stateWhenEaten = GameManager.Instance.gameState;
-
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
 
         // Play defensive sound
         AudioManager.PlayBirdSound(BirdType.PELICAN, SoundType.DEFENSIVE, 1.0f);
@@ -92,6 +90,9 @@ public class PelicanDefensive : BirdAbility
         if (!isBallEaten) return;
         isBallEaten = false;
         StartCoroutine(ReleaseBallCoroutine());
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
     }
 
     private IEnumerator ReleaseBallCoroutine()
@@ -106,10 +107,10 @@ public class PelicanDefensive : BirdAbility
         // Advance to the next hit based on what state the ball was eaten in
         switch (stateWhenEaten)
         {
-            case GameManager.GameState.Served:
+            case GameManager.GameState.PointStart:
                 ballInteract.ServeBall();  // eaten at beginning of point -> release as serve
                 break;
-            case GameManager.GameState.Spiked:
+            case GameManager.GameState.Spiked: case GameManager.GameState.Blocked: case GameManager.GameState.Served:
                 ballInteract.BumpBall();   // eaten while ball incoming from enemy -> release as bump
                 break;
             case GameManager.GameState.Bumped:
