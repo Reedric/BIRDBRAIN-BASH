@@ -1,23 +1,22 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class ScissortailOffensive : BirdAbility
 {
-    [SerializeField] private float cooldown = 8f;
-    private bool onCooldown = false;
-
-    public void OnOffensiveAbility(InputValue value)
+    private bool shotHappened; // Whether or not the ability happened for return purposes
+    override protected bool Activate()
     {
-        // If we can use the ability (off cooldown, not silenced, and spikable), do the ability
-        if (!onCooldown && CanUseAbilities() && GameManager.Instance.gameState == GameManager.GameState.Set)
-        {
-            StartCoroutine(ScissorShot());
-        }
+        StartCoroutine(ScissorShot());
+
+        Debug.Log(shotHappened);
+        return shotHappened; // This might not work due to race conditions but we will see
     }
 
     private IEnumerator ScissorShot()
     {
+        // Ability has not yet happened
+        shotHappened = false;
+
         // Get the ball's halfway point from the ground
         float ballMidHeight = BallManager.Instance.gameObject.transform.position.y / 2;
 
@@ -47,28 +46,26 @@ public class ScissortailOffensive : BirdAbility
         // If the ball actually reached the midpoint
         if (BallManager.Instance.gameObject.transform.position.y <= ballMidHeight)
         {
+            // Ability happened
+            shotHappened = true;
+
             // Ball should be at the halfway point, change its direction
             Vector3 changeTo;
             if (ballRb.linearVelocity.z > 0)
             {
-                changeTo = _onLeft ? new Vector3(8, 0, -4) : new Vector3(-8, 0, -4);
+                changeTo = transform.position.x < 0 ? new Vector3(8, 0, -4) : new Vector3(-8, 0, -4);
             }
             else
             {
-                changeTo = _onLeft ? new Vector3(8, 0, 4) : new Vector3(-8, 0, 4);
+                changeTo = transform.position.x < 0 ? new Vector3(8, 0, 4) : new Vector3(-8, 0, 4);
             }
             Vector3 unitVelocity = changeTo - BallManager.Instance.gameObject.transform.position;
             unitVelocity.Normalize();
             float ballSpeed = ballRb.linearVelocity.magnitude;
             ballRb.linearVelocity = unitVelocity * ballSpeed;
 
-            // Do the cooldown
-            onCooldown = true;
-            yield return new WaitForSeconds(cooldown);
-            onCooldown = false;
-
             int playerID = GetComponent<BallInteract>().playerID;
-            HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+            HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
         }
     }
 }

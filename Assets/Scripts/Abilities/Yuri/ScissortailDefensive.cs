@@ -5,19 +5,15 @@ using UnityEngine.InputSystem;
 public class ScissortailDefensive : BirdAbility
 {
     [Header("Yuriful")]
-    public float cooldown = 6.0f;
     public float lineUptime = 3.0f;
     public float lineWidth = 0.5f;
     public float threshold = 1.0f;
     public float lineDrawDuration = 0.3f; // How long the draw animation takes
     public Material lineMaterial;
-    private bool abilityReady = true;
-    private PlayerInput playerInput;
     private LineRenderer lr;
 
     void Start()
     {
-        playerInput = GetComponent<PlayerInput>();
         lr = gameObject.AddComponent<LineRenderer>();
         lr.enabled = false;
 
@@ -65,9 +61,6 @@ public class ScissortailDefensive : BirdAbility
 
         AudioManager.PlayBirdSound(BirdType.SCISSORTAIL, SoundType.DEFENSIVE, 1.0f);
 
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
-
         // Trigger defensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
@@ -79,8 +72,10 @@ public class ScissortailDefensive : BirdAbility
         lr.enabled = true;
 
         // Snapshot positions at the moment of cast for the draw animation
-        Vector3 selfPos = gameObject.transform.position;
-        Vector3 allyPos = ally.transform.position;
+        Vector3 selfPos = gameObject.transform.Find("ContactPoint") == null // Use contact point (if it exists)
+            ? gameObject.transform.position : gameObject.transform.Find("ContactPoint").position; 
+        Vector3 allyPos = ally.transform.Find("ContactPoint") == null // Use contact point (if it exists)
+            ? ally.transform.position : ally.transform.Find("ContactPoint").position;
         Vector3 toAlly = allyPos - selfPos;
 
         // Slerp the tip outward from self toward ally — sweeps like a quill stroke
@@ -114,10 +109,11 @@ public class ScissortailDefensive : BirdAbility
             float distanceToLine = Vector3.Cross(line, toBall).magnitude;
 
             // If the ball is within the threshold range of the line ends ability
-            if (distanceToLine < threshold)
+            if (distanceToLine < threshold && GameManager.Instance.gameState != GameManager.GameState.Set)
             {
                 BallInteract interact = GetComponent<BallInteract>();
-                interact.BumpBall();
+                if (GameManager.Instance.gameState == GameManager.GameState.Bumped) interact.SetBall();
+                else interact.BumpBall();
                 break;
             }
             yield return null;
@@ -143,22 +139,16 @@ public class ScissortailDefensive : BirdAbility
         }
 
         lr.enabled = false;
-        StartCoroutine(CooldownRoutine());
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
     }
 
-    private IEnumerator CooldownRoutine()
+    override protected bool Activate()
     {
-        yield return new WaitForSeconds(cooldown);
-        abilityReady = true;
-    }
+        StartCoroutine(Yuriful());
 
-    void Update()
-    {
-        if (playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame() && abilityReady
-                    && PointInProgress() && CanUseAbilities())
-        {
-            StartCoroutine(Yuriful());
-            abilityReady = false;
-        }
+        // Ability successfully activated
+        return true;
     }
 }

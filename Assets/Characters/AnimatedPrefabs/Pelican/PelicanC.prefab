@@ -666,6 +666,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b46d13d2bff2efb45aa33256c23387eb, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5204621729347928699}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b46d13d2bff2efb45aa33256c23387eb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -391227188337201989}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b46d13d2bff2efb45aa33256c23387eb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1245695761524282692}
   m_SourcePrefab: {fileID: 100100000, guid: b46d13d2bff2efb45aa33256c23387eb, type: 3}
 --- !u!1 &6998144753495222642 stripped
 GameObject:
@@ -5608,7 +5614,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88f319f3ed34f57429307b53d0f467d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cooldown: 20
+  abilitySlot: 1
+  cooldownTime: 20
   holdLength: 2
   ballInteract: {fileID: 6458219553106997611}
 --- !u!114 &7627097619209320294
@@ -5653,9 +5660,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e58d1fda243bd24a98cb7db7ac6a026, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  abilitySlot: 0
+  cooldownTime: 30
   mouthForwardOffset: 1
   mouthUpOffset: 1.5
-  cooldown: 30
   slipFishSpeed: 10
   fishLifetime: 15
   fishPrefab: {fileID: 38830316321675584, guid: 69b1d0c462e97e94ba0fcd5eb8a57646, type: 3}
@@ -5722,6 +5730,31 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   readyIndicator: {fileID: 0}
+--- !u!114 &-391227188337201989
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6998144753495222642}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d8776b00f5834d4f9f26b44f0a3eae8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1245695761524282692
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6998144753495222642}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5218fa23fafadc54d807b4f114cfd911, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilityController: {fileID: -391227188337201989}
 --- !u!4 &7662231825681019848 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: b46d13d2bff2efb45aa33256c23387eb, type: 3}

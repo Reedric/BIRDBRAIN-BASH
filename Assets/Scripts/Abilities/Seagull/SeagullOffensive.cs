@@ -14,22 +14,21 @@ public class SeagullOffensive : BirdAbility
     public int debuffWindowLength = 20;   // Seconds after a score the player can trigger the debuff
 
     private bool _debuffWindow = false;
-    private PlayerInput playerInput;
+    private bool _onLeft;
 
     void Start()
     {
-        playerInput = GetComponent<PlayerInput>();
         _onLeft = GetComponent<BallInteract>().onLeft;
         EventManager.SubscribeScore(OnScore);
         GetComponent<CharacterMovement>().controlMovement(true, true);
     }
 
-    void Update()
+    override protected bool Activate()
     {
-        if (_debuffWindow && playerInput.actions.FindAction("Offensive Ability").WasPressedThisFrame() && CanMock())
-        {
-            DebuffEnemy();
-        }
+        DebuffEnemy();
+
+        // Ability successfully activated
+        return true;
     }
 
     public void DebuffEnemy()
@@ -88,9 +87,10 @@ public class SeagullOffensive : BirdAbility
         AudioManager.PlayBirdSound(BirdType.SEAGULL, SoundType.OFFENSIVE, 1.0f);
 
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, 5);
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
     }
 
+    // TODO: check if these two methods are necessary now with the refactor
     public bool OnScore(bool leftScored)
     {
         if ((leftScored && _onLeft) || (!leftScored && !_onLeft))
@@ -107,23 +107,5 @@ public class SeagullOffensive : BirdAbility
         _debuffWindow = true;
         yield return new WaitForSeconds(debuffWindowLength);
         _debuffWindow = false;
-    }
-
-    private bool CanMock()
-    {
-        // If abilities are disabled for the seagull, cannot mock
-        if (!CanUseAbilities()) return false;
-
-        // If the point hasn't just ended or point not about to start return false
-        if (!gameManager.gameState.Equals(GameManager.GameState.PointStart) && gameManager.gameState.Equals(GameManager.GameState.PointEnd))
-        {
-            return false;
-        }
-
-        // Get which side just scored the point
-        bool leftJustScored = ScoreManager.Instance.side1ServeIndicator.activeInHierarchy;
-
-        // Return true if they equal
-        return _onLeft == leftJustScored;
     }
 }

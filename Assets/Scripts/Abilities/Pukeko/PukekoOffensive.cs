@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 using System.Collections;
 
 /// <summary>
@@ -9,7 +8,6 @@ using System.Collections;
 public class PukekoOffensiveAbility : BirdAbility
 {
     [Header("Pukeko Offensive Settings")]
-    [SerializeField] private float cooldown = 40f;
     [SerializeField] private float silenceDuration = 3f;
     [SerializeField] private float pushBackForce = 8f; // increased from 2f — impulse needs more weight
 
@@ -22,28 +20,23 @@ public class PukekoOffensiveAbility : BirdAbility
     [SerializeField] private int coneRayCount = 10;
     public Animator animator; // Assign in inspector
 
-    private bool onCooldown = false;
-    private RaycastHit[] hits;
+    private RaycastHit[] hits; // Pre-allocate to avoid garbage collection as long as possible
 
     void Awake()
     {
         hits = new RaycastHit[coneRayCount];
-        _onLeft = GetComponent<BallInteract>().onLeft;
     }
 
-    public void OnOffensiveAbility()
+    override protected bool Activate()
     {
-        if (!onCooldown && CanUseAbilities() && PointInProgress())
-        {
-            onCooldown = true;
-            StartCoroutine(SonicSquawk());
-        }
+        SonicSquawk();
+
+        // Successfully activated ability
+        return true;
     }
 
-    private IEnumerator SonicSquawk()
+    private void SonicSquawk()
     {
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
         Vector3 firingForward = Quaternion.Euler(-GetComponent<CharacterMovement>().rotationOffsetEuler) * transform.forward;
         firingForward.y = 0f;
         firingForward.Normalize();
@@ -53,7 +46,7 @@ public class PukekoOffensiveAbility : BirdAbility
             Quaternion facingRotation = Quaternion.LookRotation(firingForward, Vector3.up);
 
             // Rotate particles so emission matches bird facing
-            float sideRotation = _onLeft ? -90f : 90f;
+            float sideRotation = transform.position.x < 0 ? -90f : 90f;
 
             Quaternion correctedRotation =
                 facingRotation * Quaternion.Euler(0f, sideRotation, 0f);
@@ -97,6 +90,7 @@ public class PukekoOffensiveAbility : BirdAbility
             {
                 if (hits[j].collider.CompareTag("Player") && hits[j].collider.gameObject != gameObject)
                 {
+                    // Apply silence effect to the bird
                     GameObject target = hits[j].collider.gameObject;
 
                     bool targetIsOnLeft = false;
@@ -111,7 +105,7 @@ public class PukekoOffensiveAbility : BirdAbility
                     }
 
                     // Skip allies (same side as the caster)
-                    if (targetIsOnLeft == _onLeft) continue;
+                    if (targetIsOnLeft == (transform.position.x < 0)) continue;
 
                     // Ostrich is immune to silence!
                     BallInteract birdPlayer = target.GetComponent<BallInteract>();
@@ -137,8 +131,8 @@ public class PukekoOffensiveAbility : BirdAbility
                 }
             }
         }
-        
-        yield return new WaitForSeconds(cooldown);
-        onCooldown = false;
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
     }
 }

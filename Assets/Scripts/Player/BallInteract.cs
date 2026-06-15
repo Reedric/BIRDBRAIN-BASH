@@ -313,7 +313,7 @@ public class BallInteract : MonoBehaviour
 
         // Get the direction value
         Vector2 dir = playerInput.actions.FindAction("Direction").ReadValue<Vector2>();
-        Debug.LogFormat("ServeToLocation before checking direction: {0}", setToLocation);
+        // Debug.LogFormat("ServeToLocation before checking direction: {0}", setToLocation);
 
         // If player wants to set towards top or bottom, update set to location
         if (dir.y < -0.64f)
@@ -324,7 +324,7 @@ public class BallInteract : MonoBehaviour
         {
             setToLocation += new Vector3(0, 0, 4); // Upper side of the court
         }
-        Debug.LogFormat("ServeToLocation after checking direction: {0}", setToLocation);
+        // Debug.LogFormat("ServeToLocation after checking direction: {0}", setToLocation);
 
         // The ball will be set a minimum of five units
         float height = MathF.Max(5.0f, ballRb.transform.position.y + 3.0f);
@@ -448,8 +448,8 @@ public class BallInteract : MonoBehaviour
     }
 
     public void BlockBall()
-        // Play the block sound for the bird
     {
+        // Play the block sound for the bird
         AudioManager.PlayBirdSound(birdType, SoundType.BLOCK, 1.0f);
         AudioManager.PlayBallPlayerInteractionSound();
 

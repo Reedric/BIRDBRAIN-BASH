@@ -4,21 +4,25 @@ using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(PlayerInput))]
 [RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(BallInteract))]
+
 public class LovebirdDefensive : BirdAbility
 {
     [Header("Romantic Rush")]
-    public float cooldown = 6.0f;
     public float dashSpeed = 18.0f;
     public float dashToDistance = 2.0f; // How close Loverbird dashes to Ally
-    private bool abilityReady = true;
     private Rigidbody rb;
-    private PlayerInput playerInput;
 
     // Checks for Game Manager on Start
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        playerInput = GetComponent<PlayerInput>();
+    }
+
+    override protected bool Activate()
+    {
+        StartCoroutine(RomanticRush());
+        return true;
     }
 
     // Finds which GameObject is the Ally to player
@@ -56,9 +60,6 @@ public class LovebirdDefensive : BirdAbility
             yield break;
         }
 
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
-
         // Play defensive sound
         AudioManager.PlayBirdSound(BirdType.LOVEBIRD, SoundType.DEFENSIVE, 1.0f);
 
@@ -77,22 +78,8 @@ public class LovebirdDefensive : BirdAbility
             rb.MovePosition(transform.position + dashSpeed * Time.deltaTime * direction);
             yield return null;
         }
-        StartCoroutine(CooldownRoutine());
-    }
 
-    private IEnumerator CooldownRoutine()
-    {
-        yield return new WaitForSeconds(cooldown);
-        abilityReady = true;
-    }
-
-    void Update()
-    {
-        if (playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame() && abilityReady 
-            && PointInProgress() && CanUseAbilities())
-        {
-            StartCoroutine(RomanticRush());
-            abilityReady = false;
-        }
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
     }
 }

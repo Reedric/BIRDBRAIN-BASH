@@ -673,6 +673,7 @@ GameObject:
   - component: {fileID: 762634830}
   - component: {fileID: 762634831}
   - component: {fileID: 762634832}
+  - component: {fileID: 762634833}
   m_Layer: 0
   m_Name: Capsule
   m_TagString: Untagged
@@ -727,7 +728,7 @@ MonoBehaviour:
       m_Calls: []
   m_ActionEvents: []
   m_NeverAutoSwitchControlSchemes: 1
-  m_DefaultControlScheme: Keyboard&Mouse
+  m_DefaultControlScheme: Gamepad
   m_DefaultActionMap: Player
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
@@ -861,9 +862,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7bb5587bbf392f44b84ef873b6bd297d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  AbilitySlot: 1
+  _cooldownTime: 3
   burrowDuration: 2
   speedBoost: 8.47
-  cooldown: 12
 --- !u!114 &762634832
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -876,12 +878,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 46ff018494085e745bbd1d0f3c0fcdc9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cooldown: 15
+  AbilitySlot: 0
+  _cooldownTime: 3
   leftEyePosition: {fileID: 652603255}
   rightEyePosition: {fileID: 123808127}
   lazerWidth: 0.2
   lazerColor: {r: 1, g: 0, b: 0, a: 1}
   lazerDuration: 0.8
+--- !u!114 &762634833
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 762634822}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62a52fa449ea78c439b417bf12bbb9f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  onLeft: 0
+  interactionRadius: 5
+  animator: {fileID: 0}
+  spikeStat: 0
+  birdType: 6
+  playerID: 0
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
