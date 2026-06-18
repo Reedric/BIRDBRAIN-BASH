@@ -21,18 +21,22 @@ public class FresnelManager : MonoBehaviour
         ballRenderers = ballObj.GetComponentsInChildren<Renderer>();
         ballRb = ballObj.GetComponent<Rigidbody>();
 
-        // Find all BallInteract scripts (players) and sort by position
+        // Find all BallInteract scripts (players) and sort by their stable slot IDs
         allPlayers = FindObjectsOfType<BallInteract>();
         System.Array.Sort(allPlayers, (a, b) =>
         {
+            int idCompare = a.playerID.CompareTo(b.playerID);
+            if (idCompare != 0) return idCompare;
             int xCompare = a.transform.position.x.CompareTo(b.transform.position.x);
             return xCompare != 0 ? xCompare : a.transform.position.z.CompareTo(b.transform.position.z);
         });
 
-        // Find all AIBehavior scripts (AIs) and apply the same sort.
+        // Find all AIBehavior scripts (AIs) and sort by their assigned slot IDs as well.
         allAIs = FindObjectsOfType<AIBehavior>();
         System.Array.Sort(allAIs, (a, b) =>
         {
+            int idCompare = a.playerID.CompareTo(b.playerID);
+            if (idCompare != 0) return idCompare;
             int xCompare = a.transform.position.x.CompareTo(b.transform.position.x);
             return xCompare != 0 ? xCompare : a.transform.position.z.CompareTo(b.transform.position.z);
         });
@@ -81,7 +85,18 @@ public class FresnelManager : MonoBehaviour
         // Ball is in someone's radius
         if (highlightIndex != -1)
         {
-            int matIndex = isAI ? allPlayers.Length + highlightIndex : highlightIndex;
+            int matIndex;
+            if (isAI)
+            {
+                var selectedAI = allAIs[highlightIndex];
+                matIndex = selectedAI != null && selectedAI.playerID >= 0 ? selectedAI.playerID : highlightIndex;
+            }
+            else
+            {
+                var selectedPlayer = allPlayers[highlightIndex];
+                matIndex = selectedPlayer != null && selectedPlayer.playerID >= 0 ? selectedPlayer.playerID : highlightIndex;
+            }
+
             if (!fresnelActive || matIndex != currentHighlightPlayer)
             {
                 ApplyFresnelMaterial(matIndex);

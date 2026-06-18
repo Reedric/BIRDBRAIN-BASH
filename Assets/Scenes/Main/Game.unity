@@ -790,6 +790,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   birdType: 13
   onLeft: 0
+  playerID: -1
   interactionRadius: 2
   animator: {fileID: 0}
   maxGroundSpeed: 10
@@ -6435,12 +6436,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcb442ece73b6e3488abc0c5fd68618c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  team1BumpSetServePrefab: {fileID: 3499421978768982111, guid: b32d39234253c6141baf6f31711edded, type: 3}
-  team1SpikePrefab: {fileID: 3499421978768982111, guid: 55c8d5c3c0db7b3458de87acd236b137, type: 3}
-  team1BlockPrefab: {fileID: 3499421978768982111, guid: a7da621a0961fb54183bc33ae355404b, type: 3}
-  team2BumpSetServePrefab: {fileID: 3499421978768982111, guid: c78a7c518c9b159409b6f458363ecd7f, type: 3}
-  team2SpikePrefab: {fileID: 3499421978768982111, guid: c59883dd250572946afd7e1622f167c0, type: 3}
-  team2BlockPrefab: {fileID: 3499421978768982111, guid: 65dd961a133d06544a01fbb63fce7f8e, type: 3}
+  p1BumpSetServePrefab: {fileID: 3499421978768982111, guid: b32d39234253c6141baf6f31711edded, type: 3}
+  p1SpikePrefab: {fileID: 3499421978768982111, guid: 55c8d5c3c0db7b3458de87acd236b137, type: 3}
+  p1BlockPrefab: {fileID: 3499421978768982111, guid: a7da621a0961fb54183bc33ae355404b, type: 3}
+  p2BumpSetServePrefab: {fileID: 3499421978768982111, guid: 5f2a4aa19fc7ac943ae0336a6837aeeb, type: 3}
+  p2SpikePrefab: {fileID: 3499421978768982111, guid: df667a55768036546a2e591e3dbdb48d, type: 3}
+  p2BlockPrefab: {fileID: 3499421978768982111, guid: c9f9bc315ec824f42b71dd3bd7bd367c, type: 3}
+  p3BumpSetServePrefab: {fileID: 3499421978768982111, guid: c78a7c518c9b159409b6f458363ecd7f, type: 3}
+  p3SpikePrefab: {fileID: 3499421978768982111, guid: c59883dd250572946afd7e1622f167c0, type: 3}
+  p3BlockPrefab: {fileID: 3499421978768982111, guid: 65dd961a133d06544a01fbb63fce7f8e, type: 3}
+  p4BumpSetServePrefab: {fileID: 3499421978768982111, guid: 85a5c986da6df1a4d8b72d875a56555f, type: 3}
+  p4SpikePrefab: {fileID: 3499421978768982111, guid: 47bb04884dd9e464b86797e4ce9b5200, type: 3}
+  p4BlockPrefab: {fileID: 3499421978768982111, guid: 39de2c04f5db19a46b72e24cc1cd3d6f, type: 3}
 --- !u!4 &140362001
 Transform:
   m_ObjectHideFlags: 0
@@ -8602,6 +8609,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   birdType: 12
   onLeft: 0
+  playerID: -1
   interactionRadius: 2
   animator: {fileID: 0}
   maxGroundSpeed: 4
@@ -14158,6 +14166,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   birdType: 7
   onLeft: 0
+  playerID: -1
   interactionRadius: 2
   animator: {fileID: 0}
   maxGroundSpeed: 7
@@ -20961,6 +20970,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   birdType: 1
   onLeft: 0
+  playerID: -1
   interactionRadius: 2
   animator: {fileID: 0}
   maxGroundSpeed: 5
@@ -26871,10 +26881,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerFresnelMaterials:
-  - {fileID: 2100000, guid: 322ee312df53da24cb584be9bcef3db3, type: 2}
   - {fileID: 2100000, guid: 9332563b1952b4912b267ff4648c496b, type: 2}
-  - {fileID: 2100000, guid: e0e6aa9e1005fa94fada9ebd742cc0db, type: 2}
+  - {fileID: 2100000, guid: 322ee312df53da24cb584be9bcef3db3, type: 2}
   - {fileID: 2100000, guid: e777c37df29f4cf46b8137865fa71e99, type: 2}
+  - {fileID: 2100000, guid: e0e6aa9e1005fa94fada9ebd742cc0db, type: 2}
   defaultBallMaterial: {fileID: 2100000, guid: b3ab5e2311f51cc40a46064a5d86c382, type: 2}
 --- !u!4 &968887286
 Transform:
@@ -47781,6 +47791,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   birdType: 8
   onLeft: 0
+  playerID: -1
   interactionRadius: 2
   animator: {fileID: 0}
   maxGroundSpeed: 6
@@ -59270,6 +59281,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   birdType: 11
   onLeft: 0
+  playerID: -1
   interactionRadius: 2
   animator: {fileID: 0}
   maxGroundSpeed: 9

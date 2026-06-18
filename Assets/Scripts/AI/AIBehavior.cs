@@ -13,6 +13,7 @@ public class AIBehavior : MonoBehaviour
     public BirdType GetBirdType() => birdType;
     [Header("Game Manager")]
     public bool onLeft; // Whether this AI is on the left side of the net or not
+    public int playerID = -1; // Slot index for fresnel/material mapping
 
     [Header("Ball Interaction")]
     public float interactionRadius = 2f; // How far the character can interact with the ball
@@ -85,6 +86,21 @@ public class AIBehavior : MonoBehaviour
     public void SetEnamored(bool enamored)
     {
         movementEnamored = enamored;
+    }
+
+    // Helper method to get the player index (0-3) for HitEffects
+    // 0 = Blue (Team 1, player 1), 1 = Green (Team 1, player 2)
+    // 2 = Pink (Team 2, player 1), 3 = Yellow (Team 2, player 2)
+    private int GetPlayerIndex()
+    {
+        if (onLeft)
+        {
+            return GameManager.Instance.leftPlayer1.Equals(gameObject) ? 0 : 1;
+        }
+        else
+        {
+            return GameManager.Instance.rightPlayer1.Equals(gameObject) ? 2 : 3;
+        }
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -586,7 +602,7 @@ public class AIBehavior : MonoBehaviour
         AudioManager.PlayBallPlayerInteractionSound();
 
         // handle vfx
-        HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, onLeft);
+        HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, GetPlayerIndex());
 
         // Update game manager fields
         GameManager.Instance.gameState = GameManager.GameState.Bumped;
@@ -649,7 +665,7 @@ public class AIBehavior : MonoBehaviour
         AudioManager.PlayBallPlayerInteractionSound();
 
         // handle vfx
-        HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, onLeft);
+        HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, GetPlayerIndex());
 
         // Update game manager fields
         GameManager.Instance.gameState = GameManager.GameState.Set;
@@ -711,7 +727,7 @@ public class AIBehavior : MonoBehaviour
         AudioManager.PlayBallPlayerInteractionSound();
 
         // handle vfx
-        HitEffects.Instance.PlayEffect(HitEffects.HitType.Spike, onLeft);
+        HitEffects.Instance.PlayEffect(HitEffects.HitType.Spike, GetPlayerIndex());
 
         // Update game manager fields
         GameManager.Instance.gameState = GameManager.GameState.Spiked;
@@ -776,7 +792,7 @@ public class AIBehavior : MonoBehaviour
         AudioManager.PlayBallPlayerInteractionSound();
 
         // handle vfx
-        HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, onLeft);
+        HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, GetPlayerIndex());
 
         // Trigger serve animation
         if (animator != null)

@@ -1368,7 +1368,7 @@ ParticleSystem:
         serializedVersion: 2
         key0: {r: 1, g: 0.91535836, b: 0.45597476, a: 1}
         key1: {r: 1, g: 1, b: 1, a: 1}
-        key2: {r: 0.6431373, g: 0, b: 0.3019608, a: 0}
+        key2: {r: 0.023529414, g: 0.81568635, b: 0.81568635, a: 0}
         key3: {r: 0.049048606, g: 0.41371065, b: 0.5031446, a: 0}
         key4: {r: 0, g: 0, b: 0, a: 0}
         key5: {r: 0, g: 0, b: 0, a: 0}
@@ -1376,7 +1376,7 @@ ParticleSystem:
         key7: {r: 0, g: 0, b: 0, a: 0}
         ctime0: 257
         ctime1: 9895
-        ctime2: 26343
+        ctime2: 35338
         ctime3: 56926
         ctime4: 0
         ctime5: 0
@@ -4838,7 +4838,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 6bc5082814ddabd4898585fee209766b, type: 2}
+  - {fileID: 2100000, guid: 8cd5d0db5a5875849b54b3c642046bea, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -4901,7 +4901,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2135645919028824965}
   m_Layer: 0
-  m_Name: VFX_pink_block
+  m_Name: VFX_green_block
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
