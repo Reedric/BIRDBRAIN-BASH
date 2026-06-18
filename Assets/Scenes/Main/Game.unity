@@ -71794,6 +71794,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1752529230400778768, guid: 5237adce10f0ed6498eff4b789f2e10f, type: 3}
+      propertyPath: ballCollider
+      value: 
+      objectReference: {fileID: 18352589}
     - target: {fileID: 3979004741092947373, guid: 5237adce10f0ed6498eff4b789f2e10f, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

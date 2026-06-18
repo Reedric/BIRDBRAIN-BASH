@@ -15,6 +15,8 @@ public class PenguinOffensive : BirdAbility
 
     [Header("Snowball Visual")]
     public GameObject tempIce;
+    public GameObject snowballTrackPrefab; // Prefab that follows the ball when it turns into a snowball
+    public GameObject iceSpawnBurstPrefab; // Prefab that plays when the ground ice spawns
     public Material normalBallMaterial; // Default ball material to restore after snowball ends
     public Material snowballMaterial; // Material to apply to the ball when snowball is active
     private Renderer[] dodgeBallRenderers; // Christofort: grabs the dodgeball's renderer to swap materials
@@ -22,6 +24,7 @@ public class PenguinOffensive : BirdAbility
     // New: keep track of the active coroutine so we can actually stop it correctly
     private Coroutine spawnIceCoroutine;
     private GameObject iceInstance;
+    private GameObject snowballTrackInstance;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -68,6 +71,8 @@ public class PenguinOffensive : BirdAbility
         // hitNet = false; // New: reset net flag every time the ability starts
         iceTimer = iceLength;
 
+        // New: spawn the snowball particles on the spike before the ball hits the ground
+        CreateSnowballTrackEffect();
         ballInteraction.SpikeBall();
 
         // New: stop any old coroutine before starting a new one
@@ -85,6 +90,25 @@ public class PenguinOffensive : BirdAbility
 
         int playerID = GetComponent<BallInteract>().playerID;
         HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
+    }
+
+    void CreateSnowballTrackEffect()
+    {
+        if (snowballTrackPrefab == null)
+            return;
+
+        if (snowballTrackInstance != null)
+        {
+            Destroy(snowballTrackInstance);
+            snowballTrackInstance = null;
+        }
+
+        GameObject ballObj = BallManager.Instance?.gameObject;
+        if (ballObj == null)
+            return;
+
+        snowballTrackInstance = Instantiate(snowballTrackPrefab, ballObj.transform.position, Quaternion.identity);
+        snowballTrackInstance.transform.SetParent(ballObj.transform, true);
     }
 
     void ApplySnowballMaterial()
@@ -119,7 +143,7 @@ public class PenguinOffensive : BirdAbility
 
     void EndSnowBall()
     {
-        // New: stop the active coroutine properly
+        // stop the active coroutine properly
         if (spawnIceCoroutine != null)
         {
             StopCoroutine(spawnIceCoroutine);
@@ -134,6 +158,12 @@ public class PenguinOffensive : BirdAbility
 
         Destroy(iceInstance);
         iceInstance = null;
+
+        if (snowballTrackInstance != null)
+        {
+            Destroy(snowballTrackInstance);
+            snowballTrackInstance = null;
+        }
 
         RestoreNormalBallMaterial();
     }
@@ -170,7 +200,7 @@ public class PenguinOffensive : BirdAbility
 
     IEnumerator SpawnIce()
     {
-        // New: wait until the snowball gets touched by someone and the state becomes
+        // wait until the snowball gets touched by someone and the state becomes
         // either Bumped or Blocked. These are the states that mean the other side made contact.
         GameManager gameManager = GameManager.Instance;
         yield return new WaitUntil(() =>
@@ -179,17 +209,17 @@ public class PenguinOffensive : BirdAbility
             (gameManager.gameState == GameManager.GameState.Bumped ||
             gameManager.gameState == GameManager.GameState.Blocked));
 
-        // New: if the snowball got canceled while waiting, stop here
+        // if the snowball got canceled while waiting, stop here
         if (!usingSnowBall || gameManager == null || gameManager.lastHit == null)
             yield break;
 
-        // New: make sure the player who touched it is actually on the opposing team
+        // make sure the player who touched it is actually on the opposing team
         if (!IsOpponentPlayer(gameManager.lastHit))
             yield break;
 
         if (!iceSpawned)
         {
-            // New: spawn the ice under the opposing player who last touched the ball
+            // spawn the ice under the opposing player who last touched the ball
             Vector3 hitterPos = gameManager.lastHit.transform.position;
             Vector3 iceSpawnPos = new Vector3(hitterPos.x, 0, hitterPos.z);
 
@@ -200,9 +230,21 @@ public class PenguinOffensive : BirdAbility
             if (ballCollider != null && iceCollider != null)
                 Physics.IgnoreCollision(ballCollider, iceCollider, true);
 
-            // New: revert the ball texture as soon as the ice spawns
+            // disable the ball snow effect and restore the normal texture when the ice hits the ground
+            if (snowballTrackInstance != null)
+            {
+                Destroy(snowballTrackInstance);
+                snowballTrackInstance = null;
+            }
             Debug.Log("Reverting ball material after ice spawns", this);
             RestoreNormalBallMaterial();
+
+            // play a ground particle effect attached to the ice while it exists
+            if (iceSpawnBurstPrefab != null)
+            {
+                GameObject burstInstance = Instantiate(iceSpawnBurstPrefab, iceInstance.transform);
+                burstInstance.transform.localPosition = Vector3.zero;
+            }
         }
 
         spawnIceCoroutine = null;
