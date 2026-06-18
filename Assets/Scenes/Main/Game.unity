@@ -382,6 +382,10 @@ MonoBehaviour:
   confettiSpawnPoint: {fileID: 900675782}
   confettiSpawnInterval: 3
   confettiLifetime: 10
+  scoreUpdateFlourishPrefab: {fileID: 3939896171443928783, guid: d20ea2d4ce59a5c478cc38218bf1067b, type: 3}
+  scoreBounceDuration: 0.35
+  scoreBounceScale: 1.5
+  scoreFlourishLifetime: 5
   lastPhysicalTouch: {fileID: 0}
 --- !u!114 &18352594
 MonoBehaviour:

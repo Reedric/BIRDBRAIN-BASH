@@ -15,15 +15,20 @@ public class PenguinOffensive : BirdAbility
 
     [Header("Snowball Visual")]
     public GameObject tempIce;
+    public float iceSpawnFadeTime = 0.35f; // How long the ice fade-in takes
+    public float iceFadeOutTime = 0.35f; // How long the ice fade-out takes
     public GameObject snowballTrackPrefab; // Prefab that follows the ball when it turns into a snowball
     public GameObject iceSpawnBurstPrefab; // Prefab that plays when the ground ice spawns
+    public GameObject iceCircularMaskPrefab; // Optional cookie-cutter circular mask prefab for ice reveal
     public Material normalBallMaterial; // Default ball material to restore after snowball ends
     public Material snowballMaterial; // Material to apply to the ball when snowball is active
     private Renderer[] dodgeBallRenderers; // Christofort: grabs the dodgeball's renderer to swap materials
 
     // New: keep track of the active coroutine so we can actually stop it correctly
     private Coroutine spawnIceCoroutine;
+    private Coroutine iceMaskCoroutine;
     private GameObject iceInstance;
+    private GameObject iceMaskInstance;
     private GameObject snowballTrackInstance;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -154,10 +159,18 @@ public class PenguinOffensive : BirdAbility
         iceSpawned = false;
         usingSnowBall = false;
 
-        if (iceInstance != null) Debug.Log("Ice Destroyed", this);
+        if (iceMaskCoroutine != null)
+        {
+            StopCoroutine(iceMaskCoroutine);
+            iceMaskCoroutine = null;
+        }
 
-        Destroy(iceInstance);
-        iceInstance = null;
+        if (iceInstance != null)
+        {
+            StartCoroutine(FadeOutAndDestroyIce(iceInstance, iceMaskInstance, iceFadeOutTime));
+            iceInstance = null;
+            iceMaskInstance = null;
+        }
 
         if (snowballTrackInstance != null)
         {
@@ -224,7 +237,30 @@ public class PenguinOffensive : BirdAbility
             Vector3 iceSpawnPos = new Vector3(hitterPos.x, 0, hitterPos.z);
 
             iceInstance = Instantiate(tempIce, iceSpawnPos, Quaternion.identity);
+            PrepareIceForFade(iceInstance);
+            StartCoroutine(FadeInIce(iceInstance, iceSpawnFadeTime));
             iceSpawned = true;
+
+            if (iceCircularMaskPrefab != null)
+            {
+                if (iceMaskInstance != null)
+                {
+                    Destroy(iceMaskInstance);
+                    iceMaskInstance = null;
+                }
+                if (iceMaskCoroutine != null)
+                {
+                    StopCoroutine(iceMaskCoroutine);
+                    iceMaskCoroutine = null;
+                }
+
+                iceMaskInstance = Instantiate(iceCircularMaskPrefab, iceInstance.transform);
+                iceMaskInstance.transform.localPosition = Vector3.zero;
+                iceMaskInstance.transform.localRotation = Quaternion.identity;
+                iceMaskInstance.transform.localScale = Vector3.zero;
+                PrepareIceMaskForFade(iceMaskInstance);
+                iceMaskCoroutine = StartCoroutine(AnimateIceMask(iceMaskInstance, iceSpawnFadeTime));
+            }
 
             iceCollider = iceInstance.GetComponent<BoxCollider>();
             if (ballCollider != null && iceCollider != null)
@@ -248,6 +284,221 @@ public class PenguinOffensive : BirdAbility
         }
 
         spawnIceCoroutine = null;
+    }
+
+    void PrepareIceForFade(GameObject ice)
+    {
+        if (ice == null)
+            return;
+
+        Renderer[] renderers = ice.GetComponentsInChildren<Renderer>(true);
+        foreach (Renderer renderer in renderers)
+        {
+            if (renderer == null)
+                continue;
+
+            foreach (Material material in renderer.materials)
+            {
+                if (material != null)
+                {
+                    EnableMaterialTransparency(material);
+                    SetMaterialAlpha(material, 0f);
+                }
+            }
+        }
+    }
+
+    void PrepareIceMaskForFade(GameObject mask)
+    {
+        if (mask == null)
+            return;
+
+        Renderer[] renderers = mask.GetComponentsInChildren<Renderer>(true);
+        foreach (Renderer renderer in renderers)
+        {
+            if (renderer == null)
+                continue;
+
+            foreach (Material material in renderer.materials)
+            {
+                if (material != null)
+                {
+                    EnableMaterialTransparency(material);
+                    SetMaterialAlpha(material, 1f);
+                }
+            }
+        }
+    }
+
+    IEnumerator AnimateIceMask(GameObject mask, float duration)
+    {
+        if (mask == null || duration <= 0f)
+            yield break;
+
+        Renderer[] renderers = mask.GetComponentsInChildren<Renderer>(true);
+        float elapsed = 0f;
+
+        while (elapsed < duration && mask != null)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+            mask.transform.localScale = Vector3.Lerp(Vector3.zero, Vector3.one, t);
+
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer == null)
+                    continue;
+
+                foreach (Material material in renderer.materials)
+                {
+                    if (material != null)
+                    {
+                        SetMaterialAlpha(material, 1f - t);
+                    }
+                }
+            }
+            yield return null;
+        }
+
+        if (mask != null)
+        {
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer == null)
+                    continue;
+
+                foreach (Material material in renderer.materials)
+                {
+                    if (material != null)
+                    {
+                        SetMaterialAlpha(material, 0f);
+                    }
+                }
+            }
+            Destroy(mask);
+        }
+    }
+
+    IEnumerator FadeOutAndDestroyIce(GameObject ice, GameObject mask, float duration)
+    {
+        if (ice == null || duration <= 0f)
+        {
+            if (ice != null) Destroy(ice);
+            if (mask != null) Destroy(mask);
+            yield break;
+        }
+
+        Renderer[] iceRenderers = ice.GetComponentsInChildren<Renderer>(true);
+        Renderer[] maskRenderers = mask != null ? mask.GetComponentsInChildren<Renderer>(true) : new Renderer[0];
+        float elapsed = 0f;
+
+        while (elapsed < duration && (ice != null || mask != null))
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+            foreach (Renderer renderer in iceRenderers)
+            {
+                if (renderer == null)
+                    continue;
+                foreach (Material material in renderer.materials)
+                {
+                    if (material != null)
+                        SetMaterialAlpha(material, 1f - t);
+                }
+            }
+
+            if (mask != null)
+            {
+                mask.transform.localScale = Vector3.Lerp(Vector3.one, Vector3.zero, t);
+                foreach (Renderer renderer in maskRenderers)
+                {
+                    if (renderer == null)
+                        continue;
+                    foreach (Material material in renderer.materials)
+                    {
+                        if (material != null)
+                            SetMaterialAlpha(material, 1f - t);
+                    }
+                }
+            }
+
+            yield return null;
+        }
+
+        if (ice != null)
+            Destroy(ice);
+        if (mask != null)
+            Destroy(mask);
+    }
+
+    IEnumerator FadeInIce(GameObject ice, float duration)
+    {
+        if (ice == null || duration <= 0f)
+            yield break;
+
+        float elapsed = 0f;
+        Renderer[] renderers = ice.GetComponentsInChildren<Renderer>(true);
+
+        while (elapsed < duration && ice != null)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer == null)
+                    continue;
+
+                foreach (Material material in renderer.materials)
+                {
+                    if (material != null)
+                        SetMaterialAlpha(material, t);
+                }
+            }
+            yield return null;
+        }
+
+        if (ice != null)
+        {
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer == null)
+                    continue;
+
+                foreach (Material material in renderer.materials)
+                {
+                    if (material != null)
+                        SetMaterialAlpha(material, 1f);
+                }
+            }
+        }
+    }
+
+    void EnableMaterialTransparency(Material material)
+    {
+        if (material == null)
+            return;
+
+        material.SetFloat("_Mode", 2);
+        material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        material.SetInt("_ZWrite", 0);
+        material.DisableKeyword("_ALPHATEST_ON");
+        material.EnableKeyword("_ALPHABLEND_ON");
+        material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+        material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+    }
+
+    void SetMaterialAlpha(Material material, float alpha)
+    {
+        if (material == null)
+            return;
+
+        if (material.HasProperty("_Color"))
+        {
+            Color color = material.color;
+            color.a = Mathf.Clamp01(alpha);
+            material.color = color;
+        }
     }
 
     bool IsOpponentPlayer(GameObject player)

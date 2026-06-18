@@ -53,7 +53,16 @@ public class ScoreManager : MonoBehaviour
     public float confettiSpawnInterval = 0.5f;
     public float confettiLifetime = 4f;
 
+    [Header("Score Feedback")]
+    public GameObject scoreUpdateFlourishPrefab;
+    public Canvas scoreEffectCanvas; // Optional canvas to render the score flourish on top of UI
+    public float scoreBounceDuration = 0.35f;
+    public float scoreBounceScale = 1.25f;
+    public float scoreFlourishLifetime = 1.0f;
+
     private Coroutine confettiRoutine;
+    private Coroutine side1ScoreBounceCoroutine;
+    private Coroutine side2ScoreBounceCoroutine;
    
     private bool leftLastScored;
     private bool inPlay;
@@ -134,7 +143,7 @@ public class ScoreManager : MonoBehaviour
         if (collision.gameObject.CompareTag("Side1") && inPlay)
         {
             side2Score += 1;
-            side2ScoreUI.text = side2Score.ToString();
+            UpdateScoreDisplay(side2ScoreUI, side2Score);
             inPlay = false;
             // Debug.Log("side 2 scored! points: " + side2Score);
             RightScored.Invoke();
@@ -145,7 +154,7 @@ public class ScoreManager : MonoBehaviour
         else if (collision.gameObject.CompareTag("Side2") && inPlay) 
         {
             side1Score += 1;
-            side1ScoreUI.text = side1Score.ToString();
+            UpdateScoreDisplay(side1ScoreUI, side1Score);
             inPlay = false;
             // Debug.Log("side 1 scored! points: " + side1Score);
             LeftScored.Invoke();
@@ -176,7 +185,7 @@ public class ScoreManager : MonoBehaviour
             if (touchSource == gameManager.rightPlayer1 || touchSource == gameManager.rightPlayer2)
             {
                 side1Score += 1;
-                side1ScoreUI.text = side1Score.ToString();
+                UpdateScoreDisplay(side1ScoreUI, side1Score);
                 inPlay = false;
                 lastPhysicalTouch = null;
                 // Debug.Log("Out! side 1 scored! points: " + side1Score);
@@ -186,7 +195,7 @@ public class ScoreManager : MonoBehaviour
             else if (touchSource == gameManager.leftPlayer1 || touchSource == gameManager.leftPlayer2)
             {
                 side2Score += 1;
-                side2ScoreUI.text = side2Score.ToString();
+                UpdateScoreDisplay(side2ScoreUI, side2Score);
                 inPlay = false;
                 lastPhysicalTouch = null;
                 // Debug.Log("Out! side 2 scored! points: " + side2Score);
@@ -472,6 +481,105 @@ public class ScoreManager : MonoBehaviour
             fadeScreen.color = new Color(0, 0, 0, 1 - time / 2.0f);
             yield return null;
         }
+    }
+
+    void UpdateScoreDisplay(TextMeshProUGUI scoreText, int score)
+    {
+        if (scoreText == null)
+            return;
+
+        scoreText.text = score.ToString();
+
+        if (scoreText == side1ScoreUI)
+        {
+            if (side1ScoreBounceCoroutine != null)
+                StopCoroutine(side1ScoreBounceCoroutine);
+            side1ScoreBounceCoroutine = StartCoroutine(BounceScore(scoreText));
+        }
+        else if (scoreText == side2ScoreUI)
+        {
+            if (side2ScoreBounceCoroutine != null)
+                StopCoroutine(side2ScoreBounceCoroutine);
+            side2ScoreBounceCoroutine = StartCoroutine(BounceScore(scoreText));
+        }
+        else
+        {
+            StartCoroutine(BounceScore(scoreText));
+        }
+
+        SpawnScoreFlourish(scoreText);
+    }
+
+    IEnumerator BounceScore(TextMeshProUGUI scoreText)
+    {
+        if (scoreText == null)
+            yield break;
+
+        RectTransform rectTransform = scoreText.rectTransform;
+        if (rectTransform == null)
+            yield break;
+
+        Vector3 originalScale = rectTransform.localScale;
+        float elapsed = 0f;
+
+        while (elapsed < scoreBounceDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / scoreBounceDuration;
+            float bounce = Mathf.Sin(t * Mathf.PI);
+            float scale = 1f + (scoreBounceScale - 1f) * bounce;
+            rectTransform.localScale = originalScale * scale;
+            yield return null;
+        }
+
+        rectTransform.localScale = originalScale;
+    }
+
+    void SpawnScoreFlourish(TextMeshProUGUI scoreText)
+    {
+        if (scoreUpdateFlourishPrefab == null || scoreText == null)
+            return;
+
+        Canvas targetCanvas = scoreEffectCanvas != null ? scoreEffectCanvas : scoreText.GetComponentInParent<Canvas>();
+        if (targetCanvas != null)
+        {
+            targetCanvas.overrideSorting = true;
+            targetCanvas.sortingOrder = Mathf.Max(targetCanvas.sortingOrder, 100);
+        }
+
+        Transform parentTransform = targetCanvas != null ? targetCanvas.transform : scoreText.transform.parent;
+        GameObject flourish = Instantiate(scoreUpdateFlourishPrefab, parentTransform);
+        RectTransform flourishRect = flourish.GetComponent<RectTransform>();
+        RectTransform scoreRect = scoreText.rectTransform;
+
+        if (flourishRect != null && scoreRect != null && targetCanvas != null)
+        {
+            Vector2 localPoint;
+            Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(targetCanvas.worldCamera, scoreRect.position);
+            RectTransform canvasRect = parentTransform as RectTransform;
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPoint, targetCanvas.worldCamera, out localPoint))
+            {
+                flourishRect.anchoredPosition = localPoint;
+            }
+            else
+            {
+                flourishRect.anchoredPosition = Vector2.zero;
+            }
+
+            flourishRect.localScale = Vector3.one;
+            flourishRect.localRotation = Quaternion.identity;
+            flourishRect.SetAsLastSibling();
+        }
+        else
+        {
+            flourish.transform.SetParent(parentTransform, false);
+            flourish.transform.localPosition = scoreText.transform.localPosition;
+            flourish.transform.localRotation = Quaternion.identity;
+            flourish.transform.localScale = Vector3.one;
+            flourish.transform.SetAsLastSibling();
+        }
+
+        Destroy(flourish, scoreFlourishLifetime);
     }
 
     public void CheckReturnToMenu()
