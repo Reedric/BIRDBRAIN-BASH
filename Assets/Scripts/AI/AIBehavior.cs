@@ -336,6 +336,13 @@ public class AIBehavior : MonoBehaviour
                     // If this AI is the one serving
                     if (GameManager.Instance.server == gameObject)
                     {
+                        // Only serve if countdown has finished showing "GO"
+                        if (!GameManager.IsCountdownComplete())
+                        {
+                            // Wait for countdown to finish
+                            break;
+                        }
+                        
                         // If the AI can serve ball, do so. Otherwise, wait.
                         if (timeTilServe < 0f)
                         {

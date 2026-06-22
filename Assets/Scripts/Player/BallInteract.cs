@@ -195,9 +195,13 @@ public class BallInteract : MonoBehaviour
                         serverMovement.controlMovement(true, true);
                     }
                     // If this player is the one serving and they press the serve button, serve the ball
+                    // Only allow serve if countdown has finished showing "GO"
                     if (GameManager.Instance.server == gameObject && playerInput.actions.FindAction("Offensive Action").WasPressedThisFrame())
                     {
-                        ServeBall();
+                        if (GameManager.IsCountdownComplete())
+                        {
+                            ServeBall();
+                        }
                     }
                     break;
             }

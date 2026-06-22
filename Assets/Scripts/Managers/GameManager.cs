@@ -15,6 +15,9 @@ public class GameManager : MonoBehaviour
     public GameObject lastHit; // Player that had the last hit
     public GameObject server; // Player who serves this point
     public bool leftAttack; // If left is attacking
+    
+    [Header("Countdown Reference")]
+    [SerializeField] private countdown countdownScript; // Reference to the countdown script
 
     private Vector3 leftPlayer1Origin; // The position of the 1st player on the left when the game starts
     private Vector3 leftPlayer2Origin; // The position of the 2nd player on the left when the game starts
@@ -53,6 +56,12 @@ public class GameManager : MonoBehaviour
     {
         // Initialize singleton to this script
         instance = this;
+        
+        // Auto-find countdown script if not assigned
+        if (countdownScript == null)
+        {
+            countdownScript = FindObjectOfType<countdown>();
+        }
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -116,6 +125,14 @@ public class GameManager : MonoBehaviour
         return instance.gameState != GameState.PointStart
             && instance.gameState != GameState.PointEnd
             && instance.gameState != GameState.GameOver;
+    }
+    
+    // Returns true if the countdown has finished showing "GO"
+    public static bool IsCountdownComplete()
+    {
+        if (instance.countdownScript == null)
+            return true; // Allow game to proceed if countdown script is not assigned
+        return instance.countdownScript.IsCountdownComplete;
     }
 
     // Rotate server when the team who did not serve whens a point
