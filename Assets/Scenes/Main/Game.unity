@@ -47711,8 +47711,8 @@ MonoBehaviour:
   toucanDefensiveIcon: {fileID: 2800000, guid: 03fec925c819b824a9fa0c8a8ce4abda, type: 3}
   kiwiDisplayName: Kiwi
   kiwiPlayerIcon: {fileID: 2800000, guid: a0bb4a1bcda85ef47af3c32a0cc104a3, type: 3}
-  kiwiOffensiveIcon: {fileID: 2800000, guid: 6c0789d8a65367f4481e4c980f3a0a93, type: 3}
-  kiwiDefensiveIcon: {fileID: 2800000, guid: d2f9cf5e2f5823d4ebc536bb92dd5a66, type: 3}
+  kiwiOffensiveIcon: {fileID: 2800000, guid: 3ef13db8c4563484bba6c89bc82c1366, type: 3}
+  kiwiDefensiveIcon: {fileID: 2800000, guid: 73df00bf92bb9a744a057dd8d19b8a06, type: 3}
   chickenDisplayName: Chicken
   chickenPlayerIcon: {fileID: 2800000, guid: d62dbaeaa8cc0e4459786c4c17f1a13e, type: 3}
   chickenOffensiveIcon: {fileID: 2800000, guid: 2843717f86f904d4eb4ad8d9ef226b08, type: 3}
