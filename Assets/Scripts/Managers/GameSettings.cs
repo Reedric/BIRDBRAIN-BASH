@@ -5,15 +5,16 @@ public class GameSettings : MonoBehaviour
 {
     public static GameSettings Instance;
 
-    public int PointsPerSet = 2;
+    public int PointsPerSet = 25;
     public int BestOfSets = 3;
-    public int FinalSetPoints = 1;
+    public int FinalSetPoints = 15;
 
     public enum BotDifficulty
     {
         Easy = 0,
         Medium = 1,
-        Hard = 2
+        Hard = 2,
+        Impossible = 3
     }
 
     public BotDifficulty CurrentBotDifficulty = BotDifficulty.Easy;

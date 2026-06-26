@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 850810505}
   - component: {fileID: 850810504}
   - component: {fileID: 850810506}
+  - component: {fileID: 850810507}
   m_Layer: 5
   m_Name: SettingsScreen
   m_TagString: Untagged
@@ -183,10 +184,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74c8381e127f91248b8b972632cdfc2a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _pps: 2
+  PointsPerSet: 2
   MaxPPS: 25
-  _bestOfSets: 3
+  BestOfSets: 3
   MaxBestOfSets: 7
+  FinalSetPoints: 1
+  MaxFinalSetPoints: 25
+--- !u!114 &850810507
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 850810503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ecab92aca20aebe4594ab8bec59ad7e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uiDocument: {fileID: 850810504}
+  cursorTexture: {fileID: 2800000, guid: a94ca28e66f88034687a5117a321165b, type: 3}
+  cursorSize: {x: 32, y: 32}
+  speed: 1200
+  onSelect:
+    m_PersistentCalls:
+      m_Calls: []
+  onBack:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &1243774471
 GameObject:
   m_ObjectHideFlags: 0

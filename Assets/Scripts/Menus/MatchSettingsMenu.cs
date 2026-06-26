@@ -52,9 +52,9 @@ public class MatchSettingsMenu : MonoBehaviour
         _goButton = _uiDocument.rootVisualElement.Q<Button>("GoButton");
 
         // Points per set UI elements
-        _pointsPerSetArrowLeft = _uiDocument.rootVisualElement.Q<Button>("PPSArrowLeft");
-        _pointsPerSetArrowRight = _uiDocument.rootVisualElement.Q<Button>("PPSArrowRight");
-        _pointsPerSetText = _uiDocument.rootVisualElement.Q<Label>("PPSText");
+        _pointsPerSetArrowLeft = _uiDocument.rootVisualElement.Q<Button>("PointsPerSetArrowLeft");
+        _pointsPerSetArrowRight = _uiDocument.rootVisualElement.Q<Button>("PointsPerSetArrowRight");
+        _pointsPerSetText = _uiDocument.rootVisualElement.Q<Label>("PointsPerSetText");
 
         // Best of sets UI elements
         _bestOfSetsArrowLeft = _uiDocument.rootVisualElement.Q<Button>("BestOfSetsArrowLeft");
@@ -68,14 +68,14 @@ public class MatchSettingsMenu : MonoBehaviour
 
         // Final set points UI elements
         _finalSetPointsContainer = _uiDocument.rootVisualElement.Q<VisualElement>("FinalSetPoints");
-        _finalSetPointsArrowLeft = _uiDocument.rootVisualElement.Q<Button>("FSPArrowLeft");
-        _finalSetPointsArrowRight = _uiDocument.rootVisualElement.Q<Button>("FSPArrowRight");
-        _finalSetPointsText = _uiDocument.rootVisualElement.Q<Label>("FSPText");
+        _finalSetPointsArrowLeft = _uiDocument.rootVisualElement.Q<Button>("FinalSetPointsArrowLeft");
+        _finalSetPointsArrowRight = _uiDocument.rootVisualElement.Q<Button>("FinalSetPointsArrowRight");
+        _finalSetPointsText = _uiDocument.rootVisualElement.Q<Label>("FinalSetPointsText");
 
         // click event handlers
         _goButton.clicked += OnGoButtonClicked;
-        _pointsPerSetArrowLeft.clicked += OnPPSArrowLeftClicked;
-        _pointsPerSetArrowRight.clicked += OnPPSArrowRightClicked;
+        _pointsPerSetArrowLeft.clicked += OnPointsPerSetArrowLeftClicked;
+        _pointsPerSetArrowRight.clicked += OnPointsPerSetArrowRightClicked;
         _bestOfSetsArrowLeft.clicked += OnBestOfSetsArrowLeftClicked;
         _bestOfSetsArrowRight.clicked += OnBestOfSetsArrowRightClicked;
         _botDifficultyArrowLeft.clicked += OnBotDifficultyArrowLeftClicked;
@@ -84,7 +84,7 @@ public class MatchSettingsMenu : MonoBehaviour
         _finalSetPointsArrowRight.clicked += OnFinalSetPointsArrowRightClicked;
 
         // Initialize displays
-        UpdatePPSDisplay();
+        UpdatePointsPerSetDisplay();
         UpdateBestOfSetsDisplay();
         UpdateBotDifficultyDisplay();
         UpdateFinalSetPointsDisplay();
@@ -100,28 +100,28 @@ public class MatchSettingsMenu : MonoBehaviour
         gs.CurrentBotDifficulty = (GameSettings.BotDifficulty)(int)_currentBotDifficulty;
 
         Debug.Log($"Starting match with {PointsPerSet} points per set and best of {BestOfSets} sets.");
-        SceneManager.LoadScene("Game");
+        SceneManager.LoadScene("CharSelect");
     }
 
     // Points per set click handlers -------------------------------------------------------------
-    private void OnPPSArrowLeftClicked()
+    private void OnPointsPerSetArrowLeftClicked()
     {
         if (PointsPerSet > 1)
         {
             PointsPerSet--;
-            UpdatePPSDisplay();
+            UpdatePointsPerSetDisplay();
         }
     }
 
-    private void OnPPSArrowRightClicked()
+    private void OnPointsPerSetArrowRightClicked()
     {
         if (PointsPerSet < MaxPPS) {
             PointsPerSet++;
-            UpdatePPSDisplay();
+            UpdatePointsPerSetDisplay();
         }
     }
 
-    private void UpdatePPSDisplay()
+    private void UpdatePointsPerSetDisplay()
     {
         _pointsPerSetText.text = PointsPerSet.ToString();
     }
@@ -131,7 +131,7 @@ public class MatchSettingsMenu : MonoBehaviour
     {
         if (BestOfSets > 1)
         {
-            BestOfSets--;
+            BestOfSets -= 2;
             UpdateBestOfSetsDisplay();
             _finalSetPointsContainer.visible = true;
         }
@@ -141,7 +141,7 @@ public class MatchSettingsMenu : MonoBehaviour
     {
         if (BestOfSets < MaxBestOfSets)
         {
-            BestOfSets++;
+            BestOfSets += 2;
             UpdateBestOfSetsDisplay();
         }
 
@@ -181,13 +181,13 @@ public class MatchSettingsMenu : MonoBehaviour
     // Want to have the difficuties cycle
     private void OnBotDifficultyArrowLeftClicked()
     {
-        _currentBotDifficulty = (BotDifficulty)(((int)_currentBotDifficulty - 1 + 3) % 3);
+        _currentBotDifficulty = (BotDifficulty)(((int)_currentBotDifficulty - 1 + 4) % 4);
         UpdateBotDifficultyDisplay();
     }
 
     private void OnBotDifficultyArrowRightClicked()
     {
-        _currentBotDifficulty = (BotDifficulty)(((int)_currentBotDifficulty + 1) % 3);
+        _currentBotDifficulty = (BotDifficulty)(((int)_currentBotDifficulty + 1) % 4);
         UpdateBotDifficultyDisplay();
     }
 
@@ -200,13 +200,15 @@ public class MatchSettingsMenu : MonoBehaviour
     {
         Easy,
         Medium,
-        Hard
+        Hard,
+        Impossible
     }
 
     private readonly Dictionary<BotDifficulty, string> _botDifficultyLookup = new()
     {
         { BotDifficulty.Easy, "Easy" },
         { BotDifficulty.Medium, "Medium" },
-        { BotDifficulty.Hard, "Hard" }
+        { BotDifficulty.Hard, "Hard" },
+        {BotDifficulty.Impossible, "Impossible"}
     };
 }

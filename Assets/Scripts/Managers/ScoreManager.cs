@@ -125,6 +125,10 @@ public class ScoreManager : MonoBehaviour
         // Set the scores to 0, the sets to 0, right to serve, and the ball is in play
         ResetMatch();
         LeftScored.Invoke();
+
+        if(GameSettings.Instance != null) {
+            Debug.Log("Gamesettings loaded.");
+        }
     }
 
     // Checking to see if the ball hits the court on either side
