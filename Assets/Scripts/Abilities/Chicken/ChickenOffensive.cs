@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -7,41 +6,24 @@ using UnityEngine.InputSystem;
 public class ChickenOffensive : BirdAbility
 {
     [Header("Scrambled Eggs Ability")]
-
     public GameObject eggSplashPrefab;   //Assign egg splat UI prefab
     public Canvas mainCanvas;            //Single canvas that covers whole screen
     public float displayTime = 4f;       //How long the splat stays
-    public float cooldown = 15f;         //Cooldown for ability
-    private bool isAbilityReady = true;
     private BallInteract ballInteract;
-    private PlayerInput playerInput;
-    public Animator animator; // Assign in inspector
+    public Animator animator;            //Assign in inspector
 
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         ballInteract = GetComponent<BallInteract>();
-        playerInput = GetComponent<PlayerInput>();
         mainCanvas = GameObject.Find("Canvas").GetComponent<Canvas>();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (playerInput.actions.FindAction("Offensive Ability").WasCompletedThisFrame() && isAbilityReady
-            && CanUseAbilities() && PointInProgress())
-        {
-            ActivateAbility();
-        }
-    }
-
-    private void ActivateAbility()
+    protected override bool Activate()
     {
         if (eggSplashPrefab == null || mainCanvas == null)
         {
             Debug.LogWarning("ChickenOffensive missing prefab or opponent canvas!");
-            return;
+            return false;
         }
 
         //spawn the egg splat on the opponents side
@@ -58,7 +40,7 @@ public class ChickenOffensive : BirdAbility
         rt.localRotation = Quaternion.Euler(0, 0, Random.Range(0f, 360f));
 
         int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         // Play animation
         if (animator != null)
@@ -67,17 +49,10 @@ public class ChickenOffensive : BirdAbility
         // Play sound effect using AudioManager
         AudioManager.PlayBirdSound(BirdType.CHICKEN, SoundType.OFFENSIVE, 1.0f);
 
-        //Destroy splash after displayTime
+        // Destroy splash after displayTime
         Destroy(splash, displayTime);
-
-        //Start cooldown
-        StartCoroutine(CooldownRoutine());
-    }
-
-    private IEnumerator CooldownRoutine()
-    {
-        isAbilityReady = false; 
-        yield return new WaitForSeconds(cooldown);
-        isAbilityReady = true;
+        
+        // Successfully activated ability
+        return true;
     }
 }

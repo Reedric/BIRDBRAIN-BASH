@@ -548,7 +548,7 @@ public class AIBehavior : MonoBehaviour
     // Bumping the ball
     private void BumpBall()
     {
-        Debug.Log(grounded);
+        // Debug.Log(grounded);
         // Ensure animator is assigned
         if (animator == null)
         {
@@ -564,7 +564,7 @@ public class AIBehavior : MonoBehaviour
             Debug.Log("Had to reassign animator in BumpBall: " + (animator != null ? "SUCCESS" : "FAILED"));
         }
         
-        Debug.Log("BumpBall called! Animator is: " + (animator != null ? "assigned" : "NULL"));
+        // Debug.Log("BumpBall called! Animator is: " + (animator != null ? "assigned" : "NULL"));
         
         // Set bump to location to front middle of whatever side of the court is bumping
         bumpToLocation = new Vector3(2f, 0f, 0f);
@@ -596,7 +596,7 @@ public class AIBehavior : MonoBehaviour
         // Trigger bump animation
         if (animator != null)
         {
-            Debug.Log("Setting Bump trigger!");
+            // Debug.Log("Setting Bump trigger!");
             animator.SetTrigger("Bump");
         }
     }
@@ -844,8 +844,8 @@ public class AIBehavior : MonoBehaviour
 
     public IEnumerator BuffTimer(int increase, int time)
     {
-        Debug.Log("BUFFING...");
-        Debug.Log("ORIGINAL = " + maxGroundSpeed);
+        // Debug.Log("BUFFING...");
+        // Debug.Log("ORIGINAL = " + maxGroundSpeed);
         
         float originalMaxGroundSpeed = maxGroundSpeed;
         float originalMaxAirSpeed = maxAirSpeed;
@@ -853,7 +853,7 @@ public class AIBehavior : MonoBehaviour
         maxGroundSpeed += increase;
         maxAirSpeed += increase;
 
-        Debug.Log("NEW = "+ maxGroundSpeed);
+        // Debug.Log("NEW = "+ maxGroundSpeed);
 
         yield return new WaitForSeconds(time);
 

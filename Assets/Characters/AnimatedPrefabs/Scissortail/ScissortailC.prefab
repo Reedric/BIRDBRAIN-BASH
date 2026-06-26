@@ -1240,6 +1240,9 @@ GameObject:
   - component: {fileID: 6779100964335160129}
   - component: {fileID: 3006947118362268374}
   - component: {fileID: 7931116230671046414}
+  - component: {fileID: 4616945022608976977}
+  - component: {fileID: -4869133258838623927}
+  - component: {fileID: -1584234026320162053}
   m_Layer: 0
   m_Name: ScissortailC
   m_TagString: Player
@@ -6298,6 +6301,49 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   readyIndicator: {fileID: 0}
+--- !u!114 &4616945022608976977
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4400198925037795630}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f696424cb7ddabc499aa22ca4e736c88, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilitySlot: 1
+  cooldownTime: 17
+  lineUptime: 5
+  lineWidth: 0.5
+  threshold: 1
+  lineMaterial: {fileID: 0}
+--- !u!114 &-4869133258838623927
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4400198925037795630}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d8776b00f5834d4f9f26b44f0a3eae8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &-1584234026320162053
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4400198925037795630}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5218fa23fafadc54d807b4f114cfd911, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilityController: {fileID: -4869133258838623927}
 --- !u!1 &4462691033990733748
 GameObject:
   m_ObjectHideFlags: 0

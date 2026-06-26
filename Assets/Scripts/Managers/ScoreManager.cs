@@ -140,7 +140,7 @@ public class ScoreManager : MonoBehaviour
             side2Score += 1;
             side2ScoreUI.text = side2Score.ToString();
             inPlay = false;
-            Debug.Log("side 2 scored! points: " + side2Score);
+            // Debug.Log("side 2 scored! points: " + side2Score);
             RightScored.Invoke();
             StartCoroutine(PlaySounds(false));
             CheckWinSet(false);
@@ -151,7 +151,7 @@ public class ScoreManager : MonoBehaviour
             side1Score += 1;
             side1ScoreUI.text = side1Score.ToString();
             inPlay = false;
-            Debug.Log("side 1 scored! points: " + side1Score);
+            // Debug.Log("side 1 scored! points: " + side1Score);
             LeftScored.Invoke();
             StartCoroutine(PlaySounds(true));
             CheckWinSet(true);
@@ -183,7 +183,7 @@ public class ScoreManager : MonoBehaviour
                 side1ScoreUI.text = side1Score.ToString();
                 inPlay = false;
                 lastPhysicalTouch = null;
-                Debug.Log("Out! side 1 scored! points: " + side1Score);
+                // Debug.Log("Out! side 1 scored! points: " + side1Score);
                 StartCoroutine(PlaySounds(true));
                 CheckWinSet(true);
             }
@@ -193,7 +193,7 @@ public class ScoreManager : MonoBehaviour
                 side2ScoreUI.text = side2Score.ToString();
                 inPlay = false;
                 lastPhysicalTouch = null;
-                Debug.Log("Out! side 2 scored! points: " + side2Score);
+                // Debug.Log("Out! side 2 scored! points: " + side2Score);
                 StartCoroutine(PlaySounds(false));
                 CheckWinSet(false);
             }

@@ -8,7 +8,7 @@ using UnityEngine.InputSystem;
 /// Slow Falling - When holding jump at the apex of a jump, Chicken briefly hovers
 /// then slow falls down to the ground (similar to Peach in Super Mario 3D World) (passive)
 /// </summary>
-public class ChickenDefensive : BirdAbility
+public class ChickenDefensive : PassiveAbility
 {
     [Header("Chicken Defensive Settings")]
     [SerializeField] private float slowFallMultiplier = 0.15f; // How much to slow the fall

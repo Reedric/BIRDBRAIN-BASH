@@ -1,6 +1,4 @@
-using System.Collections;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(BallInteract))]
 
@@ -8,14 +6,9 @@ using UnityEngine.InputSystem;
 /// Fire the Lazar - Kiwi fires a laser beam from its eyes to hit the ball, 
 /// which automatically counts as the next action required for the ball in the rally. 
 /// If spiking or blocking, increases the ball’s speed.
-/// 
-/// TODO: Find a way to temporarily increase ball speed
 /// </summary>
 public class KiwiOffensive : BirdAbility
 {
-    [SerializeField] private float cooldown = 15f;
-    private bool onCooldown = false;
-
     // Positions for the laser to originate from (could be empty GameObjects placed at the eyes in the Unity editor)
     [SerializeField] private Transform leftEyePosition;
     [SerializeField] private Transform rightEyePosition;
@@ -32,30 +25,26 @@ public class KiwiOffensive : BirdAbility
         ballInteract = GetComponent<BallInteract>();
     }
 
-    public void OnOffensiveAbility(InputValue value)
+    override protected bool Activate()
     {
-        StartCoroutine(FireTheLazar());
+        return FireTheLazar();
     }
 
-    private IEnumerator FireTheLazar()
+    private bool FireTheLazar()
     {
-        if (onCooldown || !CanUseAbilities() || !PointInProgress() || !HasPossesion() || IsOwnTeamServing()) yield break;  // add !HasPossesion()
-        onCooldown = true;
+        if (!HasPossesion() || IsOwnTeamServing() || gameObject.Equals(GameManager.Instance.lastHit)) return false;  // add !HasPossesion()
 
         // Play offensive sound
         AudioManager.PlayBirdSound(BirdType.KIWI, SoundType.OFFENSIVE, 1.0f);
-
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
 
         Vector3 ballPosition = BallManager.Instance.gameObject.GetComponent<Transform>().position;
         GameObject leftLazer = CreateLazer(ballPosition, leftEyePosition.position);
         GameObject rightLazer = CreateLazer(ballPosition, rightEyePosition.position);
 
-        switch (gameManager.gameState)
+        switch (GameManager.Instance.gameState)
         {
             case GameManager.GameState.Served:
-                if (HasPossesion()) ballInteract.BumpBall(); // technically you han hit over on the serve, but whatevs
+                if (HasPossesion()) ballInteract.BumpBall(); // technically you can hit over on the serve, but whatevs
                 break;
 
             case GameManager.GameState.Bumped:
@@ -63,17 +52,20 @@ public class KiwiOffensive : BirdAbility
                 break;
 
             case GameManager.GameState.Set:
-                if (HasPossesion()) {
+                if (HasPossesion())
+                {
                     BallManager.Instance.incSpikeSpeed();
                     ballInteract.SpikeBall();
                 }
                 break;
 
             case GameManager.GameState.Spiked:
-                if (HasPossesion()) {
+                if (HasPossesion() && IsBallCloseToNet())
+                {
                     BallManager.Instance.incSpikeSpeed();
                     ballInteract.BlockBall();
                 }
+                else if (HasPossesion()) ballInteract.BumpBall();
                 break;
                 
             default: // We're on defense
@@ -83,8 +75,11 @@ public class KiwiOffensive : BirdAbility
         Destroy(leftLazer, lazerDuration);
         Destroy(rightLazer, lazerDuration);
 
-        yield return new WaitForSeconds(cooldown);
-        onCooldown = false;
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
+
+        // Successfully activated ability
+        return true;
     }
 
     private bool IsOwnTeamServing()
@@ -92,10 +87,10 @@ public class KiwiOffensive : BirdAbility
         bool onLeft = transform.position.x < 0;
 
         // Block during point start (serve hasn't launched yet)
-        if (gameManager.gameState == GameManager.GameState.PointStart) return true;
+        if (GameManager.Instance.gameState == GameManager.GameState.PointStart) return true;
 
         // Block if ball was served by your own team
-        if (gameManager.gameState == GameManager.GameState.Served && gameManager.leftAttack == onLeft) return true;
+        if (GameManager.Instance.gameState == GameManager.GameState.Served && GameManager.Instance.leftAttack == onLeft) return true;
 
         return false;
     }
@@ -120,5 +115,10 @@ public class KiwiOffensive : BirdAbility
         bool onLeft = transform.position.x < 0;
         Vector3 ballPosition = BallManager.Instance.gameObject.GetComponent<Transform>().position;
         return onLeft == (ballPosition.x < 0);
+    }
+
+    private bool IsBallCloseToNet()
+    {
+        return Mathf.Abs(BallManager.Instance.transform.position.x) < 1.5f;
     }
 }

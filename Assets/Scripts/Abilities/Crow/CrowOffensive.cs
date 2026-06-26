@@ -4,41 +4,19 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(PlayerInput))]
-public class CrowOffensive : BirdAbility
-{
-    public float cooldown = 10f;
+public class CrowOffensive : BirdAbility {
     public float timeEnemiesAreImpacted = 3f;
     public Animator animator; // Assign in inspector
 
-    private bool onCooldown = false;
-    private PlayerInput input;
+    private BallInteract ballInteract;
 
     void Start()
     {
-        input = GetComponent<PlayerInput>();
-        _onLeft = GetComponent<BallInteract>().onLeft;
+        ballInteract = GetComponent<BallInteract>();
     }
 
-    void Update()
+    protected override bool Activate()
     {
-        if (!onCooldown && input.actions.FindAction("Offensive Ability").WasPressedThisFrame()
-            && CanUseAbilities() && PointInProgress())
-        {
-            CrowAbility();
-        }
-    }
-
-    public void CrowAbility()
-    {
-        if (onCooldown)
-        {
-            Debug.Log("The crow is on cooldown and cannot activate its ability");
-            return;
-        }
-
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
-
         // Play animation
         if (animator != null)
             animator.SetTrigger("OffensiveAbility");
@@ -47,16 +25,18 @@ public class CrowOffensive : BirdAbility
         AudioManager.PlayBirdSound(BirdType.CROW, SoundType.OFFENSIVE, 1.0f);
 
         SilenceEnemies();
-        StartCoroutine(Cooldown());
+
+        // Successfully activated ability
+        return true;
     }
 
-    private void SilenceEnemies()
+    void SilenceEnemies()
     {
-        opponents.Clear();
-
+        // Determine which birds are on other team
+        List<GameObject> opponents = new List<GameObject>();
         GameManager gameManager = GameManager.Instance;
 
-        if (_onLeft)
+        if (ballInteract.onLeft)
         {
             opponents.Add(gameManager.rightPlayer1);
             opponents.Add(gameManager.rightPlayer2);
@@ -67,13 +47,12 @@ public class CrowOffensive : BirdAbility
             opponents.Add(gameManager.leftPlayer2);
         }
 
-        // Opponents are always on the opposite side of the caster
-        bool opponentIsOnLeft = !_onLeft;
+        // Opponents are always on the other side of the crow
+        bool opponentIsOnLeft = !ballInteract.onLeft;
 
+        // Disable all the enemies abilities
         foreach (GameObject opponent in opponents)
         {
-            if (opponent == null) continue;
-
             // Ostrich is immune to silence
             BallInteract birdPlayer = opponent.GetComponent<BallInteract>();
             BirdType birdType = birdPlayer != null
@@ -91,12 +70,8 @@ public class CrowOffensive : BirdAbility
                 opponentIsOnLeft
             );
         }
-    }
 
-    private IEnumerator Cooldown()
-    {
-        onCooldown = true;
-        yield return new WaitForSeconds(cooldown);
-        onCooldown = false;
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
     }
 }

@@ -196,7 +196,7 @@ public class MultiplayerManager : MonoBehaviour
             // Increment player count
             playerCount++;
 
-            Debug.Log("Made player");
+            // Debug.Log("Made player");
         }
 
         // Instantiate readied up for score manager

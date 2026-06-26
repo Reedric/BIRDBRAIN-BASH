@@ -4,33 +4,29 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(PlayerInput))]
+[RequireComponent(typeof(BallInteract))]
 public class EagleOffensive : BirdAbility
 {
     [Header("Ability Settings")]
     public float stunDuration = 2f;
-    public float cooldown = 10f;
     public Animator animator; // Assign in inspector
 
-    private bool onCooldown = false;
     private PlayerInput input;
+    private bool _onLeft;
+    private List<GameObject> opponents = new();
 
-    private void Awake()
+    private void Start() // Changed this to Start from Awake as setting _onLeft in Awake caused a race condition
     {
         input = GetComponent<PlayerInput>();
         _onLeft = GetComponent<BallInteract>().onLeft;
     }
 
-    private void Update()
+    override protected bool Activate()
     {
-        if (onCooldown) return;
-        if (!CanUseAbilities()) return;
-        if (!PointInProgress()) return;
+        StunOpponents();
 
-        if (input.actions.FindAction("Offensive Ability").WasPressedThisFrame())
-        {
-            StunOpponents();
-            StartCoroutine(CooldownRoutine());
-        }
+        // Successfully activated ability
+        return true;
     }
 
     private void StunOpponents()
@@ -38,9 +34,6 @@ public class EagleOffensive : BirdAbility
         GameManager gameManager = GameManager.Instance;
 
         opponents.Clear();
-
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, cooldown);
 
         // Trigger offensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
@@ -51,7 +44,7 @@ public class EagleOffensive : BirdAbility
 
         // Play sound effect using AudioManager
         AudioManager.PlayBirdSound(BirdType.EAGLE, SoundType.OFFENSIVE, 1.0f);
-
+        Debug.LogFormat("On Left: {0}", _onLeft);
         if (_onLeft)
         {
             opponents.Add(gameManager.rightPlayer1);
@@ -87,12 +80,8 @@ public class EagleOffensive : BirdAbility
                 opponentIsOnLeft
             );
         }
-    }
 
-    private IEnumerator CooldownRoutine()
-    {
-        onCooldown = true;
-        yield return new WaitForSeconds(cooldown);
-        onCooldown = false;
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
     }
 }

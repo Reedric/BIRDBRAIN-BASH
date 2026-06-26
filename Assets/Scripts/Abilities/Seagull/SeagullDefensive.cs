@@ -9,89 +9,26 @@ public class SeagullDefensive : BirdAbility
 {
     [Header("Mine Mine Mine Ability")]
     public float dashSpeed = 100f; //how fast the dash is
-    public float cooldown = 15f; //cooldown in seconds
     public float shoveForce = 18f; //how much the seagull pushes others out of the way
     public float shoveRadius = 1.5f; //radius to shove objects around
-    [HideInInspector] private bool isAbilityReady = true;
     private Rigidbody rb;
-    private PlayerInput playerInput; // Input for this specific player
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        playerInput = GetComponent<PlayerInput>();
         rb = GetComponent<Rigidbody>();
-    }
-
-    public void ActivateAbility()
-    {
-        if (!isAbilityReady)
-        {
-            return;
-        }
-        if (gameManager.gameState == GameManager.GameState.PointStart && gameManager.server == gameObject)
-        {
-            return;
-        }
-        if (gameManager.gameState == GameManager.GameState.Served && gameManager.server == gameObject)
-        {
-            return;
-        }
-        if (!CanUseAbilities())
-        {
-            return;
-        }
-        if (CanDashToBall())
-        {
-            StartCoroutine(DashToBall());
-        }
-    }
-
-    private bool CanDashToBall()
-    {
-        // Check if ball is on the player's side
-        bool onLeft = GetComponent<BallInteract>().onLeft;
-        float ballX = BallManager.Instance.gameObject.transform.position.x;
-        bool ballOnMySide = (onLeft && ballX < 0) || (!onLeft && ballX > 0);
-
-        if (!ballOnMySide)
-        {
-            return false;
-        }
-
-        // Allow dashing during any active play state where the ball is in motion
-        GameManager.GameState state = GameManager.Instance.gameState;
-        bool validState = state == GameManager.GameState.Spiked ||
-                        state == GameManager.GameState.Blocked ||
-                        state == GameManager.GameState.Bumped ||
-                        state == GameManager.GameState.Set;
-
-        return validState;
     }
     
     private IEnumerator DashToBall()
     {
-        isAbilityReady = false;
-
         // Play defensive sound
         AudioManager.PlayBirdSound(BirdType.SEAGULL, SoundType.DEFENSIVE, 1.0f);
-
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, cooldown);
 
         // Trigger defensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract.animator != null)
         {
-            myBallInteract.animator.SetTrigger("DefensiveAbility");
-        }
-
-        //Check if ball is on the player's side
-        bool isBallOnSameSide = Mathf.Sign(BallManager.Instance.gameObject.transform.position.x) == Mathf.Sign(transform.position.x);
-        if (!isBallOnSameSide)
-        {
-            isAbilityReady = true; //ability remains ready
-            yield break;
+            // myBallInteract.animator.SetTrigger("DefensiveAbility"); // Commented out as bumping and setting will call the animators
         }
         
         float fixedY = 0.5f;
@@ -137,14 +74,15 @@ public class SeagullDefensive : BirdAbility
         //Ensure seagull is exactly on the landing spot at a fixed Y
         rb.MovePosition(new Vector3(BallManager.Instance.goingTo.x, fixedY, BallManager.Instance.goingTo.z));
 
-        BallInteract ballInteract = GetComponent<BallInteract>();
-        ballInteract.BumpBall();
+        while (Vector3.Distance(BallManager.Instance.transform.position, transform.position) > myBallInteract.interactionRadius) yield return null;
+        if (GameManager.Instance.gameState == GameManager.GameState.Bumped) myBallInteract.SetBall();
+        else myBallInteract.BumpBall();
 
         //Unfreeze Y movments
         rb.constraints = RigidbodyConstraints.FreezeRotation;
 
-        //Start cooldown
-        StartCoroutine(CooldownRoutine());
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
     }
 
     private void ShoveNearbyObjects()
@@ -173,21 +111,11 @@ public class SeagullDefensive : BirdAbility
         }
     }
 
-    //Update is called once per frame
-    void Update()
+    override protected bool Activate()
     {
-        if (playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame()) //for testing can change later
-        {
-            ActivateAbility();
-        }
-    }
+        StartCoroutine(DashToBall());
 
-    private IEnumerator CooldownRoutine()
-    {
-        // Wait for the cooldown time
-        yield return new WaitForSeconds(cooldown);
-
-        // After waiting, the ability is ready again
-        isAbilityReady = true;
+        // Ability successfully activated
+        return true;
     }
 }
