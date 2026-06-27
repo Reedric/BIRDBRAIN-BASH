@@ -1,7 +1,7 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
-using System.Collections.Generic;
 
 // TODO: Team Select
 // Also TODO: Find some way to get the settings to the ScoreManager
