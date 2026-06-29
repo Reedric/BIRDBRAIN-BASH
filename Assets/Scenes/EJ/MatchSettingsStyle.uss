@@ -24,3 +24,15 @@
     transition-delay: 0s;
     scale: 1.7 1.7;
 }
+
+.gamepad-selected {
+    scale: 1.75 1.15;
+    border-top-width: 3px;
+    border-right-width: 3px;
+    border-bottom-width: 3px;
+    border-left-width: 3px;
+    border-left-color: rgb(255, 255, 255);
+    border-right-color: rgb(255, 255, 255);
+    border-top-color: rgb(255, 255, 255);
+    border-bottom-color: rgb(255, 255, 255);
+}

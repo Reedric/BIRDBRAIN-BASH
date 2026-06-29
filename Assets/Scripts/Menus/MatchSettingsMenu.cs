@@ -133,8 +133,8 @@ public class MatchSettingsMenu : MonoBehaviour
         {
             BestOfSets -= 2;
             UpdateBestOfSetsDisplay();
-            _finalSetPointsContainer.visible = true;
         }
+        if (BestOfSets < 2) _finalSetPointsContainer.visible = false;
     }
 
     private void OnBestOfSetsArrowRightClicked()
@@ -143,9 +143,9 @@ public class MatchSettingsMenu : MonoBehaviour
         {
             BestOfSets += 2;
             UpdateBestOfSetsDisplay();
+            _finalSetPointsContainer.visible = true;
         }
 
-        if (BestOfSets < 2) _finalSetPointsContainer.visible = false;
     }
 
     private void UpdateBestOfSetsDisplay()
@@ -178,7 +178,6 @@ public class MatchSettingsMenu : MonoBehaviour
     }
 
     // Bot difficulty click handlers -------------------------------------------------------------
-    // Want to have the difficuties cycle
     private void OnBotDifficultyArrowLeftClicked()
     {
         _currentBotDifficulty = (BotDifficulty)(((int)_currentBotDifficulty - 1 + 4) % 4);
