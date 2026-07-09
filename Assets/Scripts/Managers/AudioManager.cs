@@ -86,6 +86,19 @@ public class AudioManager : MonoBehaviour
 
     [Header("Background Music")]
     [SerializeField] private AudioClip[] backgroundTracks;
+    
+    [Header("Game Music (plays after countdown)")]
+    [SerializeField] private AudioClip[] gameMusicTracks;
+
+    [Header("Intro / Countdown SFX")]
+    [Tooltip("Slots for countdown SFX: index 0 = '3', 1 = '2', 2 = '1', 3 = 'GO'")]
+    [SerializeField] private AudioClip[] countdownSfx = new AudioClip[4];
+
+    [Header("Behavior")]
+    [Tooltip("When true the background music will play automatically in Awake. Set false to delay until the intro/GO event.")]
+    [SerializeField] private bool playBackgroundOnAwake = true;
+    [Tooltip("Set to true for game scenes. When true, background music will NOT play on awake (only after countdown finishes). When false, background music plays normally on menus.")]
+    [SerializeField] private bool isGameScene = false;
 
     [Header("Pause Music")]
     [SerializeField] private AudioClip pauseTrack;
@@ -93,22 +106,31 @@ public class AudioManager : MonoBehaviour
     private static AudioManager instance;
     private AudioSource audioSource;
     private AudioSource backgroundAudioSource;
-
     void Awake()
     {
         // Assign instance
         instance = this;
+        // assign audio source (required for PlayOneShot calls)
+        audioSource = instance.GetComponent<AudioSource>();
         // Create background audio source
         backgroundAudioSource = instance.gameObject.AddComponent<AudioSource>();
         backgroundAudioSource.loop = true;
-        PlayBackgroundTrack(backgroundTracks[0]);
+        // Only play on awake if explicitly allowed
+        // For menus: play background music
+        // For game scenes: don't play anything (game music plays after countdown)
+        if (playBackgroundOnAwake && backgroundTracks != null && backgroundTracks.Length > 0)
+        {
+            if (!isGameScene)
+            {
+                PlayBackgroundTrack(backgroundTracks[0]);
+            }
+        }
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        // Assign audio source
-        audioSource = instance.GetComponent<AudioSource>();
+        // audioSource already assigned in Awake
     }
 
     void Update()
@@ -214,6 +236,20 @@ public class AudioManager : MonoBehaviour
         }
     }
 
+    // Play game-specific music (called after countdown finishes)
+    public static void PlayGameMusic()
+    {
+        if (instance.gameMusicTracks != null && instance.gameMusicTracks.Length > 0)
+        {
+            PlayBackgroundTrack(instance.gameMusicTracks[0]);
+        }
+        else if (instance.backgroundTracks != null && instance.backgroundTracks.Length > 0)
+        {
+            // Fallback to regular background if no game music defined
+            PlayBackgroundTrack(instance.backgroundTracks[0]);
+        }
+    }
+
     // Play a scoring sound when a point is scored
     public static void PlayScoringSound(float volume = 1.0f)
     {
@@ -222,6 +258,17 @@ public class AudioManager : MonoBehaviour
             int randomIndex = Random.Range(0, instance.scoringSounds.Length);
             instance.audioSource.PlayOneShot(instance.scoringSounds[randomIndex], volume);
         }
+    }
+
+    // Play a countdown SFX by index (0..3)
+    public static void PlayCountdownSfx(int index, float volume = 1.0f)
+    {
+        if (instance == null || instance.countdownSfx == null || index < 0 || index >= instance.countdownSfx.Length)
+            return;
+
+        AudioClip clip = instance.countdownSfx[index];
+        if (clip != null && instance.audioSource != null)
+            instance.audioSource.PlayOneShot(clip, volume);
     }
 
     // Overload: Play scoring sound by index + volume
@@ -320,5 +367,12 @@ public class AudioManager : MonoBehaviour
     {
         if (instance.debuffEndSound != null)
             instance.audioSource.PlayOneShot(instance.debuffEndSound, volume);
+    }
+
+    // Set whether this is a game scene (stops background music on awake if true)
+    public static void SetIsGameScene(bool value)
+    {
+        if (instance != null)
+            instance.isGameScene = value;
     }
 }

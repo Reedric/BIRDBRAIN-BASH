@@ -434,6 +434,7 @@ public class MultiplayerManager : MonoBehaviour
         // Get the ai component and assign the fields
         AIBehavior aIBehavior = ai.GetComponent<AIBehavior>();
         aIBehavior.onLeft = playerCount < 2 ? true : false;
+        aIBehavior.playerID = playerCount;
 
         // Determine AI difficulty based on player count and slot:
         // - Demo mode (0 humans)  -> all 4 AIs are Hard (screensaver spectacle)

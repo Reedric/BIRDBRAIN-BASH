@@ -195,9 +195,13 @@ public class BallInteract : MonoBehaviour
                         serverMovement.controlMovement(true, true);
                     }
                     // If this player is the one serving and they press the serve button, serve the ball
+                    // Only allow serve if countdown has finished showing "GO"
                     if (GameManager.Instance.server == gameObject && playerInput.actions.FindAction("Offensive Action").WasPressedThisFrame())
                     {
-                        ServeBall();
+                        if (GameManager.IsCountdownComplete())
+                        {
+                            ServeBall();
+                        }
                     }
                     break;
             }
@@ -284,7 +288,7 @@ public class BallInteract : MonoBehaviour
         AudioManager.PlayBallPlayerInteractionSound();
 
         // handle vfx
-        HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, onLeft);
+        HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, playerID);
 
         // Update game manager fields
         GameManager.Instance.gameState = GameManager.GameState.Bumped;
@@ -339,7 +343,7 @@ public class BallInteract : MonoBehaviour
         AudioManager.PlayBallPlayerInteractionSound();
 
         // handle vfx
-        HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, onLeft);
+        HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, playerID);
 
         // Update game manager fields
         GameManager.Instance.gameState = GameManager.GameState.Set;
@@ -388,7 +392,7 @@ public class BallInteract : MonoBehaviour
         AudioManager.PlayBallPlayerInteractionSound();
 
         // handle vfx
-        HitEffects.Instance.PlayEffect(HitEffects.HitType.Spike, onLeft);
+        HitEffects.Instance.PlayEffect(HitEffects.HitType.Spike, playerID);
 
         // Update game manager fields
         GameManager.Instance.gameState = GameManager.GameState.Spiked;
@@ -433,7 +437,7 @@ public class BallInteract : MonoBehaviour
         AudioManager.PlayBallPlayerInteractionSound();
 
         // handle vfx
-        HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, onLeft);
+        HitEffects.Instance.PlayEffect(HitEffects.HitType.BumpSetServe, playerID);
 
         // Update game manager fields
         GameManager.Instance.gameState = GameManager.GameState.Served;
@@ -459,7 +463,7 @@ public class BallInteract : MonoBehaviour
         }
 
         // handle vfx
-        HitEffects.Instance.PlayEffect(HitEffects.HitType.Block, onLeft);
+        HitEffects.Instance.PlayEffect(HitEffects.HitType.Block, playerID);
         
         // If the incoming spike is marked unblockable, only allow block
         // when the spike was NOT from the unblockable owner.

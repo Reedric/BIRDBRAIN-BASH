@@ -10,6 +10,13 @@ public static class EventManager
         scoreListeners.Add(function);
     }
 
+    public static void UnsubscribeScore(Func<bool, bool> function)
+    {
+        if (function == null) return;
+        // Remove first matching listener if present
+        scoreListeners.Remove(function);
+    }
+
     // If the left scores, alerts Score Listeners
     public static void LeftScored()
     {

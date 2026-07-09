@@ -1,15 +1,17 @@
 using UnityEngine;
 
 // Manages VFX particle effects for all ball hit types.
-// TEAM MAPPING:
-//  Team 1 (Blue) = onLeft is TRUE  (left side of court)
-//  Team 2 (Pink) = onLeft is FALSE (right side of court)
+// PLAYER MAPPING:
+//  0 — Blue   (Team 1, first player,  onLeft = true)
+//  1 — Green  (Team 1, second player, onLeft = true)
+//  2 — Pink   (Team 2, first player,  onLeft = false)
+//  3 — Yellow (Team 2, second player, onLeft = false)
 
 public class HitEffects : MonoBehaviour
 {
     public static HitEffects Instance { get; private set; }
 
-    // Hit type enum
+    // ── Hit type ─────────────────────────────────────────────────────────────
 
     public enum HitType
     {
@@ -18,27 +20,29 @@ public class HitEffects : MonoBehaviour
         Block           // Block-specific effect
     }
 
-    // prefabs
+    // ── Prefabs ───────────────────────────────────────────────────────────────
 
-    [Header("Team 1 — Blue (onLeft = true)")]
-    [Tooltip("Shared prefab used for bumps, sets, and serves — Team 1")]
-    public GameObject team1BumpSetServePrefab;
+    [Header("Player 1 — Blue (Team 1)")]
+    public GameObject p1BumpSetServePrefab;
+    public GameObject p1SpikePrefab;
+    public GameObject p1BlockPrefab;
 
-    [Tooltip("Spike effect prefab — Team 1")]
-    public GameObject team1SpikePrefab;
+    [Header("Player 2 — Green (Team 1)")]
+    public GameObject p2BumpSetServePrefab;
+    public GameObject p2SpikePrefab;
+    public GameObject p2BlockPrefab;
 
-    [Tooltip("Block effect prefab — Team 1")]
-    public GameObject team1BlockPrefab;
+    [Header("Player 3 — Pink (Team 2)")]
+    public GameObject p3BumpSetServePrefab;
+    public GameObject p3SpikePrefab;
+    public GameObject p3BlockPrefab;
 
-    [Header("Team 2 — Pink (onLeft = false)")]
-    [Tooltip("Shared prefab used for bumps, sets, and serves — Team 2")]
-    public GameObject team2BumpSetServePrefab;
+    [Header("Player 4 — Yellow (Team 2)")]
+    public GameObject p4BumpSetServePrefab;
+    public GameObject p4SpikePrefab;
+    public GameObject p4BlockPrefab;
 
-    [Tooltip("Spike effect prefab — Team 2")]
-    public GameObject team2SpikePrefab;
-
-    [Tooltip("Block effect prefab — Team 2")]
-    public GameObject team2BlockPrefab;
+    // ── Singleton ─────────────────────────────────────────────────────────────
 
     private void Awake()
     {
@@ -52,20 +56,25 @@ public class HitEffects : MonoBehaviour
         Instance = this;
     }
 
+    // ── Public API ────────────────────────────────────────────────────────────
+
     /// <summary>
     /// Spawns the appropriate particle effect at the ball's current position.
     /// </summary>
     /// <param name="hitType">The type of hit that was performed.</param>
-    /// <param name="onLeft">Pass the hitting object's onLeft field to determine team.</param>
-    public void PlayEffect(HitType hitType, bool onLeft)
+    /// <param name="playerIndex">
+    ///   0 = Blue, 1 = Green, 2 = Pink, 3 = Yellow.
+    ///   Previously this was bool onLeft; Team 1 maps to 0/1, Team 2 maps to 2/3.
+    /// </param>
+    public void PlayEffect(HitType hitType, int playerIndex)
     {
-        GameObject prefab = ResolvePrefab(hitType, onLeft);
+        GameObject prefab = ResolvePrefab(hitType, playerIndex);
 
         if (prefab == null)
         {
             Debug.LogWarningFormat(
-                "HitEffects: No prefab assigned for HitType={0}, Team={1}.",
-                hitType, onLeft ? "1 (Blue)" : "2 (Pink)");
+                "HitEffects: No prefab assigned for HitType={0}, playerIndex={1}.",
+                hitType, playerIndex);
             return;
         }
 
@@ -89,27 +98,41 @@ public class HitEffects : MonoBehaviour
         }
     }
 
-    private GameObject ResolvePrefab(HitType hitType, bool onLeft)
+    // ── Private helpers ───────────────────────────────────────────────────────
+
+    private GameObject ResolvePrefab(HitType hitType, int playerIndex)
     {
-        if (onLeft) // Team 1 — Blue
+        return playerIndex switch
         {
-            return hitType switch
+            0 => hitType switch  // Blue
             {
-                HitType.BumpSetServe => team1BumpSetServePrefab,
-                HitType.Spike        => team1SpikePrefab,
-                HitType.Block        => team1BlockPrefab,
+                HitType.BumpSetServe => p1BumpSetServePrefab,
+                HitType.Spike        => p1SpikePrefab,
+                HitType.Block        => p1BlockPrefab,
                 _                    => null
-            };
-        }
-        else // Team 2 — Pink
-        {
-            return hitType switch
+            },
+            1 => hitType switch  // Green
             {
-                HitType.BumpSetServe => team2BumpSetServePrefab,
-                HitType.Spike        => team2SpikePrefab,
-                HitType.Block        => team2BlockPrefab,
+                HitType.BumpSetServe => p2BumpSetServePrefab,
+                HitType.Spike        => p2SpikePrefab,
+                HitType.Block        => p2BlockPrefab,
                 _                    => null
-            };
-        }
+            },
+            2 => hitType switch  // Pink
+            {
+                HitType.BumpSetServe => p3BumpSetServePrefab,
+                HitType.Spike        => p3SpikePrefab,
+                HitType.Block        => p3BlockPrefab,
+                _                    => null
+            },
+            3 => hitType switch  // Yellow
+            {
+                HitType.BumpSetServe => p4BumpSetServePrefab,
+                HitType.Spike        => p4SpikePrefab,
+                HitType.Block        => p4BlockPrefab,
+                _                    => null
+            },
+            _ => null
+        };
     }
 }
