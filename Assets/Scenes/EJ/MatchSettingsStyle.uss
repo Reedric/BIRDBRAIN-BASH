@@ -1,0 +1,38 @@
+.button {
+}
+
+.button:hover {
+    scale: 1.1 1.1;
+    transition-property: scale;
+    transition-duration: 0.5s;
+    -unity-background-image-tint-color: rgb(255, 0, 0);
+    background-color: rgba(250, 46, 46, 0.94);
+    transition-delay: 0s;
+    transition-timing-function: ease;
+    text-shadow: 0 0 0 rgb(255, 0, 0);
+    border-bottom-width: 40px;
+    border-top-width: 57px;
+}
+
+.buttonarrow {
+}
+
+.buttonarrow:hover {
+    transition-property: scale;
+    transition-duration: 1s;
+    transition-timing-function: ease;
+    transition-delay: 0s;
+    scale: 1.7 1.7;
+}
+
+.gamepad-selected {
+    scale: 1.75 1.15;
+    border-top-width: 3px;
+    border-right-width: 3px;
+    border-bottom-width: 3px;
+    border-left-width: 3px;
+    border-left-color: rgb(255, 255, 255);
+    border-right-color: rgb(255, 255, 255);
+    border-top-color: rgb(255, 255, 255);
+    border-bottom-color: rgb(255, 255, 255);
+}
