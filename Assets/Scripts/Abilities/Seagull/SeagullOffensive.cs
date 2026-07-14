@@ -23,6 +23,11 @@ public class SeagullOffensive : BirdAbility
         GetComponent<CharacterMovement>().controlMovement(true, true);
     }
 
+    void OnDestroy()
+    {
+        EventManager.UnsubscribeScore(OnScore);
+    }
+
     override protected bool Activate()
     {
         DebuffEnemy();

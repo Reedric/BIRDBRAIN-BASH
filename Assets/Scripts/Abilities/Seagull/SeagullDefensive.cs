@@ -26,15 +26,14 @@ public class SeagullDefensive : BirdAbility
 
         // Trigger defensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
-        if (myBallInteract.animator != null)
-        {
-            // myBallInteract.animator.SetTrigger("DefensiveAbility"); // Commented out as bumping and setting will call the animators
-        }
         
         float fixedY = 0.5f;
         
         //Freeze Y so the dash stays level
         rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionY;
+
+        // Save current game state to check if it touched the ground or if teammate got it
+        GameManager.GameState dashState = GameManager.Instance.gameState;
 
         //Always Dash to Ball until break
         while (true)
@@ -53,12 +52,18 @@ public class SeagullDefensive : BirdAbility
             float distance = Vector3.Distance(transform.position, landingPos);
 
             //Once we reached the ball
+            Debug.Log(distance - step);
             if (distance <= step)
             {
                 //Snap to landing position with a slight offset for realistic contact
                 float offset = 0.1f;
                 rb.MovePosition(landingPos - direction * offset);
                 break; //reached the ball
+            }
+            // If the game state changed, stop dashing
+            else if (dashState != GameManager.Instance.gameState)
+            {
+                break;
             }
             else
             {
@@ -71,18 +76,27 @@ public class SeagullDefensive : BirdAbility
             yield return null;
         }
 
-        //Ensure seagull is exactly on the landing spot at a fixed Y
-        rb.MovePosition(new Vector3(BallManager.Instance.goingTo.x, fixedY, BallManager.Instance.goingTo.z));
+        // If the game state did not change, then successfully dashed to ball
+        if (dashState == GameManager.Instance.gameState)
+        {
+            //Ensure seagull is exactly on the landing spot at a fixed Y
+            rb.MovePosition(new Vector3(BallManager.Instance.goingTo.x, fixedY, BallManager.Instance.goingTo.z));
 
-        while (Vector3.Distance(BallManager.Instance.transform.position, transform.position) > myBallInteract.interactionRadius) yield return null;
-        if (GameManager.Instance.gameState == GameManager.GameState.Bumped) myBallInteract.SetBall();
-        else myBallInteract.BumpBall();
+            // while (Vector3.Distance(BallManager.Instance.transform.position, transform.position) > myBallInteract.interactionRadius) yield return null;
+            while (Vector3.Distance(BallManager.Instance.transform.position, transform.position) > myBallInteract.interactionRadius && dashState == GameManager.Instance.gameState)
+            {
+                Debug.Log(Vector3.Distance(BallManager.Instance.transform.position, transform.position));
+                yield return null;
+            }
+            if (GameManager.Instance.gameState == GameManager.GameState.Bumped) myBallInteract.SetBall();
+            else myBallInteract.BumpBall();
+
+            int playerID = GetComponent<BallInteract>().playerID;
+            HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
+        }
 
         //Unfreeze Y movments
         rb.constraints = RigidbodyConstraints.FreezeRotation;
-
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
     }
 
     private void ShoveNearbyObjects()
@@ -115,7 +129,8 @@ public class SeagullDefensive : BirdAbility
     {
         StartCoroutine(DashToBall());
 
-        // Ability successfully activated
-        return true;
+        // If seagull was last one to hit, successfully activated ability
+        if (GameManager.Instance.lastHit == gameObject) return true;
+        else return false;
     }
 }

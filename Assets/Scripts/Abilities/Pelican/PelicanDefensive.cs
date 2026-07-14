@@ -32,6 +32,21 @@ public class PelicanDefensive : BirdAbility
         if (isBallEaten)
         {
             BallManager.Instance.gameObject.transform.position = transform.position + new Vector3(0, 3f, 0);
+
+            // If serve, allow pelican to move along back line of court
+            if (stateWhenEaten == GameManager.GameState.PointStart)
+            {
+                GetComponent<CharacterMovement>().controlMovement(true, false);
+
+                if (transform.position.x < 0)
+                {
+                    transform.position = new Vector3(-10, transform.position.y, Mathf.Clamp(transform.position.z, -4f, 4f));
+                }
+                else
+                {
+                    transform.position = new Vector3(10, transform.position.y, Mathf.Clamp(transform.position.z, -4f, 4f));
+                }
+            }
         }
     }
 
@@ -98,7 +113,7 @@ public class PelicanDefensive : BirdAbility
     private IEnumerator ReleaseBallCoroutine()
     {
         // Position and re-enable the ball first
-        BallManager.Instance.gameObject.transform.position = transform.position + new Vector3(0, 1f, 0);
+        BallManager.Instance.gameObject.transform.position = transform.position + new Vector3(0, 3f, 0) + transform.forward;
         BallManager.Instance.gameObject.SetActive(true);
 
         // Wait one frame so physics and state catch up before registering the hit
