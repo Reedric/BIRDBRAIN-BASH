@@ -16,7 +16,7 @@ public abstract class BirdAbility : MonoBehaviour
 
     public void TickCooldown(float deltaTime)
     {
-        if (_cooldownRemaining > 0) _cooldownRemaining -= deltaTime;
+        if (_cooldownRemaining > 0 && GameManager.PointInProgress()) _cooldownRemaining -= deltaTime;
     }
 
     public bool TryActivate(AbilitySlot slot)
