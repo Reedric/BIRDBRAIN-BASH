@@ -27678,6 +27678,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3bd2834d7138ea44b9eeb436d77161d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   maxGroundSpeed: 10
   maxAirSpeed: 10
   jumpForce: 10
@@ -34816,6 +34817,9 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6b339143306f2548b60d165942be01e, type: 3}
       insertIndex: -1
+      addedObject: {fileID: 1117799714}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6b339143306f2548b60d165942be01e, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 1117799709}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6b339143306f2548b60d165942be01e, type: 3}
       insertIndex: -1
@@ -34837,16 +34841,22 @@ PrefabInstance:
       addedObject: {fileID: 1117799703}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6b339143306f2548b60d165942be01e, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1117799711}
+      addedObject: {fileID: 1117799710}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6b339143306f2548b60d165942be01e, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1117799710}
+      addedObject: {fileID: 1117799711}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6b339143306f2548b60d165942be01e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1117799713}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6b339143306f2548b60d165942be01e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1117799712}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6b339143306f2548b60d165942be01e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1117799716}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6b339143306f2548b60d165942be01e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1117799715}
   m_SourcePrefab: {fileID: 100100000, guid: f6b339143306f2548b60d165942be01e, type: 3}
 --- !u!1 &1117799702 stripped
 GameObject:
@@ -34998,6 +35008,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3bd2834d7138ea44b9eeb436d77161d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   maxGroundSpeed: 5
   maxAirSpeed: 7
   jumpForce: 7
@@ -39850,6 +39861,62 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   abilityController: {fileID: 1117799712}
+--- !u!114 &1117799714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1117799702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 3762893457
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  <InScenePlaced>k__BackingField: 0
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!114 &1117799715
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1117799702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62b4e5d770d73c14c9b9e026196a2a6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  AbilitySlot: 1
+  _cooldownTime: 0
+  mimicDuration: 15
+--- !u!114 &1117799716
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1117799702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 318c55bd2154e344e8296a227c7e38d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  AbilitySlot: 0
+  _cooldownTime: 0
+  flipDuration: 10
 --- !u!1 &1119195247 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6291724136544104244, guid: 7b7d5a335f4733d4f81dd33e5c37eda7, type: 3}
@@ -40672,6 +40739,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3bd2834d7138ea44b9eeb436d77161d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   maxGroundSpeed: 5
   maxAirSpeed: 5
   jumpForce: 5
@@ -55377,140 +55445,277 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   muteBackgroundMusic: 0
   penguinSounds:
-  - {fileID: 8300000, guid: 8af3d13ded60b634e8b576b1f92a2a56, type: 3}
-  - {fileID: 8300000, guid: 4209d1a8e38a3334cb586e8ac04a80e1, type: 3}
-  - {fileID: 8300000, guid: de646397ced512b4488c799523f9cf00, type: 3}
-  - {fileID: 8300000, guid: 62ab6da83c603ee46a2b6d1b80ffecc8, type: 3}
-  - {fileID: 8300000, guid: 3a4cce6906f42f34f80b08491a84544d, type: 3}
-  - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
-  - {fileID: 8300000, guid: ac5a0ff18126b13419c13d9dbd6720a7, type: 3}
-  - {fileID: 0}
+    happy:
+    - {fileID: 8300000, guid: 8af3d13ded60b634e8b576b1f92a2a56, type: 3}
+    sad:
+    - {fileID: 8300000, guid: 4209d1a8e38a3334cb586e8ac04a80e1, type: 3}
+    bump:
+    - {fileID: 8300000, guid: de646397ced512b4488c799523f9cf00, type: 3}
+    set:
+    - {fileID: 8300000, guid: 62ab6da83c603ee46a2b6d1b80ffecc8, type: 3}
+    spike:
+    - {fileID: 8300000, guid: 3a4cce6906f42f34f80b08491a84544d, type: 3}
+    block:
+    - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
+    defensive:
+    - {fileID: 8300000, guid: ac5a0ff18126b13419c13d9dbd6720a7, type: 3}
+    offensive:
+    - {fileID: 8300000, guid: 3a4cce6906f42f34f80b08491a84544d, type: 3}
   crowSounds:
-  - {fileID: 8300000, guid: 57292661603c0f04b9f9ecaf8761b58b, type: 3}
-  - {fileID: 8300000, guid: c914495ec8699664bbefef22cd9234da, type: 3}
-  - {fileID: 8300000, guid: 0e344c3677f3c6449940c9978fc2dd0c, type: 3}
-  - {fileID: 8300000, guid: 90206d16817eea3428b2961068e130dd, type: 3}
-  - {fileID: 8300000, guid: 9db36db339303c449beffa804ad38b1b, type: 3}
-  - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
-  - {fileID: 8300000, guid: eaca15adc8525274186474be5ee55f51, type: 3}
-  - {fileID: 8300000, guid: 9db36db339303c449beffa804ad38b1b, type: 3}
+    happy:
+    - {fileID: 8300000, guid: 57292661603c0f04b9f9ecaf8761b58b, type: 3}
+    sad:
+    - {fileID: 8300000, guid: c914495ec8699664bbefef22cd9234da, type: 3}
+    bump:
+    - {fileID: 8300000, guid: 0e344c3677f3c6449940c9978fc2dd0c, type: 3}
+    set:
+    - {fileID: 8300000, guid: 90206d16817eea3428b2961068e130dd, type: 3}
+    spike:
+    - {fileID: 8300000, guid: 9db36db339303c449beffa804ad38b1b, type: 3}
+    block:
+    - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
+    defensive:
+    - {fileID: 8300000, guid: eaca15adc8525274186474be5ee55f51, type: 3}
+    offensive:
+    - {fileID: 8300000, guid: 57292661603c0f04b9f9ecaf8761b58b, type: 3}
   scissortailSounds:
-  - {fileID: 8300000, guid: 001d2edea88aff24e9a0daf7e187d76f, type: 3}
-  - {fileID: 8300000, guid: 874d0e4a212049e42af75050a79da7e7, type: 3}
-  - {fileID: 8300000, guid: bfcd36449fa8e954bb1c9e15f300dd9c, type: 3}
-  - {fileID: 8300000, guid: b3faf003d6a652648b14ac82348c726b, type: 3}
-  - {fileID: 8300000, guid: 49d96296e3e29e742a2632e5aa16c13d, type: 3}
-  - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
-  - {fileID: 8300000, guid: 81912487c56a3e942b03b9cc6a3c9784, type: 3}
-  - {fileID: 8300000, guid: 8ce969f916eeae545bc560008a10d940, type: 3}
+    happy:
+    - {fileID: 8300000, guid: 001d2edea88aff24e9a0daf7e187d76f, type: 3}
+    sad:
+    - {fileID: 8300000, guid: 874d0e4a212049e42af75050a79da7e7, type: 3}
+    bump:
+    - {fileID: 8300000, guid: bfcd36449fa8e954bb1c9e15f300dd9c, type: 3}
+    set:
+    - {fileID: 8300000, guid: b3faf003d6a652648b14ac82348c726b, type: 3}
+    spike:
+    - {fileID: 8300000, guid: 49d96296e3e29e742a2632e5aa16c13d, type: 3}
+    block:
+    - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
+    defensive:
+    - {fileID: 8300000, guid: 81912487c56a3e942b03b9cc6a3c9784, type: 3}
+    offensive:
+    - {fileID: 8300000, guid: 8ce969f916eeae545bc560008a10d940, type: 3}
   lovebirdSounds:
-  - {fileID: 8300000, guid: 93981666575f3e844aeec5432c1bde04, type: 3}
-  - {fileID: 8300000, guid: 3b025b89ed4cdc44988d1abc018c6c19, type: 3}
-  - {fileID: 8300000, guid: 29d4ab88c5fd0c74b84d18eb1ae87a74, type: 3}
-  - {fileID: 8300000, guid: 81ac9f7cfd2394243bde2459c83b096e, type: 3}
-  - {fileID: 8300000, guid: fa41255b7e6cfbe47a4b2b04e7c3f7bf, type: 3}
-  - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
-  - {fileID: 0}
-  - {fileID: 8300000, guid: 11c62da8e049ea545a35e2da331f8bbf, type: 3}
+    happy:
+    - {fileID: 8300000, guid: 93981666575f3e844aeec5432c1bde04, type: 3}
+    sad:
+    - {fileID: 8300000, guid: 3b025b89ed4cdc44988d1abc018c6c19, type: 3}
+    bump:
+    - {fileID: 8300000, guid: 29d4ab88c5fd0c74b84d18eb1ae87a74, type: 3}
+    set:
+    - {fileID: 8300000, guid: 81ac9f7cfd2394243bde2459c83b096e, type: 3}
+    spike:
+    - {fileID: 8300000, guid: fa41255b7e6cfbe47a4b2b04e7c3f7bf, type: 3}
+    block:
+    - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
+    defensive:
+    - {fileID: 8300000, guid: 93981666575f3e844aeec5432c1bde04, type: 3}
+    offensive:
+    - {fileID: 8300000, guid: 11c62da8e049ea545a35e2da331f8bbf, type: 3}
   dodoSounds:
-  - {fileID: 8300000, guid: 06820743357e1fc46b505b245b2e4bb2, type: 3}
-  - {fileID: 8300000, guid: 43a0afa8660b6b8438d9f3250ae7e70f, type: 3}
-  - {fileID: 8300000, guid: ec9afd87008d88c4c8b2b8c886d9f8df, type: 3}
-  - {fileID: 8300000, guid: 214e2f58495c60c48927f64d39e2d91d, type: 3}
-  - {fileID: 8300000, guid: 50875c8f4d581a04aa12bdbfa8346ac9, type: 3}
-  - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
-  - {fileID: 8300000, guid: 8500534685f712f40b5f349a9300b88f, type: 3}
-  - {fileID: 8300000, guid: 8500534685f712f40b5f349a9300b88f, type: 3}
+    happy:
+    - {fileID: 8300000, guid: 06820743357e1fc46b505b245b2e4bb2, type: 3}
+    sad:
+    - {fileID: 8300000, guid: 43a0afa8660b6b8438d9f3250ae7e70f, type: 3}
+    bump:
+    - {fileID: 8300000, guid: ec9afd87008d88c4c8b2b8c886d9f8df, type: 3}
+    set:
+    - {fileID: 8300000, guid: 214e2f58495c60c48927f64d39e2d91d, type: 3}
+    spike:
+    - {fileID: 8300000, guid: 50875c8f4d581a04aa12bdbfa8346ac9, type: 3}
+    block:
+    - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
+    defensive:
+    - {fileID: 8300000, guid: 8500534685f712f40b5f349a9300b88f, type: 3}
+    offensive:
+    - {fileID: 8300000, guid: 8500534685f712f40b5f349a9300b88f, type: 3}
   seagullSounds:
-  - {fileID: 8300000, guid: da233880978317d4a9c66209548e3348, type: 3}
-  - {fileID: 8300000, guid: a6ad216b8d2229b4a85261c57326e67a, type: 3}
-  - {fileID: 8300000, guid: 5112d46bcf2358d40946e40c1fd5fa50, type: 3}
-  - {fileID: 8300000, guid: fe28fcba00e4c8648a5d4e69c193ec13, type: 3}
-  - {fileID: 8300000, guid: 3f0468da3ff8feb4f89ac4acf76c4b8e, type: 3}
-  - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
-  - {fileID: 8300000, guid: d8dafdcf294c9314381c355288a7e154, type: 3}
-  - {fileID: 8300000, guid: 6cdc268bee007aa40ab52809d6857a62, type: 3}
+    happy:
+    - {fileID: 8300000, guid: da233880978317d4a9c66209548e3348, type: 3}
+    sad:
+    - {fileID: 8300000, guid: a6ad216b8d2229b4a85261c57326e67a, type: 3}
+    bump:
+    - {fileID: 8300000, guid: 5112d46bcf2358d40946e40c1fd5fa50, type: 3}
+    set:
+    - {fileID: 8300000, guid: fe28fcba00e4c8648a5d4e69c193ec13, type: 3}
+    spike:
+    - {fileID: 8300000, guid: 3f0468da3ff8feb4f89ac4acf76c4b8e, type: 3}
+    block:
+    - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
+    defensive:
+    - {fileID: 8300000, guid: d8dafdcf294c9314381c355288a7e154, type: 3}
+    offensive:
+    - {fileID: 8300000, guid: 6cdc268bee007aa40ab52809d6857a62, type: 3}
   pelicanSounds:
-  - {fileID: 8300000, guid: 6b072a7f0930f8344a048e0d2d91dc4a, type: 3}
-  - {fileID: 8300000, guid: e60b035a1aacfb4429314e5121681912, type: 3}
-  - {fileID: 8300000, guid: 2f47119ac37b2e8419b9c5b009ba1224, type: 3}
-  - {fileID: 8300000, guid: 211648e348bec5a4bb88836bc5a78b05, type: 3}
-  - {fileID: 8300000, guid: f07a4615985da1f47abdcf9e525e33fe, type: 3}
-  - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
-  - {fileID: 8300000, guid: caa2d01bb88dfc4428eb33be183f3b1f, type: 3}
-  - {fileID: 8300000, guid: 2a0800ec69548cf49bf61c04ec210153, type: 3}
+    happy:
+    - {fileID: 8300000, guid: 6b072a7f0930f8344a048e0d2d91dc4a, type: 3}
+    sad:
+    - {fileID: 8300000, guid: e60b035a1aacfb4429314e5121681912, type: 3}
+    bump:
+    - {fileID: 8300000, guid: 31bd0b460a7b3e04682923d123e3e220, type: 3}
+    - {fileID: 8300000, guid: 2f47119ac37b2e8419b9c5b009ba1224, type: 3}
+    set:
+    - {fileID: 8300000, guid: 211648e348bec5a4bb88836bc5a78b05, type: 3}
+    spike:
+    - {fileID: 8300000, guid: f07a4615985da1f47abdcf9e525e33fe, type: 3}
+    block:
+    - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
+    defensive:
+    - {fileID: 8300000, guid: caa2d01bb88dfc4428eb33be183f3b1f, type: 3}
+    offensive:
+    - {fileID: 8300000, guid: 2a0800ec69548cf49bf61c04ec210153, type: 3}
   toucanSounds:
-  - {fileID: 8300000, guid: ad5f3e11831c86041b2e3d5552f1ddec, type: 3}
-  - {fileID: 8300000, guid: 864b3d9de3c8db045b161ae90127f092, type: 3}
-  - {fileID: 8300000, guid: db546166876e2bb44a60336a8e2e3c53, type: 3}
-  - {fileID: 8300000, guid: 0b9cfce97abc1a54a8261538969c1d9e, type: 3}
-  - {fileID: 8300000, guid: 43a200ccaf62f3b479f9f6a43ac31cdc, type: 3}
-  - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
-  - {fileID: 0}
-  - {fileID: 8300000, guid: ad5f3e11831c86041b2e3d5552f1ddec, type: 3}
+    happy:
+    - {fileID: 8300000, guid: ad5f3e11831c86041b2e3d5552f1ddec, type: 3}
+    sad:
+    - {fileID: 8300000, guid: 864b3d9de3c8db045b161ae90127f092, type: 3}
+    bump:
+    - {fileID: 8300000, guid: db546166876e2bb44a60336a8e2e3c53, type: 3}
+    set:
+    - {fileID: 8300000, guid: 0b9cfce97abc1a54a8261538969c1d9e, type: 3}
+    spike:
+    - {fileID: 8300000, guid: 43a200ccaf62f3b479f9f6a43ac31cdc, type: 3}
+    block:
+    - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
+    defensive:
+    - {fileID: 8300000, guid: ad5f3e11831c86041b2e3d5552f1ddec, type: 3}
+    offensive:
+    - {fileID: 8300000, guid: 43a200ccaf62f3b479f9f6a43ac31cdc, type: 3}
   pukekoSounds:
-  - {fileID: 8300000, guid: 8ed984a29908a8e4ebf65fa269c17075, type: 3}
-  - {fileID: 8300000, guid: a9dfd50bc2dbc534aaa0ac1a289a1d8b, type: 3}
-  - {fileID: 8300000, guid: 6867fe76142ee54479447bdc0d5b7a94, type: 3}
-  - {fileID: 8300000, guid: 4f4c3155e5cb52342997e37fa12d9e46, type: 3}
-  - {fileID: 8300000, guid: 632856b2f5e4d7c43a6d31c3d9bcca4b, type: 3}
-  - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
-  - {fileID: 8300000, guid: c4a20388ea9da164e943affae112abe9, type: 3}
-  - {fileID: 8300000, guid: 6be0e182bd4d4ce409972ae9ddc44ca0, type: 3}
+    happy:
+    - {fileID: 8300000, guid: 8ed984a29908a8e4ebf65fa269c17075, type: 3}
+    sad:
+    - {fileID: 8300000, guid: a9dfd50bc2dbc534aaa0ac1a289a1d8b, type: 3}
+    bump:
+    - {fileID: 8300000, guid: 6867fe76142ee54479447bdc0d5b7a94, type: 3}
+    - {fileID: 8300000, guid: 6fd4d1c0d7acf484f8184f41f3e6ecc1, type: 3}
+    set:
+    - {fileID: 8300000, guid: 4f4c3155e5cb52342997e37fa12d9e46, type: 3}
+    - {fileID: 8300000, guid: 770c8ba1e2584014e80050d2d7dda0a1, type: 3}
+    spike:
+    - {fileID: 8300000, guid: 78a3d993fbd927d42afd486558eab5ab, type: 3}
+    - {fileID: 8300000, guid: 632856b2f5e4d7c43a6d31c3d9bcca4b, type: 3}
+    block:
+    - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
+    defensive:
+    - {fileID: 8300000, guid: c4a20388ea9da164e943affae112abe9, type: 3}
+    offensive:
+    - {fileID: 8300000, guid: 6be0e182bd4d4ce409972ae9ddc44ca0, type: 3}
   chickenSounds:
-  - {fileID: 8300000, guid: 2d8aa020e10dd29418acd5430665a2a6, type: 3}
-  - {fileID: 8300000, guid: 192e3f035864b3944832b4bfd80a3187, type: 3}
-  - {fileID: 8300000, guid: 9153b0835c97f2f49add2032099bb9a5, type: 3}
-  - {fileID: 8300000, guid: 634e5381c7892414bb70bc623b8d221f, type: 3}
-  - {fileID: 8300000, guid: ae0fdf5705fe2084482ed10b9d6391ee, type: 3}
-  - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
-  - {fileID: 8300000, guid: 9153b0835c97f2f49add2032099bb9a5, type: 3}
-  - {fileID: 8300000, guid: 2d8aa020e10dd29418acd5430665a2a6, type: 3}
+    happy:
+    - {fileID: 8300000, guid: 2d8aa020e10dd29418acd5430665a2a6, type: 3}
+    sad:
+    - {fileID: 8300000, guid: 192e3f035864b3944832b4bfd80a3187, type: 3}
+    bump:
+    - {fileID: 8300000, guid: 9153b0835c97f2f49add2032099bb9a5, type: 3}
+    set:
+    - {fileID: 8300000, guid: 634e5381c7892414bb70bc623b8d221f, type: 3}
+    spike:
+    - {fileID: 8300000, guid: ae0fdf5705fe2084482ed10b9d6391ee, type: 3}
+    block:
+    - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
+    defensive:
+    - {fileID: 8300000, guid: 9153b0835c97f2f49add2032099bb9a5, type: 3}
+    offensive:
+    - {fileID: 8300000, guid: 2d8aa020e10dd29418acd5430665a2a6, type: 3}
   ostrichSounds:
-  - {fileID: 8300000, guid: 957f65cb92519db4384612c170814eb9, type: 3}
-  - {fileID: 8300000, guid: 0521f3fb572a6224d9be44f376c724a9, type: 3}
-  - {fileID: 8300000, guid: a682fda36d6ef8b4d8b5fbe7c00764f9, type: 3}
-  - {fileID: 8300000, guid: b11603343b47b104484ca6a510c32667, type: 3}
-  - {fileID: 8300000, guid: 381023797383f3647ba9644433e3a1c0, type: 3}
-  - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
-  - {fileID: 0}
-  - {fileID: 8300000, guid: 957f65cb92519db4384612c170814eb9, type: 3}
+    happy:
+    - {fileID: 8300000, guid: 957f65cb92519db4384612c170814eb9, type: 3}
+    sad:
+    - {fileID: 8300000, guid: 0521f3fb572a6224d9be44f376c724a9, type: 3}
+    bump:
+    - {fileID: 8300000, guid: a682fda36d6ef8b4d8b5fbe7c00764f9, type: 3}
+    set:
+    - {fileID: 8300000, guid: b11603343b47b104484ca6a510c32667, type: 3}
+    spike:
+    - {fileID: 8300000, guid: 381023797383f3647ba9644433e3a1c0, type: 3}
+    block:
+    - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
+    defensive:
+    - {fileID: 8300000, guid: a682fda36d6ef8b4d8b5fbe7c00764f9, type: 3}
+    offensive:
+    - {fileID: 8300000, guid: 957f65cb92519db4384612c170814eb9, type: 3}
   eagleSounds:
-  - {fileID: 8300000, guid: 45627535dccdf814f8587143e36b4828, type: 3}
-  - {fileID: 8300000, guid: 363ce08614dcc534dbe1eda592f39b4a, type: 3}
-  - {fileID: 8300000, guid: fb11fc51ffa986f4db2cb8812e66602c, type: 3}
-  - {fileID: 8300000, guid: 2f14e99dbcbf39b4a93cc069d51dc53d, type: 3}
-  - {fileID: 8300000, guid: 07d8c6e7a08b30c4180563f11d92aec8, type: 3}
-  - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
-  - {fileID: 0}
-  - {fileID: 8300000, guid: b7ebdebd261c316428e4d77cac87a1c5, type: 3}
+    happy:
+    - {fileID: 8300000, guid: 45627535dccdf814f8587143e36b4828, type: 3}
+    sad:
+    - {fileID: 8300000, guid: 363ce08614dcc534dbe1eda592f39b4a, type: 3}
+    bump:
+    - {fileID: 8300000, guid: fb11fc51ffa986f4db2cb8812e66602c, type: 3}
+    set:
+    - {fileID: 8300000, guid: 2f14e99dbcbf39b4a93cc069d51dc53d, type: 3}
+    spike:
+    - {fileID: 8300000, guid: 07d8c6e7a08b30c4180563f11d92aec8, type: 3}
+    block:
+    - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
+    defensive:
+    - {fileID: 8300000, guid: fb11fc51ffa986f4db2cb8812e66602c, type: 3}
+    offensive:
+    - {fileID: 8300000, guid: b7ebdebd261c316428e4d77cac87a1c5, type: 3}
   kiwiSounds:
-  - {fileID: 8300000, guid: 2b642a7f1184e9f4d86fb27196940707, type: 3}
-  - {fileID: 8300000, guid: afbc3a90f2858654c83ee1c264828250, type: 3}
-  - {fileID: 8300000, guid: 91dab8fdee9f5564381e99805ff85d01, type: 3}
-  - {fileID: 8300000, guid: c8e2bab32001393478a024d5b1033e40, type: 3}
-  - {fileID: 8300000, guid: 8fe23fbc68222bd49aca9463e9d5c32e, type: 3}
-  - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
-  - {fileID: 8300000, guid: 853247f809f18274f81a8857308dd13e, type: 3}
-  - {fileID: 8300000, guid: a1b159375ba8ab14ba72bcdc9a486b43, type: 3}
+    happy:
+    - {fileID: 8300000, guid: 2b642a7f1184e9f4d86fb27196940707, type: 3}
+    sad:
+    - {fileID: 8300000, guid: afbc3a90f2858654c83ee1c264828250, type: 3}
+    bump:
+    - {fileID: 8300000, guid: 91dab8fdee9f5564381e99805ff85d01, type: 3}
+    set:
+    - {fileID: 8300000, guid: c8e2bab32001393478a024d5b1033e40, type: 3}
+    - {fileID: 8300000, guid: a1b159375ba8ab14ba72bcdc9a486b43, type: 3}
+    spike:
+    - {fileID: 8300000, guid: 8fe23fbc68222bd49aca9463e9d5c32e, type: 3}
+    block:
+    - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
+    defensive:
+    - {fileID: 8300000, guid: c8e2bab32001393478a024d5b1033e40, type: 3}
+    offensive:
+    - {fileID: 8300000, guid: 853247f809f18274f81a8857308dd13e, type: 3}
   macawSounds:
-  - {fileID: 8300000, guid: a82aaec9527c4284d9d3beee3b5c52fe, type: 3}
-  - {fileID: 8300000, guid: a82aaec9527c4284d9d3beee3b5c52fe, type: 3}
-  - {fileID: 8300000, guid: a82aaec9527c4284d9d3beee3b5c52fe, type: 3}
-  - {fileID: 8300000, guid: a82aaec9527c4284d9d3beee3b5c52fe, type: 3}
-  - {fileID: 8300000, guid: a82aaec9527c4284d9d3beee3b5c52fe, type: 3}
-  - {fileID: 8300000, guid: a82aaec9527c4284d9d3beee3b5c52fe, type: 3}
-  - {fileID: 8300000, guid: a82aaec9527c4284d9d3beee3b5c52fe, type: 3}
-  - {fileID: 8300000, guid: a82aaec9527c4284d9d3beee3b5c52fe, type: 3}
+    happy:
+    - {fileID: 8300000, guid: 7563014000ba04a44940f66ce78dee68, type: 3}
+    - {fileID: 8300000, guid: 46eb3dd82534a734aaaaf94c6dc031f5, type: 3}
+    sad:
+    - {fileID: 8300000, guid: 8fc6b4cf6a9dcc44793d2d4c2290b34b, type: 3}
+    - {fileID: 8300000, guid: e3de8f25a47ddf84c9d52b1d64b19856, type: 3}
+    bump:
+    - {fileID: 8300000, guid: 7a788cb09f6e2044495f7a7262afb0aa, type: 3}
+    - {fileID: 8300000, guid: a3d1ef85d3386fa4e957cccf8ed36252, type: 3}
+    - {fileID: 8300000, guid: 96f83470136b1a142b14a50c80726c00, type: 3}
+    set:
+    - {fileID: 8300000, guid: a6e55440ea5b9374fb6b82ab3cb98513, type: 3}
+    - {fileID: 8300000, guid: 75b89e4ffed67494998745a68d8b56b5, type: 3}
+    spike:
+    - {fileID: 8300000, guid: 8da9b758151c70c4e96dc47a6ab2257c, type: 3}
+    - {fileID: 8300000, guid: e28f941796af2c648ae598e307dc9f32, type: 3}
+    block:
+    - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
+    defensive:
+    - {fileID: 8300000, guid: 5dd484e31f2b0214c90cb9ab9eb4928d, type: 3}
+    - {fileID: 8300000, guid: 6ee7086e50b532742940f9f3c316c5f3, type: 3}
+    - {fileID: 8300000, guid: 2ef7f5bf46c5e6c4b8215d71db5995dc, type: 3}
+    - {fileID: 8300000, guid: 63d77c9c003eb41408b8ccc3d056b7f6, type: 3}
+    offensive:
+    - {fileID: 8300000, guid: 532395bd6cd713d49ae0da735dab9a86, type: 3}
+    - {fileID: 8300000, guid: 80c224bea217aea45acf6a999b7cd897, type: 3}
+    - {fileID: 8300000, guid: 0128b72c271433345ac89f40ee79a57b, type: 3}
+    - {fileID: 8300000, guid: a519aedb2be5cd84bb34668f5e35fc3e, type: 3}
   owlSounds:
-  - {fileID: 8300000, guid: f7901d6e3fa546f469cee6feb21be0ab, type: 3}
-  - {fileID: 8300000, guid: 6a2bec4266a28f946907ceaa0b3386e8, type: 3}
-  - {fileID: 8300000, guid: 59de867bc270c8343a99e5b3a5d36487, type: 3}
-  - {fileID: 8300000, guid: cc8115b7104e0ad418e7632c024adbea, type: 3}
-  - {fileID: 8300000, guid: 9237ed44401286d47b7de80fc27ef344, type: 3}
-  - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
-  - {fileID: 8300000, guid: 1e1c49f80c59c5442a7928610cb29267, type: 3}
-  - {fileID: 8300000, guid: f7901d6e3fa546f469cee6feb21be0ab, type: 3}
+    happy:
+    - {fileID: 8300000, guid: f7901d6e3fa546f469cee6feb21be0ab, type: 3}
+    sad:
+    - {fileID: 8300000, guid: 6a2bec4266a28f946907ceaa0b3386e8, type: 3}
+    bump:
+    - {fileID: 8300000, guid: 59de867bc270c8343a99e5b3a5d36487, type: 3}
+    set:
+    - {fileID: 8300000, guid: cc8115b7104e0ad418e7632c024adbea, type: 3}
+    spike:
+    - {fileID: 8300000, guid: 9237ed44401286d47b7de80fc27ef344, type: 3}
+    block:
+    - {fileID: 0}
+    defensive:
+    - {fileID: 8300000, guid: 1e1c49f80c59c5442a7928610cb29267, type: 3}
+    offensive:
+    - {fileID: 8300000, guid: 1e1c49f80c59c5442a7928610cb29267, type: 3}
   scoringSounds:
   - {fileID: 8300000, guid: eb33c0f9c80807641add146b4c6d0873, type: 3}
   - {fileID: 8300000, guid: b824cfbb869d83345955b0e6a6d029c9, type: 3}
@@ -56120,6 +56325,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3bd2834d7138ea44b9eeb436d77161d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   maxGroundSpeed: 6
   maxAirSpeed: 5
   jumpForce: 7
@@ -67413,6 +67619,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3bd2834d7138ea44b9eeb436d77161d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   maxGroundSpeed: 7
   maxAirSpeed: 7
   jumpForce: 6
@@ -74886,6 +75093,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -3588198480320225053, guid: 5237adce10f0ed6498eff4b789f2e10f, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 2508250761
+      objectReference: {fileID: 0}
+    - target: {fileID: -3588198480320225053, guid: 5237adce10f0ed6498eff4b789f2e10f, type: 3}
+      propertyPath: SceneMigrationSynchronization
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -3588198480320225053, guid: 5237adce10f0ed6498eff4b789f2e10f, type: 3}
+      propertyPath: InScenePlacedSourceGlobalObjectIdHash
+      value: 1756626148
+      objectReference: {fileID: 0}
     - target: {fileID: 1752529230400778768, guid: 5237adce10f0ed6498eff4b789f2e10f, type: 3}
       propertyPath: ballCollider
       value: 
