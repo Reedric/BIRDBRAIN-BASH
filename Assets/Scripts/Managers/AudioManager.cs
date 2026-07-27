@@ -32,6 +32,51 @@ public enum SoundType
     OFFENSIVE
 }
 
+// One labeled multi-clip slot per SoundType. Each bird gets exactly one of these.
+// Unity auto-labels each field by name in the Inspector (Happy, Sad, Bump, Set,
+// Spike, Block, Defensive, Offensive), and each is a normal AudioClip[] so it can
+// hold 1 or many clips - a random one is chosen whenever that sound plays.
+[System.Serializable]
+public class BirdSoundSet
+{
+    public AudioClip[] happy;
+    public AudioClip[] sad;
+    public AudioClip[] bump;
+    public AudioClip[] set;
+    public AudioClip[] spike;
+    public AudioClip[] block;
+    public AudioClip[] defensive;
+    public AudioClip[] offensive;
+
+    // Returns the clip pool for the requested SoundType.
+    public AudioClip[] GetClips(SoundType soundType)
+    {
+        switch (soundType)
+        {
+            case SoundType.HAPPY: return happy;
+            case SoundType.SAD: return sad;
+            case SoundType.BUMP: return bump;
+            case SoundType.SET: return set;
+            case SoundType.SPIKE: return spike;
+            case SoundType.BLOCK: return block;
+            case SoundType.DEFENSIVE: return defensive;
+            case SoundType.OFFENSIVE: return offensive;
+            default: return null;
+        }
+    }
+
+    // Picks a random clip from the requested SoundType's pool.
+    // Works fine with a pool of exactly 1 clip too (Random.Range(0, 1) always returns 0).
+    public AudioClip GetRandomClip(SoundType soundType)
+    {
+        AudioClip[] options = GetClips(soundType);
+        if (options == null || options.Length == 0)
+            return null;
+
+        return options[Random.Range(0, options.Length)];
+    }
+}
+
 [RequireComponent(typeof(AudioSource))]
 public class AudioManager : MonoBehaviour
 {
@@ -39,22 +84,23 @@ public class AudioManager : MonoBehaviour
     [Tooltip("Mute background music for testing.")]
     public bool muteBackgroundMusic = false;
 
-    [Header("Sounds")]
-    [SerializeField] private AudioClip[] penguinSounds;
-    [SerializeField] private AudioClip[] crowSounds;
-    [SerializeField] private AudioClip[] scissortailSounds;
-    [SerializeField] private AudioClip[] lovebirdSounds;
-    [SerializeField] private AudioClip[] dodoSounds;
-    [SerializeField] private AudioClip[] seagullSounds;
-    [SerializeField] private AudioClip[] pelicanSounds;
-    [SerializeField] private AudioClip[] toucanSounds;
-    [SerializeField] private AudioClip[] pukekoSounds;
-    [SerializeField] private AudioClip[] chickenSounds;
-    [SerializeField] private AudioClip[] ostrichSounds;
-    [SerializeField] private AudioClip[] eagleSounds;
-    [SerializeField] private AudioClip[] kiwiSounds;
-    [SerializeField] private AudioClip[] macawSounds;
-    [SerializeField] private AudioClip[] owlSounds;
+    [Header("Bird Sounds")]
+    [Tooltip("Each bird has one labeled slot per action (Happy, Sad, Bump, Set, Spike, Block, Defensive, Offensive). Drop 1 or more clips into any slot - if there's more than one, a random one is chosen each time that sound plays.")]
+    [SerializeField] private BirdSoundSet penguinSounds;
+    [SerializeField] private BirdSoundSet crowSounds;
+    [SerializeField] private BirdSoundSet scissortailSounds;
+    [SerializeField] private BirdSoundSet lovebirdSounds;
+    [SerializeField] private BirdSoundSet dodoSounds;
+    [SerializeField] private BirdSoundSet seagullSounds;
+    [SerializeField] private BirdSoundSet pelicanSounds;
+    [SerializeField] private BirdSoundSet toucanSounds;
+    [SerializeField] private BirdSoundSet pukekoSounds;
+    [SerializeField] private BirdSoundSet chickenSounds;
+    [SerializeField] private BirdSoundSet ostrichSounds;
+    [SerializeField] private BirdSoundSet eagleSounds;
+    [SerializeField] private BirdSoundSet kiwiSounds;
+    [SerializeField] private BirdSoundSet macawSounds;
+    [SerializeField] private BirdSoundSet owlSounds;
 
     [Header("Scoring Sounds")]
     [SerializeField] private AudioClip[] scoringSounds;
@@ -144,64 +190,68 @@ public class AudioManager : MonoBehaviour
 
     public static void PlayBirdSound(BirdType birdType, SoundType soundType, float volume = 1.0f)
     {
-        // Initialize bird sounds
-        AudioClip[] birdSounds;
-
-        // Decide which sounds to use
+        // Decide which bird's sound set to use
+        BirdSoundSet soundSet;
         switch (birdType)
         {
             case BirdType.PENGUIN:
-                birdSounds = instance.penguinSounds;
+                soundSet = instance.penguinSounds;
                 break;
             case BirdType.CROW:
-                birdSounds = instance.crowSounds;
+                soundSet = instance.crowSounds;
                 break;
             case BirdType.SCISSORTAIL:
-                birdSounds = instance.scissortailSounds;
+                soundSet = instance.scissortailSounds;
                 break;
             case BirdType.LOVEBIRD:
-                birdSounds = instance.lovebirdSounds;
+                soundSet = instance.lovebirdSounds;
                 break;
             case BirdType.DODO:
-                birdSounds = instance.dodoSounds;
+                soundSet = instance.dodoSounds;
                 break;
             case BirdType.SEAGULL:
-                birdSounds = instance.seagullSounds;
+                soundSet = instance.seagullSounds;
                 break;
             case BirdType.PELICAN:
-                birdSounds = instance.pelicanSounds;
+                soundSet = instance.pelicanSounds;
                 break;
             case BirdType.TOUCAN:
-                birdSounds = instance.toucanSounds;
+                soundSet = instance.toucanSounds;
                 break;
             case BirdType.PUKEKO:
-                birdSounds = instance.pukekoSounds;
+                soundSet = instance.pukekoSounds;
                 break;
             case BirdType.CHICKEN:
-                birdSounds = instance.chickenSounds;
+                soundSet = instance.chickenSounds;
                 break;
             case BirdType.OSTRICH:
-                birdSounds = instance.ostrichSounds;
+                soundSet = instance.ostrichSounds;
                 break;
             case BirdType.OWL:
-                birdSounds = instance.owlSounds;
+                soundSet = instance.owlSounds;
                 break;
             case BirdType.EAGLE:
-                birdSounds = instance.eagleSounds;
+                soundSet = instance.eagleSounds;
                 break;
             case BirdType.KIWI:
-                birdSounds = instance.kiwiSounds;
+                soundSet = instance.kiwiSounds;
                 break;
             case BirdType.MACAW:
-                birdSounds = instance.macawSounds;
+                soundSet = instance.macawSounds;
                 break;
             default:
-                birdSounds = instance.penguinSounds;
+                soundSet = instance.penguinSounds;
                 break;
         }
 
-        // Play the desired sound
-        instance.audioSource.PlayOneShot(birdSounds[(int)soundType], volume);
+        if (soundSet == null)
+            return;
+
+        AudioClip clip = soundSet.GetRandomClip(soundType);
+        if (clip != null)
+        {
+            instance.audioSource.PlayOneShot(clip, volume);
+        }
     }
 
     // For playing the background track
