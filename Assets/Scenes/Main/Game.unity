@@ -47901,8 +47901,8 @@ MonoBehaviour:
   eagleDefensiveIcon: {fileID: 2800000, guid: 93fdaadbe995a8e4b820047a1005177a, type: 3}
   macawDisplayName: Macaw
   macawPlayerIcon: {fileID: 2800000, guid: fbf26f505f4afaf4d9b244298d4541e8, type: 3}
-  macawOffensiveIcon: {fileID: 2800000, guid: 6c0789d8a65367f4481e4c980f3a0a93, type: 3}
-  macawDefensiveIcon: {fileID: 2800000, guid: d2f9cf5e2f5823d4ebc536bb92dd5a66, type: 3}
+  macawOffensiveIcon: {fileID: 2800000, guid: 420efab2a6db09c419ed508f498837dc, type: 3}
+  macawDefensiveIcon: {fileID: 2800000, guid: 4fb0efd8f34179b49bb5c2b7c204b4b8, type: 3}
 --- !u!1 &1354460402
 GameObject:
   m_ObjectHideFlags: 0
