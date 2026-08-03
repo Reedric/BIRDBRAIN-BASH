@@ -17,6 +17,9 @@ public enum BirdType
     CHICKEN,
     EAGLE,
     MACAW, 
+    PHOENIX,
+    ROBOPIGEON,
+    HUMMINGBIRD,
     OTHER
 }
 
@@ -101,6 +104,9 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private BirdSoundSet kiwiSounds;
     [SerializeField] private BirdSoundSet macawSounds;
     [SerializeField] private BirdSoundSet owlSounds;
+    [SerializeField] private BirdSoundSet phoenixSounds;
+    [SerializeField] private BirdSoundSet robopigeonSounds;
+    [SerializeField] private BirdSoundSet hummingbirdSounds;
 
     [Header("Scoring Sounds")]
     [SerializeField] private AudioClip[] scoringSounds;
@@ -238,6 +244,15 @@ public class AudioManager : MonoBehaviour
                 break;
             case BirdType.MACAW:
                 soundSet = instance.macawSounds;
+                break;
+            case BirdType.PHOENIX:
+                soundSet = instance.phoenixSounds;
+                break;
+            case BirdType.ROBOPIGEON:
+                soundSet = instance.robopigeonSounds;
+                break;
+            case BirdType.HUMMINGBIRD:
+                soundSet = instance.hummingbirdSounds;
                 break;
             default:
                 soundSet = instance.penguinSounds;
