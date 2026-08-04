@@ -91906,11 +91906,23 @@ PrefabInstance:
       addedObject: {fileID: 874750455}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 8005662711130161911, guid: d698ca1d3720ca349a24b22581ba4781, type: 3}
+      insertIndex: 3
+      addedObject: {fileID: 3580792438942232051}
+    - targetCorrespondingSourceObject: {fileID: 8005662711130161911, guid: d698ca1d3720ca349a24b22581ba4781, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3580792438942232049}
+    - targetCorrespondingSourceObject: {fileID: 8005662711130161911, guid: d698ca1d3720ca349a24b22581ba4781, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3580792438942232050}
     - targetCorrespondingSourceObject: {fileID: 8005662711130161911, guid: d698ca1d3720ca349a24b22581ba4781, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 3580792438942232049}
+      addedObject: {fileID: 3580792438942232052}
+    - targetCorrespondingSourceObject: {fileID: 8005662711130161911, guid: d698ca1d3720ca349a24b22581ba4781, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3580792438942232054}
+    - targetCorrespondingSourceObject: {fileID: 8005662711130161911, guid: d698ca1d3720ca349a24b22581ba4781, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3580792438942232053}
   m_SourcePrefab: {fileID: 100100000, guid: d698ca1d3720ca349a24b22581ba4781, type: 3}
 --- !u!1 &3580792438942232047 stripped
 GameObject:
@@ -96740,6 +96752,75 @@ ParticleSystem:
         m_PostInfinity: 2
         m_RotationOrder: 4
     vectorLabel1_3: W
+--- !u!114 &3580792438942232051
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3580792438942232047}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 1041682617
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  <InScenePlaced>k__BackingField: 0
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!114 &3580792438942232052
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3580792438942232047}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ad0aff29000c3547aca2d7cca7e977b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  AbilitySlot: 0
+  _cooldownTime: 30
+  baseDuration: 30
+  durationExtensionOnTeamScore: 15
+  cooldownAfterDuration: 30
+  maxSpikePower: 10
+--- !u!114 &3580792438942232053
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3580792438942232047}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5218fa23fafadc54d807b4f114cfd911, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilityController: {fileID: 3580792438942232054}
+--- !u!114 &3580792438942232054
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3580792438942232047}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d8776b00f5834d4f9f26b44f0a3eae8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &3653763959862561894
 GameObject:
   m_ObjectHideFlags: 0
@@ -102992,8 +103073,42 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8067408739502402168, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
+      insertIndex: 9
+      addedObject: {fileID: 7536105899563430811}
   m_SourcePrefab: {fileID: 100100000, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
+--- !u!1 &7536105899563430810 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8067408739502402168, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
+  m_PrefabInstance: {fileID: 7536105899563430809}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7536105899563430811
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7536105899563430810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 3798350005
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  <InScenePlaced>k__BackingField: 0
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
 --- !u!4 &7565060780863846373
 Transform:
   m_ObjectHideFlags: 0
