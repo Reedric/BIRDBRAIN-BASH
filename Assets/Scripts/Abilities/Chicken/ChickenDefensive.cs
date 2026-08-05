@@ -16,32 +16,51 @@ public class ChickenDefensive : PassiveAbility
     [SerializeField] private float apexVelocityThreshold = 2f; // How close to zero Y velocity counts as apex
 
     private Rigidbody rb;
+    private CharacterMovement characterMovement; // Used to check grounded state - hover should only trigger mid-air
+    private PlayerInput playerInput;             // Polled directly, matching CharacterMovement's input pattern
+    private InputAction jumpAction;              // Cached Jump action reference
+
     private bool _jumpHeld = false;        // Whether the player is currently holding jump
     private bool _apexReached = false;     // Whether we've entered the apex hover window
     private bool _slowFalling = false;     // Whether we're in the slow fall phase
     private float _apexTimer = 0f;         // Tracks how long we've hovered at the apex
 
-    private void Awake() { rb = GetComponent<Rigidbody>(); }
-
-    // Called by Unity's Input System when the jump action fires
-    public void OnJump(InputValue value)
+    private void Awake()
     {
-        _jumpHeld = value.isPressed;
+        rb = GetComponent<Rigidbody>();
+        characterMovement = GetComponent<CharacterMovement>();
+        playerInput = GetComponent<PlayerInput>();
+    }
 
-        // Reset hover state and restore gravity when jump is released
-        if (!_jumpHeld)
-        {
-            _apexReached = false;
-            _slowFalling = false;
-            _apexTimer = 0f;
-            rb.useGravity = true; // Always restore gravity on release
-        }
+    private void Start()
+    {
+        // Cache the action so we're not calling FindAction every physics step
+        jumpAction = playerInput.actions.FindAction("Jump");
     }
 
     private void FixedUpdate()
     {
-        // Only activate if player is holding jump
-        if (!_jumpHeld) return;
+        // Poll the Jump action directly instead of relying on the OnJump(InputValue)
+        // message - this project doesn't broadcast input messages (CharacterMovement
+        // polls the same way), so that callback was never actually firing.
+        bool wasHeld = _jumpHeld;
+        _jumpHeld = jumpAction != null && jumpAction.IsPressed();
+
+        // Jump was just released this frame - reset hover state and restore gravity
+        if (wasHeld && !_jumpHeld)
+        {
+            _apexReached = false;
+            _slowFalling = false;
+            _apexTimer = 0f;
+            rb.useGravity = true;
+        }
+
+        // Only activate if the player is holding jump AND actually airborne - this stops
+        // hover from falsely triggering just from holding jump while standing on the ground
+        if (!_jumpHeld || characterMovement.grounded)
+        {
+            return;
+        }
 
         float velY = rb.linearVelocity.y;
 

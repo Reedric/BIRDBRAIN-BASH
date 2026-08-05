@@ -12,8 +12,13 @@ public class BirdAbilityController : MonoBehaviour
 
     void Awake()
     {
-        foreach (var ability in GetComponentsInChildren<BirdAbility>())
-            abilities[ability.AbilitySlot] = ability;
+        InitializeAbilities();
+    }
+
+    void Start()
+    {
+        // Rebuild the ability lookup after all child Awake methods have run.
+        InitializeAbilities();
     }
 
     void Update()
@@ -22,11 +27,22 @@ public class BirdAbilityController : MonoBehaviour
         foreach (var ability in abilities.Values) ability.TickCooldown(deltaTime);
     }
 
+    private void InitializeAbilities()
+    {
+        abilities.Clear();
+        foreach (var ability in GetComponentsInChildren<BirdAbility>())
+            abilities[ability.AbilitySlot] = ability;
+    }
+
     public void UseAbility(AbilitySlot slot)
     {
-        // Debug.Log(abilities[slot]);
-        if (!abilities.TryGetValue(slot, out var ability)) return;
-        // Debug.Log("using ability.");
+        if (!abilities.TryGetValue(slot, out var ability))
+        {
+            Debug.LogWarning($"[BirdAbilityController] No ability found for slot {slot} on {gameObject.name}.");
+            return;
+        }
+
+        Debug.Log($"[BirdAbilityController] UseAbility {slot} on {gameObject.name} with {ability.GetType().Name}.");
         ability.TryActivate(slot);
     }
 

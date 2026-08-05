@@ -48,10 +48,15 @@ public class BallInteract : MonoBehaviour
         playerInput = GetComponent<PlayerInput>();
         baseSpikeSpeed = 10.0f;
         
-        ballRb = BallManager.Instance.gameObject.GetComponent<Rigidbody>();
+        ballRb = BallManager.Instance?.gameObject?.GetComponent<Rigidbody>();
         if (ballRb == null)
         {
             Debug.LogError("Rigidbody for the ball was not found in BallInteract!");
+        }
+
+        if (playerInput == null)
+        {
+            Debug.LogWarningFormat("BallInteract on {0} has no PlayerInput; skipping player input handling.", gameObject.name);
         }
 
         // locate contact point child safely
@@ -103,13 +108,22 @@ public class BallInteract : MonoBehaviour
     void Update()
     {
         // Get the height of bird whilst standing on the ground
-        if (baseHeight == 0f && serverMovement.grounded) baseHeight = transform.position.y;
+        if (baseHeight == 0f && serverMovement != null && serverMovement.grounded)
+        {
+            baseHeight = transform.position.y;
+        }
 
         // Keep ball completely still before serve
         if (GameManager.Instance.gameState == GameManager.GameState.PointStart && ballRb != null)
         {
             ballRb.linearVelocity = Vector3.zero;
             ballRb.useGravity = false;
+        }
+
+        if (playerInput == null)
+        {
+            // This BallInteract instance is not a player-controlled character; AIBehavior should handle the minion.
+            return;
         }
 
         CheckState();

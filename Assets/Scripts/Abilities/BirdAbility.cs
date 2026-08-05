@@ -19,17 +19,33 @@ public abstract class BirdAbility : MonoBehaviour
         if (_cooldownRemaining > 0) _cooldownRemaining -= deltaTime;
     }
 
+    protected void StartCooldown(float seconds)
+    {
+        _cooldownRemaining = seconds;
+    }
+
     public bool TryActivate(AbilitySlot slot)
     {
-        if (!IsReady) return false;
-        if (!BirdAbilityRuleService.Instance.CanUseAbility(gameObject, slot)) return false;
+        if (!IsReady)
+        {
+            Debug.Log($"[BirdAbility] {GetType().Name} not ready for activation ({_cooldownRemaining:F1}s remaining).");
+            return false;
+        }
+
+        if (!BirdAbilityRuleService.Instance.CanUseAbility(gameObject, slot))
+        {
+            Debug.Log($"[BirdAbility] {GetType().Name} denied by rules for slot {slot}.");
+            return false;
+        }
 
         if (Activate())
         {
             _cooldownRemaining = _cooldownTime;
+            Debug.Log($"[BirdAbility] {GetType().Name} activated successfully.");
             return true;
         }
-        
+
+        Debug.Log($"[BirdAbility] {GetType().Name} activation failed inside Activate().");
         return false;
     }
 

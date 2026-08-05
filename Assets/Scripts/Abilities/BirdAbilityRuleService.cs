@@ -26,19 +26,31 @@ public class BirdAbilityRuleService : MonoBehaviour
 
     public bool CanUseAbility(GameObject user, AbilitySlot slot)
     {
-        if (_globalAbilitiesDisabled) return false;
+        if (_globalAbilitiesDisabled)
+        {
+            Debug.Log("[BirdAbilityRuleService] Global abilities disabled.");
+            return false;
+        }
 
-        if (gameManager == null) return false;
+        if (gameManager == null)
+        {
+            Debug.LogWarning("[BirdAbilityRuleService] GameManager reference is null.");
+            return false;
+        }
 
         BallInteract ballInteract = user.GetComponent<BallInteract>();
+        if (ballInteract == null)
+        {
+            Debug.LogWarning("[BirdAbilityRuleService] CanUseAbility called on object without BallInteract.");
+            return false;
+        }
 
-        // if on defense, only allow defensive abilities
-        if (OnDefense(ballInteract) && slot == AbilitySlot.Defensive) return true;
-        // if on offense, only allow offensive abilities
-        if (OnOffense(ballInteract) && slot == AbilitySlot.Offensive) return true;
+        bool canUse = false;
+        if (OnDefense(ballInteract) && slot == AbilitySlot.Defensive) canUse = true;
+        if (OnOffense(ballInteract) && slot == AbilitySlot.Offensive) canUse = true;
 
-        // Must be using a defensive/offensive ability while not on defense/offense
-        return false;
+        Debug.Log($"[BirdAbilityRuleService] CanUseAbility for {ballInteract.GetBirdType()} slot {slot}: {canUse} (state={GameManager.Instance?.gameState}).");
+        return canUse;
     }
 
     private bool OnDefense(BallInteract ballInteract)
@@ -52,6 +64,7 @@ public class BirdAbilityRuleService : MonoBehaviour
         if (ballInteract.GetBirdType() == BirdType.PELICAN && GameManager.Instance.gameState == GameManager.GameState.PointStart
             && ballInteract.Equals(GameManager.Instance.server.GetComponent<BallInteract>())) return true;
         if (ballInteract.GetBirdType() == BirdType.TOUCAN && GameManager.PointInProgress()) return true;
+        if (ballInteract.GetBirdType() == BirdType.ROBOPIGEON) return true;
         if (ballInteract.GetBirdType() == BirdType.KIWI && GameManager.PointInProgress()) return true;
 
         // If the ball is not on your side of the court (to prevent any blocking abilities from blocking too early)
