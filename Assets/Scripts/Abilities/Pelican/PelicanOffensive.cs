@@ -18,13 +18,13 @@ public class PelicanOffensive : BirdAbility
 
     override protected bool Activate()
     {
-        SlipFish();
+        StartCoroutine(SlipFish());
 
         // Ability successfully activated
         return true;
     }
 
-    private void SlipFish()
+    private IEnumerator SlipFish()
     {
         // Play offensive sound
         AudioManager.PlayBirdSound(BirdType.PELICAN, SoundType.OFFENSIVE, 1.0f);
@@ -56,6 +56,13 @@ public class PelicanOffensive : BirdAbility
         int playerID = GetComponent<BallInteract>().playerID;
         HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
-        Destroy(fish, fishLifetime);
+        // Wait for either the point to end or fish's lifetime to expire
+        float timeElapsed = 0f;
+        while (timeElapsed < fishLifetime && GameManager.Instance.gameState != GameManager.GameState.PointEnd)
+        {
+            timeElapsed += Time.deltaTime;
+            yield return null;
+        }
+        Destroy(fish);
     }
 }

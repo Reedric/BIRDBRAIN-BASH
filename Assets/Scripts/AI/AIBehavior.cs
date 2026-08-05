@@ -50,10 +50,7 @@ public class AIBehavior : MonoBehaviour
     // move and hit the ball while silenced (abilities only).
     private bool abilitiesSilenced = false;
 
-    private float originalMaxGroundSpeed;
-    private float originalMaxAirSpeed;
-
-        public enum AIDifficulty
+    public enum AIDifficulty
     {
         Easy,
         Medium,
@@ -527,7 +524,7 @@ public class AIBehavior : MonoBehaviour
         Vector2 dir = new Vector2(dx, dz);
 
         // If the AI is not already at the target (use magnitude instead of Equals for floating-point safety)
-        if (dir.magnitude > 0.5f)
+        if (dir.magnitude > 1.0f)
         {
             // Normalize direction for consistent acceleration
             dir.Normalize();
@@ -547,6 +544,8 @@ public class AIBehavior : MonoBehaviour
                 newVelocity.Normalize();
                 newVelocity *= maxAirSpeed;
             }
+
+            // Debug.LogFormat("{0} is moving at a speed of {1}.", gameObject.name, newVelocity.magnitude);
 
             // Update target rotation to face the movement direction
             if (!overrideRotation)

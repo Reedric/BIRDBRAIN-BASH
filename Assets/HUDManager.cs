@@ -37,15 +37,19 @@ public class HUDManager : MonoBehaviour
             float elapsed = 0f;
             while (elapsed < duration)
             {
-                elapsed += Time.deltaTime;
-                float remaining = duration - elapsed;
+                // Only elapse time if the point is in progress
+                if (GameManager.PointInProgress())
+                {
+                    elapsed += Time.deltaTime;
+                    float remaining = duration - elapsed;
 
-                // fillAmount 1 = fully covered, 0 = fully revealed
-                if (cooldownOverlay != null)
-                    cooldownOverlay.fillAmount = 1f - (elapsed / duration);
+                    // fillAmount 1 = fully covered, 0 = fully revealed
+                    if (cooldownOverlay != null)
+                        cooldownOverlay.fillAmount = 1f - (elapsed / duration);
 
-                if (cooldownText != null)
-                    cooldownText.text = Mathf.CeilToInt(remaining).ToString();
+                    if (cooldownText != null)
+                        cooldownText.text = Mathf.CeilToInt(remaining).ToString();
+                }
 
                 yield return null;
             }

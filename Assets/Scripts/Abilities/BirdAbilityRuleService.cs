@@ -103,9 +103,7 @@ public class BirdAbilityRuleService : MonoBehaviour
         if (ballInteract.GetBirdType() == BirdType.PELICAN) return true;
         if (ballInteract.GetBirdType() == BirdType.DODO) return true;
         if (ballInteract.GetBirdType() == BirdType.PUKEKO && GameManager.PointInProgress()) return true;
-        if (ballInteract.GetBirdType() == BirdType.SEAGULL
-            && (GameManager.Instance.gameState == GameManager.GameState.PointEnd
-            || GameManager.Instance.gameState == GameManager.GameState.PointStart)
+        if (ballInteract.GetBirdType() == BirdType.SEAGULL && GameManager.Instance.gameState == GameManager.GameState.PointStart
             && ScoreManager.Instance.side1ServeIndicator.activeInHierarchy == (ballInteract.transform.position.x < 0)) return true;
 
         // If the ball is not on your side of the court (to prevent any spiking abilities from activating too early)

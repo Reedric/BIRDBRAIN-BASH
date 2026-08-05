@@ -52,7 +52,7 @@ public class BuffsDebuffs : MonoBehaviour
         if (bird == null) return;
 
         // Reject any effect that tries to start outside of an active point
-        if (!GameManager.PointInProgress()) return;
+        // if (!GameManager.PointInProgress()) return;
 
         if (!activeEffects.ContainsKey(bird))
             activeEffects[bird] = new Dictionary<EffectType, Coroutine>();

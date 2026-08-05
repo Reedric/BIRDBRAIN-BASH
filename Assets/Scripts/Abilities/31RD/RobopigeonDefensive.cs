@@ -98,7 +98,7 @@ public class RobopigeonDefensive : BirdAbility
 
         if (minionRb != null)
         {
-            minionRb.velocity = Vector3.zero;
+            minionRb.linearVelocity = Vector3.zero;
             minionRb.angularVelocity = Vector3.zero;
             minionRb.useGravity = true;
         }
