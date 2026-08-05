@@ -374,12 +374,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
-    m_SelectOnLeft: {fileID: 0}
-    m_SelectOnRight: {fileID: 0}
+    m_SelectOnUp: {fileID: 1205306878}
+    m_SelectOnDown: {fileID: 2078819189}
+    m_SelectOnLeft: {fileID: 792711167}
+    m_SelectOnRight: {fileID: 1146768443}
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
@@ -1009,11 +1009,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
-    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnUp: {fileID: 1235531131}
+    m_SelectOnDown: {fileID: 1153935824}
+    m_SelectOnLeft: {fileID: 1064718145}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
@@ -2690,12 +2690,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
+    m_SelectOnUp: {fileID: 1205306878}
+    m_SelectOnDown: {fileID: 2078819189}
     m_SelectOnLeft: {fileID: 0}
-    m_SelectOnRight: {fileID: 0}
+    m_SelectOnRight: {fileID: 1205306878}
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
@@ -3250,9 +3250,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
+    m_SelectOnUp: {fileID: 1183188988}
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
@@ -3355,7 +3355,7 @@ RectTransform:
   m_GameObject: {fileID: 1116536031}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.75, y: 0.75, z: 0.75}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
@@ -3622,11 +3622,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
-    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnUp: {fileID: 1205306878}
+    m_SelectOnDown: {fileID: 2078819189}
+    m_SelectOnLeft: {fileID: 170548454}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
@@ -3717,11 +3717,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
+    m_SelectOnUp: {fileID: 271010095}
     m_SelectOnDown: {fileID: 0}
-    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnLeft: {fileID: 1064718145}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
@@ -3923,10 +3923,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
+    m_SelectOnUp: {fileID: 1064718145}
+    m_SelectOnDown: {fileID: 1235531131}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
@@ -4086,44 +4086,167 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   muteBackgroundMusic: 0
   penguinSounds:
-  - {fileID: 8300000, guid: 8af3d13ded60b634e8b576b1f92a2a56, type: 3}
-  - {fileID: 8300000, guid: 4209d1a8e38a3334cb586e8ac04a80e1, type: 3}
-  - {fileID: 8300000, guid: de646397ced512b4488c799523f9cf00, type: 3}
-  - {fileID: 8300000, guid: 62ab6da83c603ee46a2b6d1b80ffecc8, type: 3}
-  - {fileID: 8300000, guid: 3a4cce6906f42f34f80b08491a84544d, type: 3}
-  - {fileID: 0}
-  - {fileID: 8300000, guid: ac5a0ff18126b13419c13d9dbd6720a7, type: 3}
-  - {fileID: 0}
-  crowSounds: []
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  crowSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
   scissortailSounds:
-  - {fileID: 8300000, guid: 001d2edea88aff24e9a0daf7e187d76f, type: 3}
-  - {fileID: 8300000, guid: 874d0e4a212049e42af75050a79da7e7, type: 3}
-  - {fileID: 8300000, guid: bfcd36449fa8e954bb1c9e15f300dd9c, type: 3}
-  - {fileID: 8300000, guid: b3faf003d6a652648b14ac82348c726b, type: 3}
-  - {fileID: 8300000, guid: 49d96296e3e29e742a2632e5aa16c13d, type: 3}
-  - {fileID: 0}
-  - {fileID: 8300000, guid: 81912487c56a3e942b03b9cc6a3c9784, type: 3}
-  - {fileID: 8300000, guid: 8ce969f916eeae545bc560008a10d940, type: 3}
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
   lovebirdSounds:
-  - {fileID: 8300000, guid: 93981666575f3e844aeec5432c1bde04, type: 3}
-  - {fileID: 8300000, guid: 3b025b89ed4cdc44988d1abc018c6c19, type: 3}
-  - {fileID: 8300000, guid: 29d4ab88c5fd0c74b84d18eb1ae87a74, type: 3}
-  - {fileID: 8300000, guid: 81ac9f7cfd2394243bde2459c83b096e, type: 3}
-  - {fileID: 8300000, guid: fa41255b7e6cfbe47a4b2b04e7c3f7bf, type: 3}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 8300000, guid: 11c62da8e049ea545a35e2da331f8bbf, type: 3}
-  dodoSounds: []
-  seagullSounds: []
-  pelicanSounds: []
-  toucanSounds: []
-  pukekoSounds: []
-  chickenSounds: []
-  ostrichSounds: []
-  eagleSounds: []
-  kiwiSounds: []
-  macawSounds: []
-  owlSounds: []
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  dodoSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  seagullSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  pelicanSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  toucanSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  pukekoSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  chickenSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  ostrichSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  eagleSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  kiwiSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  macawSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  owlSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  phoenixSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  robopigeonSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  hummingbirdSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
   scoringSounds:
   - {fileID: 8300000, guid: eb33c0f9c80807641add146b4c6d0873, type: 3}
   ballPlayerInteractionSounds:
@@ -4411,6 +4534,7 @@ GameObject:
   - component: {fileID: 1205306877}
   - component: {fileID: 1205306876}
   - component: {fileID: 1205306875}
+  - component: {fileID: 1205306878}
   m_Layer: 5
   m_Name: Aviary
   m_TagString: Untagged
@@ -4503,6 +4627,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1205306873}
   m_CullTransparentMesh: 1
+--- !u!114 &1205306878
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1205306873}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Navigation:
+    m_Mode: 4
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 170548454}
+    m_SelectOnLeft: {fileID: 792711167}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 1205306876}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &1224288344
 GameObject:
   m_ObjectHideFlags: 0
@@ -4586,11 +4754,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
-    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnUp: {fileID: 1183188988}
+    m_SelectOnDown: {fileID: 271010095}
+    m_SelectOnLeft: {fileID: 1064718145}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
@@ -5265,7 +5433,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1621964713
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5614,7 +5782,13 @@ MonoBehaviour:
   cursorBounceDuration: 0.14
   cursorBounceOvershoot: 1.15
   cursorSpeed: 1000
-  numPlayersPanel: {fileID: 0}
+  cursorMoveSmoothTime: 0.06
+  hoverBobAmplitude: 3
+  hoverBobFrequency: 1
+  mainMenuPanel: {fileID: 1157903268}
+  numPlayersPanel: {fileID: 363993055}
+  inputDeadzone: 0.5
+  inputRepeatDelay: 0.12
 --- !u!114 &1933689304
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5794,12 +5968,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
+    m_SelectOnUp: {fileID: 792711167}
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
-    m_SelectOnRight: {fileID: 0}
+    m_SelectOnRight: {fileID: 792711167}
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}

@@ -78,6 +78,25 @@ public class CharacterSelectManager : MonoBehaviour
     [Range(1.0f, 1.5f)]
     public float cursorBounceOvershoot = 1.15f;
 
+    [Header("Cursor Snap & Movement")]
+    [Tooltip("Seconds to interpolate the cursor between positions")]
+    public float cursorMoveSmoothTime = 0.06f;
+
+    [Tooltip("Minimum stick magnitude to trigger a snap move")]
+    public float inputDeadzone = 0.5f;
+
+    [Tooltip("Minimum seconds between directional snap moves (per player)")]
+    public float inputRepeatDelay = 0.12f;
+
+    [Tooltip("Bobbing amplitude in pixels when hovering over a target")]
+    public float hoverBobAmplitude = 6f;
+
+    [Tooltip("Bobbing frequency in Hz when hovering over a target")]
+    public float hoverBobFrequency = 3.0f;
+
+    [Tooltip("Seconds to smooth cursor rotation when multiple players overlap")]
+    public float cursorRotationSmoothTime = 0.08f;
+
     [Header("Bird Icon Bounce")]
     [SerializeField] private float iconShrinkDuration = 0.08f;
     [SerializeField] private float iconBounceDuration = 0.2f;
@@ -92,6 +111,21 @@ public class CharacterSelectManager : MonoBehaviour
     private List<bool> playerReady = new();
     private List<Transform> playerCursors = new();
     private List<PlayerInputState> playerInputStates = new();
+
+    // UI targets (bird buttons + other buttons) we can snap to
+    private List<RectTransform> uiTargets = new();
+    // Parallel list of Selectable components for navigation-based movement
+    private List<Selectable> uiSelectables = new();
+
+    // Per-player runtime state for snapping and smoothing
+    private int[] currentTargetIndex = new int[4];
+    private float[] lastMoveTime = new float[4];
+    private Vector2[] desiredScreenPositions = new Vector2[4];
+    private bool[] isHoveringTarget = new bool[4];
+    // Per-player currently selected Selectable (for navigation)
+    private Selectable[] currentSelectable = new Selectable[4];
+    // Preserve the original scale of each cursor instance.
+    private Vector3[] cursorBaseScales = new Vector3[4];
 
     // One coroutine slot per player — stops any in-progress animation before starting a new one
     private readonly Coroutine[] cursorAnimCoroutines = new Coroutine[4];
@@ -161,6 +195,29 @@ public class CharacterSelectManager : MonoBehaviour
         CreatePlayerCursors();
 
         if (readyButton != null) readyButton.onClick.AddListener(CheckAllPlayersReady);
+
+        // Build list of selectable UI targets and initialize per-player snap state
+        CollectUITargets();
+        for (int i = 0; i < currentTargetIndex.Length; ++i)
+        {
+            currentTargetIndex[i] = -1;
+            lastMoveTime[i] = -999f;
+            desiredScreenPositions[i] = new Vector2(Screen.width / 2f, Screen.height / 2f);
+            isHoveringTarget[i] = false;
+        }
+
+        // Initialize each player's starting target to the closest to screen center
+        Vector2 center = new Vector2(Screen.width / 2f, Screen.height / 2f);
+        for (int i = 0; i < playerInputStates.Count; ++i)
+        {
+            int selIdx = FindClosestSelectableIndex(center);
+            if (selIdx >= 0)
+            {
+                currentTargetIndex[i] = selIdx;
+                currentSelectable[i] = uiSelectables[selIdx];
+                desiredScreenPositions[i] = GetPreferredScreenPosition(uiTargets[selIdx]);
+            }
+        }
 
         if (p1Ready != null) p1Ready.enabled = false;
         if (p2Ready != null) p2Ready.enabled = false;
@@ -319,6 +376,7 @@ public class CharacterSelectManager : MonoBehaviour
             if (rt != null)
                 rt.pivot = new Vector2(0f, 1f);
 
+            cursorBaseScales[i] = cursor.localScale;
             playerCursors.Add(cursor);
         }
     }
@@ -343,18 +401,24 @@ public class CharacterSelectManager : MonoBehaviour
             Gamepad pad = state.device as Gamepad;
             if (pad != null)
             {
+                // Read stick direction but do not freely move the cursor. Directional input
+                // will be used to snap between selectable UI targets instead.
                 state.inputDirection = pad.leftStick.ReadValue();
-
-                float moveSpeed = 1000f * Time.deltaTime;
-                state.cursorPosition += state.inputDirection * moveSpeed;
-
-                state.cursorPosition.x = Mathf.Clamp(state.cursorPosition.x, 0, Screen.width);
-                state.cursorPosition.y = Mathf.Clamp(state.cursorPosition.y, 0, Screen.height);
 
                 if (pad.aButton.wasPressedThisFrame)
                 {
+                    // Snap cursor position to current desired target before pressing
+                    if (currentTargetIndex[playerIndex] >= 0)
+                        state.cursorPosition = desiredScreenPositions[playerIndex];
+
                     PlayCursorPressAnimation(playerIndex);
-                    HandlePlayerButtonPress(playerIndex);
+                    bool activated = false;
+                    int targetIndex = currentTargetIndex[playerIndex];
+                    if (targetIndex >= 0)
+                        activated = TryActivateTargetAtIndex(targetIndex, playerIndex);
+
+                    if (!activated)
+                        HandlePlayerButtonPress(playerIndex);
                 }
 
                 if (pad.startButton.wasPressedThisFrame)
@@ -372,18 +436,267 @@ public class CharacterSelectManager : MonoBehaviour
         Transform cursor = playerCursors[playerIndex];
         if (cursor == null) return;
 
-        Vector2 screenPos = playerInputStates[playerIndex].cursorPosition;
+        PlayerInputState state = playerInputStates[playerIndex];
 
-        // With the pivot set to (0, 1) the RectTransform's anchor point IS the
-        // top-left corner, so placing it at localPos puts the tip exactly there.
+        // If this player is using KBM, keep mouse behavior unchanged
+        if (state.isKBM)
+        {
+            Vector2 screenPos = state.cursorPosition;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                mainCanvas.GetComponent<RectTransform>(),
+                screenPos,
+                mainCanvas.worldCamera,
+                out Vector2 localPosKBM
+            );
+            cursor.GetComponent<RectTransform>().localPosition = localPosKBM;
+            return;
+        }
+
+        // Gamepad: handle directional snapping
+        Vector2 stick = state.inputDirection;
+        float mag = stick.magnitude;
+
+        // When stick is pushed beyond deadzone, attempt to navigate using Selectable.navigation
+        if (mag >= inputDeadzone && Time.time - lastMoveTime[playerIndex] >= inputRepeatDelay && uiSelectables.Count > 0)
+        {
+            Selectable cur = currentSelectable[playerIndex];
+            if (cur == null)
+            {
+                int selIdx = FindClosestSelectableIndex(state.cursorPosition);
+                if (selIdx >= 0)
+                {
+                    cur = uiSelectables[selIdx];
+                    currentSelectable[playerIndex] = cur;
+                    currentTargetIndex[playerIndex] = selIdx;
+                    desiredScreenPositions[playerIndex] = GetPreferredScreenPosition(uiTargets[selIdx]);
+                }
+            }
+
+            if (cur != null)
+            {
+                Navigation nav = cur.navigation;
+                Selectable next = null;
+                // Determine primary axis from stick
+                if (Mathf.Abs(stick.x) > Mathf.Abs(stick.y))
+                {
+                    next = (stick.x > 0f) ? nav.selectOnRight : nav.selectOnLeft;
+                }
+                else
+                {
+                    next = (stick.y > 0f) ? nav.selectOnUp : nav.selectOnDown;
+                }
+
+                if (next != null)
+                {
+                    int idx = uiSelectables.IndexOf(next);
+                    if (idx >= 0 && idx != currentTargetIndex[playerIndex])
+                    {
+                        currentTargetIndex[playerIndex] = idx;
+                        currentSelectable[playerIndex] = next;
+                        desiredScreenPositions[playerIndex] = GetPreferredScreenPosition(uiTargets[idx]);
+                        isHoveringTarget[playerIndex] = false;
+                        lastMoveTime[playerIndex] = Time.time;
+                        // Also update EventSystem selection for consistency
+                        if (EventSystem.current != null)
+                            EventSystem.current.SetSelectedGameObject(next.gameObject);
+                    }
+                }
+            }
+        }
+
+        // If we have a target, compute desired position; otherwise hold current position
+        Vector2 desiredScreen = state.cursorPosition;
+        int tidx = currentTargetIndex[playerIndex];
+        if (tidx >= 0 && tidx < uiTargets.Count)
+        {
+            desiredScreen = GetPreferredScreenPosition(uiTargets[tidx]);
+            desiredScreenPositions[playerIndex] = desiredScreen;
+        }
+
+        // Smoothly interpolate the internal cursor screen position toward desiredScreen
+        float t = Mathf.Clamp01(Time.deltaTime / Mathf.Max(0.0001f, cursorMoveSmoothTime));
+        state.cursorPosition = Vector2.Lerp(state.cursorPosition, desiredScreenPositions[playerIndex], t);
+
+        // Check hovering threshold (close enough to snap into hover state)
+        float hoverThreshold = 10f;
+        float dist = Vector2.Distance(state.cursorPosition, desiredScreenPositions[playerIndex]);
+        isHoveringTarget[playerIndex] = (tidx >= 0 && dist <= hoverThreshold);
+
+        Vector2 finalScreenPos = state.cursorPosition;
+
+        // When hovering, pin to preferred position and add diagonal bobbing
+        if (isHoveringTarget[playerIndex])
+        {
+            finalScreenPos = desiredScreenPositions[playerIndex];
+            float phase = (Time.time * hoverBobFrequency) % 1f;
+            float intensity;
+            if (phase < 0.5f)
+            {
+                float normalized = phase / 0.5f;
+                intensity = normalized * normalized; // accelerate into the button
+            }
+            else
+            {
+                float normalized = (phase - 0.5f) / 0.5f;
+                intensity = 1f - (normalized * normalized); // decelerate away
+            }
+            Vector2 bob = new Vector2(-intensity, -intensity) * hoverBobAmplitude;
+            finalScreenPos += bob;
+
+            // Clamp to screen bounds
+            float margin = 4f;
+            finalScreenPos.x = Mathf.Clamp(finalScreenPos.x, margin, Screen.width - margin);
+            finalScreenPos.y = Mathf.Clamp(finalScreenPos.y, margin, Screen.height - margin);
+        }
+
+        // Convert final screen position to canvas local and apply
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
             mainCanvas.GetComponent<RectTransform>(),
-            screenPos,
+            finalScreenPos,
             mainCanvas.worldCamera,
             out Vector2 localPos
         );
 
         cursor.GetComponent<RectTransform>().localPosition = localPos;
+
+        // If multiple players hover the same target, rotate each cursor around its top-left anchor
+        if (tidx >= 0 && isHoveringTarget[playerIndex])
+        {
+            List<int> overlappingPlayers = new List<int>();
+            for (int i = 0; i < playerInputStates.Count; ++i)
+            {
+                if (i == playerIndex) continue;
+                if (playerInputStates[i] == null) continue;
+                if (currentTargetIndex[i] == tidx && isHoveringTarget[i])
+                    overlappingPlayers.Add(i);
+            }
+
+            Quaternion desiredRotation = Quaternion.identity;
+            if (overlappingPlayers.Count > 0)
+            {
+                overlappingPlayers.Add(playerIndex);
+                overlappingPlayers.Sort();
+                int position = overlappingPlayers.IndexOf(playerIndex);
+                int count = overlappingPlayers.Count;
+                float angle = (position - (count - 1) * 0.5f) * 30f;
+                desiredRotation = Quaternion.Euler(0f, 0f, angle);
+            }
+
+            RectTransform cursorRect = cursor.GetComponent<RectTransform>();
+            cursorRect.localRotation = Quaternion.Slerp(cursorRect.localRotation, desiredRotation, Mathf.Clamp01(Time.deltaTime / Mathf.Max(0.0001f, cursorRotationSmoothTime)));
+        }
+        else
+        {
+            RectTransform cursorRect = cursor.GetComponent<RectTransform>();
+            cursorRect.localRotation = Quaternion.Slerp(cursorRect.localRotation, Quaternion.identity, Mathf.Clamp01(Time.deltaTime / Mathf.Max(0.0001f, cursorRotationSmoothTime)));
+        }
+    }
+
+    // Collect BirdSelectButton rects and other Buttons under the main canvas as snap targets
+    private void CollectUITargets()
+    {
+        uiTargets.Clear();
+
+        uiTargets.Clear();
+        uiSelectables.Clear();
+
+        // Prefer Selectable-based navigation (Buttons, Toggle, etc.) under the main canvas
+        if (mainCanvas != null)
+        {
+            Selectable[] selectables = mainCanvas.GetComponentsInChildren<Selectable>(true);
+            foreach (var s in selectables)
+            {
+                RectTransform rt = s.GetComponent<RectTransform>();
+                if (rt != null && !uiTargets.Contains(rt))
+                {
+                    uiTargets.Add(rt);
+                    uiSelectables.Add(s);
+                }
+            }
+        }
+
+        // Fallback: include BirdSelectButton instances as rect targets if not already present
+        BirdSelectButton[] birdButtons = FindObjectsOfType<BirdSelectButton>(true);
+        foreach (var b in birdButtons)
+        {
+            RectTransform rt = b.GetComponent<RectTransform>();
+            if (rt != null && !uiTargets.Contains(rt))
+            {
+                uiTargets.Add(rt);
+                uiSelectables.Add(null);
+            }
+        }
+    }
+
+    // Returns the preferred screen-space position for a target: use the transform center and clamp to screen bounds.
+    private Vector2 GetPreferredScreenPosition(RectTransform rt)
+    {
+        if (rt == null) return new Vector2(Screen.width / 2f, Screen.height / 2f);
+
+        Vector2 center = RectTransformUtility.WorldToScreenPoint(mainCanvas.worldCamera, rt.position);
+        float margin = 6f;
+        center.x = Mathf.Clamp(center.x, margin, Screen.width - margin);
+        center.y = Mathf.Clamp(center.y, margin, Screen.height - margin);
+        return center;
+    }
+
+    // Find the closest uiTargets index from a given screen point biased by an optional direction.
+    // If direction magnitude is > 0, prefer targets that are roughly in that direction from the fromPoint.
+    private int FindClosestTargetIndex(Vector2 fromPoint, Vector2 direction)
+    {
+        if (uiTargets == null || uiTargets.Count == 0) return -1;
+
+        int bestIndex = -1;
+        float bestScore = float.MaxValue;
+
+        Vector2 dir = direction.normalized;
+        bool useDir = direction.sqrMagnitude > 0.001f;
+
+        for (int i = 0; i < uiTargets.Count; ++i)
+        {
+            RectTransform rt = uiTargets[i];
+            Vector2 targetScreen = GetPreferredScreenPosition(rt);
+            Vector2 toTarget = targetScreen - fromPoint;
+            float dist = toTarget.sqrMagnitude;
+
+            float score = dist;
+
+            if (useDir)
+            {
+                Vector2 toDir = toTarget.normalized;
+                float dot = Vector2.Dot(dir, toDir);
+                // Favor targets that are in roughly the same direction (dot near 1).
+                // Subtract from score so higher dot = lower score.
+                score = dist * (1f - Mathf.Clamp01((dot + 1f) / 2f));
+            }
+
+            if (score < bestScore)
+            {
+                bestScore = score;
+                bestIndex = i;
+            }
+        }
+
+        return bestIndex;
+    }
+
+    // Find the closest selectable index to a screen point (used for initial placement and fallbacks)
+    private int FindClosestSelectableIndex(Vector2 fromPoint)
+    {
+        if (uiTargets == null || uiTargets.Count == 0) return -1;
+        int best = -1;
+        float bestDist = float.MaxValue;
+        for (int i = 0; i < uiTargets.Count; ++i)
+        {
+            Vector2 p = GetPreferredScreenPosition(uiTargets[i]);
+            float d = (p - fromPoint).sqrMagnitude;
+            if (d < bestDist)
+            {
+                bestDist = d;
+                best = i;
+            }
+        }
+        return best;
     }
 
     // Cursor press animation
@@ -407,42 +720,45 @@ public class CharacterSelectManager : MonoBehaviour
     private IEnumerator CursorPressRoutine(int playerIndex)
     {
         Transform cursor = playerCursors[playerIndex];
+        Vector3 baseScale = cursorBaseScales[playerIndex];
+        Vector3 pressedScale = baseScale * cursorPressScale;
 
-        // Phase 1 — shrink down to cursorPressScale
+        // Phase 1 — shrink down to cursorPressScale * base scale
         float elapsed = 0f;
         while (elapsed < cursorShrinkDuration)
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / cursorShrinkDuration);
-            float s = Mathf.Lerp(1f, cursorPressScale, t);
-            cursor.localScale = new Vector3(s, s, 1f);
+            cursor.localScale = Vector3.Lerp(baseScale, pressedScale, t);
             yield return null;
         }
-        cursor.localScale = new Vector3(cursorPressScale, cursorPressScale, 1f);
+        cursor.localScale = pressedScale;
 
-        // Phase 2 — bounce back, briefly overshooting 1.0 before settling
-        // sin(t * π) peaks at t = 0.5, giving a smooth overshoot arc
+        // Phase 2 — bounce back, briefly overshooting base scale before settling
         elapsed = 0f;
         while (elapsed < cursorBounceDuration)
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / cursorBounceDuration);
-            float baseScale = Mathf.Lerp(cursorPressScale, 1f, t);
+            Vector3 baseLerp = Vector3.Lerp(pressedScale, baseScale, t);
             float overshoot = Mathf.Sin(t * Mathf.PI) * (cursorBounceOvershoot - 1f);
-            float s = baseScale + overshoot;
-            cursor.localScale = new Vector3(s, s, 1f);
+            cursor.localScale = baseLerp + baseScale * overshoot;
             yield return null;
         }
 
-        cursor.localScale = Vector3.one; // snap clean
+        cursor.localScale = baseScale; // snap clean
         cursorAnimCoroutines[playerIndex] = null;
     }
 
     private void HandlePlayerButtonPress(int playerIndex)
     {
         if (playerIndex >= playerInputStates.Count) return;
-        Vector2 screenPos = playerInputStates[playerIndex].cursorPosition;
 
+        int targetIndex = currentTargetIndex[playerIndex];
+        if (targetIndex >= 0 && TryActivateTargetAtIndex(targetIndex, playerIndex))
+            return;
+
+        Vector2 screenPos = playerInputStates[playerIndex].cursorPosition;
         PointerEventData pointerData = new(EventSystem.current) { position = screenPos };
         List<RaycastResult> results = new();
         EventSystem.current.RaycastAll(pointerData, results);
@@ -463,6 +779,76 @@ public class CharacterSelectManager : MonoBehaviour
                 return;
             }
         }
+    }
+
+    private bool TryActivateTargetAtIndex(int index, int playerIndex)
+    {
+        if (index < 0 || index >= uiTargets.Count) return false;
+
+        Selectable selectable = (index < uiSelectables.Count) ? uiSelectables[index] : null;
+        if (TryActivateSelectable(selectable, playerIndex))
+            return true;
+
+        RectTransform rt = uiTargets[index];
+        if (rt == null) return false;
+
+        BirdSelectButton birdButton = rt.GetComponent<BirdSelectButton>();
+        if (birdButton != null)
+        {
+            birdButton.OnPressed(playerIndex);
+            return true;
+        }
+
+        Button uiButton = rt.GetComponent<Button>();
+        if (uiButton != null)
+        {
+            uiButton.onClick.Invoke();
+            return true;
+        }
+
+        // Also check children if the button component is nested.
+        birdButton = rt.GetComponentInChildren<BirdSelectButton>(true);
+        if (birdButton != null)
+        {
+            birdButton.OnPressed(playerIndex);
+            return true;
+        }
+
+        uiButton = rt.GetComponentInChildren<Button>(true);
+        if (uiButton != null)
+        {
+            uiButton.onClick.Invoke();
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool TryActivateSelectable(Selectable selectable, int playerIndex)
+    {
+        if (selectable == null) return false;
+
+        if (selectable.TryGetComponent<BirdSelectButton>(out BirdSelectButton birdButton))
+        {
+            birdButton.OnPressed(playerIndex);
+            return true;
+        }
+
+        if (selectable.TryGetComponent<Button>(out Button uiButton))
+        {
+            uiButton.onClick.Invoke();
+            return true;
+        }
+
+        // Use EventSystem submit as a final fallback for interactable Selectables.
+        if (EventSystem.current != null && selectable.IsInteractable())
+        {
+            BaseEventData eventData = new BaseEventData(EventSystem.current);
+            ExecuteEvents.Execute(selectable.gameObject, eventData, ExecuteEvents.submitHandler);
+            return true;
+        }
+
+        return false;
     }
 
     public void ResizePlayerLists(int count)
