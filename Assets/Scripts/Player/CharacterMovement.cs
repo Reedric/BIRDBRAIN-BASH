@@ -125,7 +125,10 @@ public class CharacterMovement : NetworkBehaviour
         if (canJump && grounded && jump.IsPressed())
         {
             float jumpAmount = 5 + 0.3f * jumpForce;
-            rb.linearVelocity += new Vector3(0, jumpAmount, 0);
+            // Assign Y velocity directly rather than += - prevents leftover fall velocity
+            // (which isn't always fully zeroed by the physics solver on landing) from
+            // stacking with the jump impulse and producing inconsistent jump heights
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpAmount, rb.linearVelocity.z);
             grounded = false;
         }
     }

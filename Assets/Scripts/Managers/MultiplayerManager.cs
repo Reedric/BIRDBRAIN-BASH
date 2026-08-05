@@ -363,6 +363,15 @@ public class MultiplayerManager : MonoBehaviour
             case BirdType.MACAW:
                 if (!isPlayer) return cManager.MacawAI;
                 return isKBM ? cManager.MacawKBM : cManager.MacawC;
+            case BirdType.PHOENIX:
+                if (!isPlayer) return cManager.PhoenixAI;
+                return isKBM ? cManager.PhoenixKBM : cManager.PhoenixC;
+            case BirdType.ROBOPIGEON:
+                if (!isPlayer) return cManager.RobopigeonAI;
+                return isKBM ? cManager.RobopigeonKBM : cManager.RobopigeonC;
+            case BirdType.HUMMINGBIRD:
+                if (!isPlayer) return cManager.HummingbirdAI;
+                return isKBM ? cManager.HummingbirdKBM : cManager.HummingbirdC;
             default:
                 if (!isPlayer) return cManager.PenguinAI;
                 return isKBM ? cManager.PenguinKBM : cManager.PenguinC;

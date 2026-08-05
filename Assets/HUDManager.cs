@@ -182,6 +182,24 @@ public class HUDManager : MonoBehaviour
     [SerializeField] private Texture macawOffensiveIcon;
     [SerializeField] private Texture macawDefensiveIcon;
 
+    [Header("Phoenix")]
+    [SerializeField] private string phoenixDisplayName = "Phoenix";
+    [SerializeField] private Texture phoenixPlayerIcon;
+    [SerializeField] private Texture phoenixOffensiveIcon;
+    [SerializeField] private Texture phoenixDefensiveIcon;
+
+    [Header("31RD")]
+    [SerializeField] private string robopigeonDisplayName = "31RD";
+    [SerializeField] private Texture robopigeonPlayerIcon;
+    [SerializeField] private Texture robopigeonOffensiveIcon;
+    [SerializeField] private Texture robopigeonDefensiveIcon;
+
+    [Header("Hummingbird")]
+    [SerializeField] private string hummingbirdDisplayName = "Hummingbird";
+    [SerializeField] private Texture hummingbirdPlayerIcon;
+    [SerializeField] private Texture hummingbirdOffensiveIcon;
+    [SerializeField] private Texture hummingbirdDefensiveIcon;
+
 
     private static HUDManager instance;
     public static HUDManager Instance => instance;
@@ -399,6 +417,9 @@ public class HUDManager : MonoBehaviour
             BirdType.OSTRICH     => new BirdHUDData { displayName = ostrichDisplayName,     playerIcon = ostrichPlayerIcon,     offensiveIcon = ostrichOffensiveIcon,     defensiveIcon = ostrichDefensiveIcon },
             BirdType.EAGLE       => new BirdHUDData { displayName = eagleDisplayName,       playerIcon = eaglePlayerIcon,       offensiveIcon = eagleOffensiveIcon,       defensiveIcon = eagleDefensiveIcon },
             BirdType.MACAW       => new BirdHUDData { displayName = macawDisplayName,       playerIcon = macawPlayerIcon,       offensiveIcon = macawOffensiveIcon,       defensiveIcon = macawDefensiveIcon },
+            BirdType.PHOENIX     => new BirdHUDData { displayName = phoenixDisplayName,     playerIcon = phoenixPlayerIcon,     offensiveIcon = phoenixOffensiveIcon,     defensiveIcon = phoenixDefensiveIcon },
+            BirdType.ROBOPIGEON  => new BirdHUDData { displayName = robopigeonDisplayName,  playerIcon = robopigeonPlayerIcon,  offensiveIcon = robopigeonOffensiveIcon,  defensiveIcon = robopigeonDefensiveIcon },
+            BirdType.HUMMINGBIRD => new BirdHUDData { displayName = hummingbirdDisplayName, playerIcon = hummingbirdPlayerIcon, offensiveIcon = hummingbirdOffensiveIcon, defensiveIcon = hummingbirdDefensiveIcon },
             _                    => null
         };
     }

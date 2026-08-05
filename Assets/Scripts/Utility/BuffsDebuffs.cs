@@ -15,8 +15,10 @@ public class BuffsDebuffs : MonoBehaviour
     }
 
     private Dictionary<GameObject, Dictionary<EffectType, GameObject>> activeVFX = new();
+    private Dictionary<GameObject, Dictionary<EffectType, Coroutine>> activeEffects = new();
     private Dictionary<GameObject, (float groundSpeed, float airSpeed, float jumpForce, float aiGroundSpeed, float aiAirSpeed)> stunOriginalValues = new();
     private HashSet<RagdollManager> activeRagdolls = new();
+    private Dictionary<GameObject, HashSet<EffectType>> preservedEffects = new();
 
     [System.Serializable]
     public class EffectSet
@@ -32,8 +34,6 @@ public class BuffsDebuffs : MonoBehaviour
 
     [Header("Team 2 — Right Side")]
     public EffectSet team2Effects;
-
-    private Dictionary<GameObject, Dictionary<EffectType, Coroutine>> activeEffects = new();
 
     private void Awake()
     {
@@ -65,6 +65,30 @@ public class BuffsDebuffs : MonoBehaviour
 
         Coroutine co = StartCoroutine(RunEffect(type, bird, duration, onLeft));
         activeEffects[bird][type] = co;
+    }
+
+    public void PreserveEffect(GameObject bird, EffectType type)
+    {
+        if (bird == null) return;
+        if (!preservedEffects.ContainsKey(bird))
+            preservedEffects[bird] = new HashSet<EffectType>();
+        preservedEffects[bird].Add(type);
+    }
+
+    public void ReleaseEffect(GameObject bird, EffectType type)
+    {
+        if (bird == null) return;
+        if (!preservedEffects.ContainsKey(bird)) return;
+        preservedEffects[bird].Remove(type);
+        if (preservedEffects[bird].Count == 0)
+            preservedEffects.Remove(bird);
+    }
+
+    private bool IsEffectPreserved(GameObject bird, EffectType type)
+    {
+        return bird != null
+            && preservedEffects.ContainsKey(bird)
+            && preservedEffects[bird].Contains(type);
     }
 
     private IEnumerator RunEffect(EffectType type, GameObject bird, float duration, bool onLeft)
@@ -240,26 +264,42 @@ public class BuffsDebuffs : MonoBehaviour
     // cleanup effects after point is over
     public void ClearAllEffects()
     {
-        foreach (var bird in activeEffects.Keys)
+        var activeEffectsCopy = new Dictionary<GameObject, Dictionary<EffectType, Coroutine>>(activeEffects);
+
+        foreach (var bird in activeEffectsCopy.Keys)
         {
-            foreach (var kvp in activeEffects[bird])
+            foreach (var kvp in activeEffectsCopy[bird])
             {
+                if (IsEffectPreserved(bird, kvp.Key))
+                    continue;
+
                 StopCoroutine(kvp.Value);
                 ApplyGameplayEffect(kvp.Key, bird, false);
+                activeEffects[bird].Remove(kvp.Key);
             }
+
+            if (activeEffects.ContainsKey(bird) && activeEffects[bird].Count == 0)
+                activeEffects.Remove(bird);
         }
-        activeEffects.Clear();
 
         // Actually destroy the spawned VFX — previously the dict was cleared
         // but the GameObjects were left alive, causing infinite particle replay
-        foreach (var bird in activeVFX.Keys)
+        var vfxCopy = new Dictionary<GameObject, Dictionary<EffectType, GameObject>>(activeVFX);
+        foreach (var bird in vfxCopy.Keys)
         {
-            foreach (var vfx in activeVFX[bird].Values)
+            foreach (var kvp in vfxCopy[bird])
             {
-                if (vfx != null) Destroy(vfx);
+                if (IsEffectPreserved(bird, kvp.Key))
+                    continue;
+
+                if (kvp.Value != null) Destroy(kvp.Value);
+                activeVFX[bird].Remove(kvp.Key);
             }
+
+            if (activeVFX.ContainsKey(bird) && activeVFX[bird].Count == 0)
+                activeVFX.Remove(bird);
         }
-        activeVFX.Clear();
+
         stunOriginalValues.Clear();
     }
 }

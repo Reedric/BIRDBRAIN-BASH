@@ -77,6 +77,21 @@ public class CharacterManager : MonoBehaviour
     [SerializeField] private GameObject macawC;
     [SerializeField] private GameObject macawAI;
 
+    [Header("Phoenix")]
+    [SerializeField] private GameObject phoenixKBM;
+    [SerializeField] private GameObject phoenixC;
+    [SerializeField] private GameObject phoenixAI;
+
+    [Header("31rd")]
+    [SerializeField] private GameObject robopigeonKBM;
+    [SerializeField] private GameObject robopigeonC;
+    [SerializeField] private GameObject robopigeonAI;
+
+    [Header("Hummingbird")]
+    [SerializeField] private GameObject hummingbirdKBM;
+    [SerializeField] private GameObject hummingbirdC;
+    [SerializeField] private GameObject hummingbirdAI;
+
     [HideInInspector] public GameObject PenguinKBM => penguinKBM;
     [HideInInspector] public GameObject PenguinC => penguinC;
     [HideInInspector] public GameObject PenguinAI => penguinAI;
@@ -130,4 +145,13 @@ public class CharacterManager : MonoBehaviour
     [HideInInspector] public GameObject MacawKBM => macawKBM;
     [HideInInspector] public GameObject MacawC => macawC;
     [HideInInspector] public GameObject MacawAI => macawAI;
+    [HideInInspector] public GameObject PhoenixKBM => phoenixKBM;
+    [HideInInspector] public GameObject PhoenixC => phoenixC;
+    [HideInInspector] public GameObject PhoenixAI => phoenixAI;
+    [HideInInspector] public GameObject RobopigeonKBM => robopigeonKBM;
+    [HideInInspector] public GameObject RobopigeonC => robopigeonC;
+    [HideInInspector] public GameObject RobopigeonAI => robopigeonAI;
+    [HideInInspector] public GameObject HummingbirdKBM => hummingbirdKBM;
+    [HideInInspector] public GameObject HummingbirdC => hummingbirdC;
+    [HideInInspector] public GameObject HummingbirdAI => hummingbirdAI;
 }
