@@ -545,7 +545,7 @@ public class AIBehavior : MonoBehaviour
                 newVelocity *= maxAirSpeed;
             }
 
-            Debug.LogFormat("{0} is moving at a speed of {1}.", gameObject.name, newVelocity.magnitude);
+            // Debug.LogFormat("{0} is moving at a speed of {1}.", gameObject.name, newVelocity.magnitude);
 
             // Update target rotation to face the movement direction
             if (!overrideRotation)
