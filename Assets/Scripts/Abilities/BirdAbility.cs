@@ -9,7 +9,7 @@ public abstract class BirdAbility : MonoBehaviour
 
     [SerializeField] protected float _cooldownTime;
     
-    private float _cooldownRemaining;
+    protected float _cooldownRemaining;
     private bool _abilitiesDisabled;
 
     public bool IsReady => _cooldownRemaining <= 0 && !_abilitiesDisabled;

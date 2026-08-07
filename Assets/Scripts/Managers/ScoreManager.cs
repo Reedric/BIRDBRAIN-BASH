@@ -2,9 +2,9 @@ using UnityEngine;
 using System.Collections;
 using UnityEngine.Events;
 using TMPro;
-using System;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System;
 
 public class ScoreManager : MonoBehaviour
 {
@@ -63,15 +63,24 @@ public class ScoreManager : MonoBehaviour
     private Coroutine confettiRoutine;
     private Coroutine side1ScoreBounceCoroutine;
     private Coroutine side2ScoreBounceCoroutine;
-   
+
     private bool leftLastScored;
     private bool inPlay;
     private bool outCheckPending; // guard against multiple outCheck coroutines
+    private bool pointIntercepted;
+
     public GameObject lastPhysicalTouch;
+
     UnityEvent LeftScored;
     UnityEvent RightScored;
 
+    // Lets a defensive ability (e.g. Phoenix) intercept a ground-touch point before it's scored.
+    // leftConceding is true when the point is about to go against the LEFT side (a "Side1" touch).
+    // A subscriber returns true to save/revive the ball; ScoreManager then skips the score entirely.
+    public static event Func<bool, Rigidbody, Vector3, bool> InterceptPoint;
+
     private static ScoreManager instance; // Private instance of the GameManager that other classes cannot reference
+
     public static ScoreManager Instance // Public instance of GameManager that other classes can reference
     {
         get
@@ -80,6 +89,7 @@ public class ScoreManager : MonoBehaviour
             {
                 instance = new ScoreManager();
             }
+
             return instance;
         }
     }
@@ -104,7 +114,6 @@ public class ScoreManager : MonoBehaviour
         pinkWinScore.enabled = false;
         blueContinue.enabled = false;
         pinkContinue.enabled = false;
-        
 
         // Make sure main camera is enabled
         endCamera.enabled = false;
@@ -123,7 +132,7 @@ public class ScoreManager : MonoBehaviour
         side2ScoreUI.text = "0";
         leftLastScored = false;
         inPlay = true;
-        
+
         // Initializes events for when the left or right side scores
         LeftScored = new UnityEvent();
         RightScored = new UnityEvent();
@@ -135,7 +144,8 @@ public class ScoreManager : MonoBehaviour
         ResetMatch();
         LeftScored.Invoke();
 
-        if(GameSettings.Instance != null) {
+        if (GameSettings.Instance != null)
+        {
             Debug.Log("Gamesettings loaded.");
         }
     }
@@ -146,6 +156,21 @@ public class ScoreManager : MonoBehaviour
         // if it touches side 1, then side 2 scores
         if (collision.gameObject.CompareTag("Side1") && inPlay)
         {
+            Rigidbody ballRb = BallManager.Instance?.gameObject?.GetComponent<Rigidbody>();
+
+            if (ballRb == null)
+                ballRb = collision.rigidbody != null ? collision.rigidbody : collision.gameObject.GetComponent<Rigidbody>();
+
+            if (ballRb == null)
+                Debug.LogWarning("ScoreManager: could not resolve ball Rigidbody for Side1 collision.");
+
+            // Give any subscribed defensive ability a chance to save the point first
+            if (RaiseInterceptPoint(true, ballRb, collision.GetContact(0).point))
+            {
+                pointIntercepted = true;
+                return;
+            }
+
             side2Score += 1;
             UpdateScoreDisplay(side2ScoreUI, side2Score);
             inPlay = false;
@@ -153,10 +178,25 @@ public class ScoreManager : MonoBehaviour
             RightScored.Invoke();
             StartCoroutine(PlaySounds(false));
             CheckWinSet(false);
-        } 
+        }
+
         // if it touches side 2, then side 1 scores
-        else if (collision.gameObject.CompareTag("Side2") && inPlay) 
+        else if (collision.gameObject.CompareTag("Side2") && inPlay)
         {
+            Rigidbody ballRb = BallManager.Instance?.gameObject?.GetComponent<Rigidbody>();
+
+            if (ballRb == null)
+                ballRb = collision.rigidbody != null ? collision.rigidbody : collision.gameObject.GetComponent<Rigidbody>();
+
+            if (ballRb == null)
+                Debug.LogWarning("ScoreManager: could not resolve ball Rigidbody for Side2 collision.");
+
+            if (RaiseInterceptPoint(false, ballRb, collision.GetContact(0).point))
+            {
+                pointIntercepted = true;
+                return;
+            }
+
             side1Score += 1;
             UpdateScoreDisplay(side1ScoreUI, side1Score);
             inPlay = false;
@@ -165,6 +205,7 @@ public class ScoreManager : MonoBehaviour
             StartCoroutine(PlaySounds(true));
             CheckWinSet(true);
         }
+
         // ducky: If ball goes out, run coroutine in case out collision was registered before court collision
         else if (collision.gameObject.CompareTag("Out") && inPlay && !outCheckPending)
         {
@@ -173,42 +214,122 @@ public class ScoreManager : MonoBehaviour
         }
     }
 
+    // Invokes InterceptPoint by hand instead of calling the multicast delegate directly, so that if
+    // more than one ability is ever subscribed, each one gets checked — calling a non-void multicast
+    // delegate directly only returns the LAST subscriber's result, silently ignoring the others.
+    private bool RaiseInterceptPoint(bool leftConceding, Rigidbody ballRb, Vector3 contactPoint)
+    {
+        if (InterceptPoint == null)
+            return false;
+
+        foreach (Func<bool, Rigidbody, Vector3, bool> handler in InterceptPoint.GetInvocationList())
+        {
+            if (handler(leftConceding, ballRb, contactPoint))
+                return true;
+        }
+
+        return false;
+    }
+
     // ducky: IEnumerator coroutine for collision order sorting (b/c out collision was sometimes coming through before court)
     public IEnumerator outCheck()
     {
+        // Wait briefly because the Out collision can sometimes happen
+        // before the actual court collision.
         yield return new WaitForSeconds(.2f);
 
-        // Get the game manager's instance
+        if (pointIntercepted)
+        {
+            pointIntercepted = false;
+            outCheckPending = false;
+            yield break;
+        }
+
         GameManager gameManager = GameManager.Instance;
 
-        // Checks if ball still in play
+        // Check if ball is still in play
         if (inPlay)
         {
-            GameObject touchSource = lastPhysicalTouch != null ? lastPhysicalTouch : gameManager.lastHit;
+            GameObject touchSource = lastPhysicalTouch != null
+                ? lastPhysicalTouch
+                : gameManager.lastHit;
 
-            if (touchSource == gameManager.rightPlayer1 || touchSource == gameManager.rightPlayer2)
+            Rigidbody ballRb = BallManager.Instance?.gameObject?.GetComponent<Rigidbody>();
+
+            if (ballRb == null)
+            {
+                Debug.LogWarning("ScoreManager: could not resolve ball Rigidbody during Out check.");
+            }
+
+            // Give defensive abilities such as Phoenix one last chance
+            // to save the point before the Out collision awards it.
+            //
+            // We determine which side is conceding from the player who
+            // last physically touched the ball.
+            bool leftConceding = false;
+            bool validTouchSource = false;
+
+            if (touchSource == gameManager.rightPlayer1 ||
+                touchSource == gameManager.rightPlayer2)
+            {
+                // Right player touched it last.
+                // Therefore the ball is going against the LEFT side.
+                leftConceding = true;
+                validTouchSource = true;
+            }
+            else if (touchSource == gameManager.leftPlayer1 ||
+                     touchSource == gameManager.leftPlayer2)
+            {
+                // Left player touched it last.
+                // Therefore the ball is going against the RIGHT side.
+                leftConceding = false;
+                validTouchSource = true;
+            }
+
+            if (validTouchSource)
+            {
+                Vector3 contactPoint = ballRb != null
+                    ? ballRb.position
+                    : transform.position;
+
+                if (RaiseInterceptPoint(leftConceding, ballRb, contactPoint))
+                {
+                    // Phoenix saved the point.
+                    // DO NOT award a score.
+                    lastPhysicalTouch = null;
+                    outCheckPending = false;
+                    yield break;
+                }
+            }
+
+            // No defensive ability saved the point.
+            // Continue with the normal Out scoring behavior.
+            if (touchSource == gameManager.rightPlayer1 ||
+                touchSource == gameManager.rightPlayer2)
             {
                 side1Score += 1;
                 UpdateScoreDisplay(side1ScoreUI, side1Score);
                 inPlay = false;
                 lastPhysicalTouch = null;
-                // Debug.Log("Out! side 1 scored! points: " + side1Score);
+
                 StartCoroutine(PlaySounds(true));
                 CheckWinSet(true);
             }
-            else if (touchSource == gameManager.leftPlayer1 || touchSource == gameManager.leftPlayer2)
+            else if (touchSource == gameManager.leftPlayer1 ||
+                     touchSource == gameManager.leftPlayer2)
             {
                 side2Score += 1;
                 UpdateScoreDisplay(side2ScoreUI, side2Score);
                 inPlay = false;
                 lastPhysicalTouch = null;
-                // Debug.Log("Out! side 2 scored! points: " + side2Score);
+
                 StartCoroutine(PlaySounds(false));
                 CheckWinSet(false);
             }
         }
 
-        outCheckPending = false; // always reset so next point can trigger it again
+        // Always reset this so another Out collision can be handled.
+        outCheckPending = false;
     }
 
     // After each score, check the win conditions for both sides
@@ -221,7 +342,7 @@ public class ScoreManager : MonoBehaviour
         int pointsPerSet = 15;
         int finalSetPoints = 15;
         int bestOf = 3;
-        
+
         if (GameSettings.Instance != null)
         {
             pointsPerSet = GameSettings.Instance.PointsPerSet > 0 ? GameSettings.Instance.PointsPerSet : pointsPerSet;
@@ -238,28 +359,30 @@ public class ScoreManager : MonoBehaviour
             Debug.Log("side 1 wins! final score: " + side1Score + " to " + side2Score);
             side1SetsWon++;
             side1SetUI.text = side1SetsWon.ToString();
-            CheckMatchWin();
-        } 
+            CheckMatchWin(true);
+        }
         else if (side2Score >= targetPoints && side2Score - side1Score >= 2)
         {
             Debug.Log("side 2 wins! final score: " + side1Score + " to " + side2Score);
             side2SetsWon++;
             side2SetUI.text = side2SetsWon.ToString();
-            CheckMatchWin();
+            CheckMatchWin(false);
         }
         else
         {
             StartCoroutine(StartNextPoint(leftJustScored));
         }
     }
-    //Checks if the Match is won, Best of 3 format
-    void CheckMatchWin()
+
+    // Check whether the match is over after a set win
+    private void CheckMatchWin(bool leftSideJustWon)
     {
         int bestOf = 3;
         if (GameSettings.Instance != null)
         {
             bestOf = GameSettings.Instance.BestOfSets > 0 ? GameSettings.Instance.BestOfSets : bestOf;
         }
+
         int setsToWin = bestOf / 2 + 1;
 
         if (side1SetsWon >= setsToWin)
@@ -278,25 +401,7 @@ public class ScoreManager : MonoBehaviour
         {
             //Resets the score for next set
             ResetScore();
-            bool leftStartServer = SetServerForNewSet();
-            StartCoroutine(StartNextPoint(leftStartServer));
-        }
-    }
-
-    private bool SetServerForNewSet()
-    {
-        // If the first set was just won, set the server to the first player on the left
-        if (side1SetsWon + side2SetsWon == 1)
-        {
-            GameManager.Instance.server = GameManager.Instance.leftPlayer1;
-            leftLastScored = true;
-            return true;
-        }
-        else // The second set was just won, set the server to the second player on the right
-        {
-            GameManager.Instance.server = GameManager.Instance.rightPlayer2;
-            leftLastScored = false;
-            return false;
+            StartCoroutine(StartNextPoint(leftSideJustWon));
         }
     }
 
@@ -305,7 +410,8 @@ public class ScoreManager : MonoBehaviour
     {
         // ducky: Reset additional spike speed to 0.0f
         BallManager.Instance.resetSpikeSpeed();
-        outCheckPending = false; // reset for the new point
+        outCheckPending = false;
+        pointIntercepted = false;
         lastPhysicalTouch = null;
 
         // Check for rotation of server
@@ -336,6 +442,7 @@ public class ScoreManager : MonoBehaviour
         side1ScoreUI.text = "0";
         side2ScoreUI.text = "0";
     }
+
     //Reset the entire Match
     void ResetMatch()
     {
@@ -367,7 +474,6 @@ public class ScoreManager : MonoBehaviour
                 side1ServeIndicator.SetActive(false);
                 side2ServeIndicator.SetActive(true);
             }
-
         }
     }
 
@@ -383,7 +489,7 @@ public class ScoreManager : MonoBehaviour
         BirdType lbt2 = GetBirdType(GameManager.Instance.leftPlayer2);
         BirdType rbt1 = GetBirdType(GameManager.Instance.rightPlayer1);
         BirdType rbt2 = GetBirdType(GameManager.Instance.rightPlayer2);
-        
+
         // Play the correct sounds depending on which team just scored
         if (leftJustScored)
         {
@@ -448,13 +554,14 @@ public class ScoreManager : MonoBehaviour
     {
         // Fade to black
         float time = 0.0f;
+
         while (time < 2.0f)
         {
             time += Time.deltaTime;
             fadeScreen.color = new Color(0, 0, 0, time / 2.0f);
             yield return null;
         }
-        
+
         // Indicate end of game
         GameManager.Instance.gameState = GameManager.GameState.GameOver;
 
@@ -482,7 +589,7 @@ public class ScoreManager : MonoBehaviour
             blueWinScore.text = $"{side1SetsWon}-{side2SetsWon}";
             blueWinScore.enabled = true;
             blueContinue.enabled = true;
-        
+
             blueTrophy.enabled = true;
             confettiRoutine = StartCoroutine(ConfettiLoop(true));
         }
@@ -502,6 +609,7 @@ public class ScoreManager : MonoBehaviour
 
         // Fade out of black
         time = 0.0f;
+
         while (time < 2.0f)
         {
             time += Time.deltaTime;
@@ -521,12 +629,14 @@ public class ScoreManager : MonoBehaviour
         {
             if (side1ScoreBounceCoroutine != null)
                 StopCoroutine(side1ScoreBounceCoroutine);
+
             side1ScoreBounceCoroutine = StartCoroutine(BounceScore(scoreText));
         }
         else if (scoreText == side2ScoreUI)
         {
             if (side2ScoreBounceCoroutine != null)
                 StopCoroutine(side2ScoreBounceCoroutine);
+
             side2ScoreBounceCoroutine = StartCoroutine(BounceScore(scoreText));
         }
         else
@@ -543,6 +653,7 @@ public class ScoreManager : MonoBehaviour
             yield break;
 
         RectTransform rectTransform = scoreText.rectTransform;
+
         if (rectTransform == null)
             yield break;
 
@@ -567,14 +678,20 @@ public class ScoreManager : MonoBehaviour
         if (scoreUpdateFlourishPrefab == null || scoreText == null)
             return;
 
-        Canvas targetCanvas = scoreEffectCanvas != null ? scoreEffectCanvas : scoreText.GetComponentInParent<Canvas>();
+        Canvas targetCanvas = scoreEffectCanvas != null
+            ? scoreEffectCanvas
+            : scoreText.GetComponentInParent<Canvas>();
+
         if (targetCanvas != null)
         {
             targetCanvas.overrideSorting = true;
             targetCanvas.sortingOrder = Mathf.Max(targetCanvas.sortingOrder, 100);
         }
 
-        Transform parentTransform = targetCanvas != null ? targetCanvas.transform : scoreText.transform.parent;
+        Transform parentTransform = targetCanvas != null
+            ? targetCanvas.transform
+            : scoreText.transform.parent;
+
         GameObject flourish = Instantiate(scoreUpdateFlourishPrefab, parentTransform);
         RectTransform flourishRect = flourish.GetComponent<RectTransform>();
         RectTransform scoreRect = scoreText.rectTransform;
@@ -582,9 +699,17 @@ public class ScoreManager : MonoBehaviour
         if (flourishRect != null && scoreRect != null && targetCanvas != null)
         {
             Vector2 localPoint;
-            Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(targetCanvas.worldCamera, scoreRect.position);
+            Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(
+                targetCanvas.worldCamera,
+                scoreRect.position);
+
             RectTransform canvasRect = parentTransform as RectTransform;
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPoint, targetCanvas.worldCamera, out localPoint))
+
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                canvasRect,
+                screenPoint,
+                targetCanvas.worldCamera,
+                out localPoint))
             {
                 flourishRect.anchoredPosition = localPoint;
             }
