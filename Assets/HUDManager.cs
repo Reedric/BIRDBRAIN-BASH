@@ -200,6 +200,12 @@ public class HUDManager : MonoBehaviour
     [SerializeField] private Texture hummingbirdOffensiveIcon;
     [SerializeField] private Texture hummingbirdDefensiveIcon;
 
+    [Header("Shima Enaga")]
+    [SerializeField] private string shimaenagaDisplayName = "Shima Enaga";
+    [SerializeField] private Texture shimaenagaPlayerIcon;
+    [SerializeField] private Texture shimaenagaOffensiveIcon;
+    [SerializeField] private Texture shimaenagaDefensiveIcon;
+
 
     private static HUDManager instance;
     public static HUDManager Instance => instance;
@@ -420,6 +426,7 @@ public class HUDManager : MonoBehaviour
             BirdType.PHOENIX     => new BirdHUDData { displayName = phoenixDisplayName,     playerIcon = phoenixPlayerIcon,     offensiveIcon = phoenixOffensiveIcon,     defensiveIcon = phoenixDefensiveIcon },
             BirdType.ROBOPIGEON  => new BirdHUDData { displayName = robopigeonDisplayName,  playerIcon = robopigeonPlayerIcon,  offensiveIcon = robopigeonOffensiveIcon,  defensiveIcon = robopigeonDefensiveIcon },
             BirdType.HUMMINGBIRD => new BirdHUDData { displayName = hummingbirdDisplayName, playerIcon = hummingbirdPlayerIcon, offensiveIcon = hummingbirdOffensiveIcon, defensiveIcon = hummingbirdDefensiveIcon },
+            BirdType.SHIMAENAGA  => new BirdHUDData { displayName = shimaenagaDisplayName,  playerIcon = shimaenagaPlayerIcon,  offensiveIcon = shimaenagaOffensiveIcon,  defensiveIcon = shimaenagaDefensiveIcon },
             _                    => null
         };
     }

@@ -92,6 +92,11 @@ public class CharacterManager : MonoBehaviour
     [SerializeField] private GameObject hummingbirdC;
     [SerializeField] private GameObject hummingbirdAI;
 
+    [Header("ShimaEnaga")]
+    [SerializeField] private GameObject shimaenagaKBM;
+    [SerializeField] private GameObject shimaenagaC;
+    [SerializeField] private GameObject shimaenagaAI;
+
     [HideInInspector] public GameObject PenguinKBM => penguinKBM;
     [HideInInspector] public GameObject PenguinC => penguinC;
     [HideInInspector] public GameObject PenguinAI => penguinAI;
@@ -154,4 +159,7 @@ public class CharacterManager : MonoBehaviour
     [HideInInspector] public GameObject HummingbirdKBM => hummingbirdKBM;
     [HideInInspector] public GameObject HummingbirdC => hummingbirdC;
     [HideInInspector] public GameObject HummingbirdAI => hummingbirdAI;
+    [HideInInspector] public GameObject ShimaenagaKBM => shimaenagaKBM;
+    [HideInInspector] public GameObject ShimaenagaC => shimaenagaC;
+    [HideInInspector] public GameObject ShimaenagaAI => shimaenagaAI;
 }
