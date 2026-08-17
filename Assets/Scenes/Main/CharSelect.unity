@@ -2345,7 +2345,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: -217.43277, w: 0}
+  m_margin: {x: 0, y: 0, z: -273.50806, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -4386,7 +4386,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: -222.27022, w: 0}
+  m_margin: {x: 0, y: 0, z: -291.1675, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -5214,7 +5214,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: -225.00854, w: 0}
+  m_margin: {x: 0, y: 0, z: -289.58017, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -5423,7 +5423,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: -223.90474, w: 0}
+  m_margin: {x: 0, y: 0, z: -290.1756, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -6253,6 +6253,15 @@ MonoBehaviour:
     block: []
     defensive: []
     offensive: []
+  shimaenagaSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
   scoringSounds:
   - {fileID: 8300000, guid: eb33c0f9c80807641add146b4c6d0873, type: 3}
   - {fileID: 8300000, guid: b824cfbb869d83345955b0e6a6d029c9, type: 3}
@@ -6533,7 +6542,7 @@ MonoBehaviour:
   blue2Name: {fileID: 1596772759}
   pink1Name: {fileID: 1718734310}
   pink2Name: {fileID: 1389631583}
-  availableBirds: 00000000070000000500000009000000030000000600000008000000040000000a00000001000000020000000c0000000b0000000d0000000e0000000f000000100000001100000012000000
+  availableBirds: 00000000070000000500000009000000030000000600000008000000040000000a00000001000000020000000c0000000b0000000d0000000e0000000f00000010000000110000001200000013000000
   numberOfPlayers: 1
   mainCanvas: {fileID: 1933689300}
   cursor1Prefab: {fileID: 1592670345}
@@ -6562,7 +6571,8 @@ MonoBehaviour:
   macawTexture: {fileID: 1505430146}
   phoenixTexture: {fileID: 974871002}
   robopigeonTexture: {fileID: 1553305807}
-  hummingbirdTexture: {fileID: 0}
+  hummingbirdTexture: {fileID: 1200663736}
+  shimaenagaTexture: {fileID: 2097161942}
   randomTexture: {fileID: 488551193}
   p1Ready: {fileID: 1437344202}
   p2Ready: {fileID: 1454632524}
@@ -6851,7 +6861,7 @@ GameObject:
   - component: {fileID: 2097161940}
   - component: {fileID: 2097161939}
   m_Layer: 5
-  m_Name: ShimeEnaga
+  m_Name: ShimaEnaga
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
