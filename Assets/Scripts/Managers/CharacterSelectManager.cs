@@ -54,6 +54,7 @@ public class CharacterSelectManager : MonoBehaviour
     public RawImage phoenixTexture;
     public RawImage robopigeonTexture;
     public RawImage hummingbirdTexture;
+    public RawImage shimaenagaTexture;
     public RawImage randomTexture;
 
     [Header("Ready Indicators")]
@@ -1047,6 +1048,7 @@ public class CharacterSelectManager : MonoBehaviour
             BirdType.PHOENIX => phoenixTexture,
             BirdType.ROBOPIGEON => robopigeonTexture,
             BirdType.HUMMINGBIRD => hummingbirdTexture,
+            BirdType.SHIMAENAGA => shimaenagaTexture,
             BirdType.OTHER => randomTexture,
             _ => null
         };

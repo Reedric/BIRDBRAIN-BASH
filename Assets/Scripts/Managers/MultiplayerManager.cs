@@ -372,6 +372,9 @@ public class MultiplayerManager : MonoBehaviour
             case BirdType.HUMMINGBIRD:
                 if (!isPlayer) return cManager.HummingbirdAI;
                 return isKBM ? cManager.HummingbirdKBM : cManager.HummingbirdC;
+            case BirdType.SHIMAENAGA:
+                if (!isPlayer) return cManager.ShimaenagaAI;
+                return isKBM ? cManager.ShimaenagaKBM : cManager.ShimaenagaC;
             default:
                 if (!isPlayer) return cManager.PenguinAI;
                 return isKBM ? cManager.PenguinKBM : cManager.PenguinC;
