@@ -6358,6 +6358,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: c58857022b26f0c4f8c6482396b69ab2, type: 3}
       insertIndex: -1
       addedObject: {fileID: 607344675}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: c58857022b26f0c4f8c6482396b69ab2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 607344676}
   m_SourcePrefab: {fileID: 100100000, guid: c58857022b26f0c4f8c6482396b69ab2, type: 3}
 --- !u!1 &129639418 stripped
 GameObject:
@@ -20038,6 +20041,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0da6a7855cf76bb41b03714010ba4343, type: 3}
       insertIndex: -1
       addedObject: {fileID: 450783038}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0da6a7855cf76bb41b03714010ba4343, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 450783044}
   m_SourcePrefab: {fileID: 100100000, guid: 0da6a7855cf76bb41b03714010ba4343, type: 3}
 --- !u!1 &450783032 stripped
 GameObject:
@@ -20083,7 +20089,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   onLeft: 0
-  interactionRadius: 5
+  interactionRadius: 2
   animator: {fileID: 450783035}
   spikeStat: 3
   birdType: 15
@@ -25048,6 +25054,40 @@ CapsuleCollider:
   m_Height: 3.14
   m_Direction: 1
   m_Center: {x: 0, y: 1.7, z: 0.09}
+--- !u!114 &450783044
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 450783032}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6dca93e819a6fc47a03b72b82e10caf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  birdType: 19
+  onLeft: 0
+  playerID: -1
+  interactionRadius: 2
+  animator: {fileID: 0}
+  maxGroundSpeed: 3
+  maxAirSpeed: 3
+  jumpForce: 3
+  rotationSpeed: 10
+  overrideRotation: 0
+  targetRotation: {x: 0, y: 0, z: 0, w: 0}
+  rotationOffsetEuler: {x: 0, y: 180, z: 0}
+  aiDifficulty: 1
+  easyBumpChance: 0.5
+  easySetChance: 0.5
+  easySpikeChance: 0.5
+  mediumBumpChance: 0.75
+  mediumSetChance: 0.75
+  mediumSpikeChance: 0.75
+  hardBumpChance: 0.9
+  hardSetChance: 0.9
+  hardSpikeChance: 0.9
 --- !u!1 &454939468
 GameObject:
   m_ObjectHideFlags: 0
@@ -30161,6 +30201,10 @@ PrefabInstance:
     - target: {fileID: 4070893477325989090, guid: 4b8e3b76b96340348b65add77fbbaf6f, type: 3}
       propertyPath: m_Name
       value: ducky! (8)
+      objectReference: {fileID: 0}
+    - target: {fileID: 4070893477325989090, guid: 4b8e3b76b96340348b65add77fbbaf6f, type: 3}
+      propertyPath: m_TagString
+      value: Out
       objectReference: {fileID: 0}
     - target: {fileID: 4960098223858084302, guid: 4b8e3b76b96340348b65add77fbbaf6f, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -35965,6 +36009,25 @@ MonoBehaviour:
   reviveUpwardForce: 8
   reviveHorizontalNudge: {x: 0, y: 0, z: 0}
   ashesEffect: {fileID: 3499421978768982111, guid: 65dd961a133d06544a01fbb63fce7f8e, type: 3}
+--- !u!114 &607344676
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 129639418}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49dc7306c65a768418d82c4114092498, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  AbilitySlot: 0
+  _cooldownTime: 20
+  rotisserieChickenPrefab: {fileID: 450783032}
+  transformationRadius: 12
+  rotisserieDuration: 8
+  transformEffectPrefab: {fileID: 0}
+  restoreEffectPrefab: {fileID: 0}
 --- !u!1 &611413458 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8653898586001143564, guid: b50b9fdf31a0a5942a05b28ebf631e01, type: 3}
@@ -36265,6 +36328,10 @@ PrefabInstance:
     - target: {fileID: 4070893477325989090, guid: 4b8e3b76b96340348b65add77fbbaf6f, type: 3}
       propertyPath: m_Name
       value: ducky! (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 4070893477325989090, guid: 4b8e3b76b96340348b65add77fbbaf6f, type: 3}
+      propertyPath: m_TagString
+      value: Out
       objectReference: {fileID: 0}
     - target: {fileID: 4960098223858084302, guid: 4b8e3b76b96340348b65add77fbbaf6f, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -45005,7 +45072,7 @@ GameObject:
   - component: {fileID: 1002770807}
   m_Layer: 0
   m_Name: Fabric
-  m_TagString: Untagged
+  m_TagString: Out
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -64553,6 +64620,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: ducky! (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 4070893477325989090, guid: 4b8e3b76b96340348b65add77fbbaf6f, type: 3}
+      propertyPath: m_TagString
+      value: Out
+      objectReference: {fileID: 0}
     - target: {fileID: 4960098223858084302, guid: 4b8e3b76b96340348b65add77fbbaf6f, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -65103,6 +65174,10 @@ PrefabInstance:
     - target: {fileID: 4070893477325989090, guid: 4b8e3b76b96340348b65add77fbbaf6f, type: 3}
       propertyPath: m_Name
       value: ducky! (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 4070893477325989090, guid: 4b8e3b76b96340348b65add77fbbaf6f, type: 3}
+      propertyPath: m_TagString
+      value: Out
       objectReference: {fileID: 0}
     - target: {fileID: 4960098223858084302, guid: 4b8e3b76b96340348b65add77fbbaf6f, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -91522,6 +91597,10 @@ PrefabInstance:
     - target: {fileID: 4070893477325989090, guid: 4b8e3b76b96340348b65add77fbbaf6f, type: 3}
       propertyPath: m_Name
       value: ducky!
+      objectReference: {fileID: 0}
+    - target: {fileID: 4070893477325989090, guid: 4b8e3b76b96340348b65add77fbbaf6f, type: 3}
+      propertyPath: m_TagString
+      value: Out
       objectReference: {fileID: 0}
     - target: {fileID: 4960098223858084302, guid: 4b8e3b76b96340348b65add77fbbaf6f, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'

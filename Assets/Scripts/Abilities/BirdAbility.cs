@@ -11,6 +11,7 @@ public abstract class BirdAbility : MonoBehaviour
     
     protected float _cooldownRemaining;
     private bool _abilitiesDisabled;
+    protected bool _delayCooldownStart;
 
     public bool IsReady => _cooldownRemaining <= 0 && !_abilitiesDisabled;
 
@@ -40,7 +41,9 @@ public abstract class BirdAbility : MonoBehaviour
 
         if (Activate())
         {
-            _cooldownRemaining = _cooldownTime;
+            if (!_delayCooldownStart)
+                _cooldownRemaining = _cooldownTime;
+
             Debug.Log($"[BirdAbility] {GetType().Name} activated successfully.");
             return true;
         }

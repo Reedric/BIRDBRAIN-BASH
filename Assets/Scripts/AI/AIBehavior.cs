@@ -10,6 +10,11 @@ public class AIBehavior : MonoBehaviour
 
     // Change the birdType from other managers
     public void SetBirdType(BirdType type) { birdType = type; }
+    public void SetIdentity(bool leftSide, int id)
+    {
+        onLeft = leftSide;
+        playerID = id;
+    }
     public BirdType GetBirdType() => birdType;
     [Header("Game Manager")]
     public bool onLeft; // Whether this AI is on the left side of the net or not
@@ -90,6 +95,9 @@ public class AIBehavior : MonoBehaviour
     // 2 = Pink (Team 2, player 1), 3 = Yellow (Team 2, player 2)
     private int GetPlayerIndex()
     {
+        if (playerID >= 0 && playerID <= 3)
+            return playerID;
+
         if (onLeft)
         {
             return GameManager.Instance.leftPlayer1.Equals(gameObject) ? 0 : 1;
@@ -469,7 +477,7 @@ public class AIBehavior : MonoBehaviour
             target *= -1;
             
             // If the AI is the first player on the left side, push them to the top of the screen
-            if (GameManager.Instance.leftPlayer1.Equals(gameObject))
+            if (playerID == 0)
             {
                 target += new Vector3(0, 0, 2);
             }
@@ -480,8 +488,8 @@ public class AIBehavior : MonoBehaviour
         }
         else
         {
-            // If the AI is the first player on the right side, push them to the the top of the screen
-            if (GameManager.Instance.rightPlayer1.Equals(gameObject))
+            // If the AI is the first player on the right side of the court
+            if (playerID == 2)
             {
                 target += new Vector3(0, 0, 2);
             }
