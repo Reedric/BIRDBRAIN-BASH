@@ -3,6 +3,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
 using TMPro;
 using UnityEngine.Video;
+using System.Collections.Generic;
 
 public class TutorialMenu : MonoBehaviour
 {
@@ -12,6 +13,13 @@ public class TutorialMenu : MonoBehaviour
     public TMP_Text explanation; // Explanation of the controls
     public VideoPlayer videoPlayer; // Video player for the tutorial stuff
     public VideoClip[] videoClips; // Video clips to play for the tutorial
+
+    [Header("Game Scenes")]
+    [Tooltip("Scenes to choose from when the tutorial is finished. Each scene must be included in Build Settings.")]
+    [SerializeField] private List<string> gameSceneNames = new() { "Game_Beach", "Game_Forest", "Game_Iceberg" };
+
+    private const string fallbackGameSceneName = "Game_Beach";
+
     private string[] titles; // Titles for each of the screens
     private string[] explanations; // Which button to press
     private int pageNum; // Page of the tutorial the game is currenlty showing (0 is tutorial confirmation, 1-6 is actual tutorial stuff)
@@ -173,6 +181,27 @@ public class TutorialMenu : MonoBehaviour
     void StartGame()
     {
         // LET'S BASH SOME BIRDBRAINS!!!!
-        SceneManager.LoadScene("Game");
+        List<string> playableScenes = new();
+        foreach (string sceneName in gameSceneNames)
+        {
+            if (string.IsNullOrWhiteSpace(sceneName)) continue;
+
+            string trimmedSceneName = sceneName.Trim();
+            if (Application.CanStreamedLevelBeLoaded(trimmedSceneName))
+                playableScenes.Add(trimmedSceneName);
+            else
+                Debug.LogWarning($"Game scene '{trimmedSceneName}' is not included in Build Settings and will be skipped.");
+        }
+
+        if (playableScenes.Count == 0 && Application.CanStreamedLevelBeLoaded(fallbackGameSceneName))
+            playableScenes.Add(fallbackGameSceneName);
+
+        if (playableScenes.Count == 0)
+        {
+            Debug.LogError("No playable game scenes are configured in TutorialMenu.");
+            return;
+        }
+
+        SceneManager.LoadScene(playableScenes[Random.Range(0, playableScenes.Count)]);
     }
 }

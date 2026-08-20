@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -67,6 +68,24 @@ public class GameManager : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        StartCoroutine(InitializeWhenPlayersAreReady());
+    }
+
+    private IEnumerator InitializeWhenPlayersAreReady()
+    {
+        float timeout = 5f;
+        while (!HasRequiredMatchObjects() && timeout > 0f)
+        {
+            timeout -= Time.deltaTime;
+            yield return null;
+        }
+
+        if (!HasRequiredMatchObjects())
+        {
+            Debug.LogError("GameManager could not start: four players and a ball with a Rigidbody are required in this scene.");
+            yield break;
+        }
+
         // Set the last hit to null
         lastHit = null; 
 
@@ -119,6 +138,13 @@ public class GameManager : MonoBehaviour
         NextPoint();
     }
 
+    private bool HasRequiredMatchObjects()
+    {
+        return leftPlayer1 != null && leftPlayer2 != null
+            && rightPlayer1 != null && rightPlayer2 != null
+            && FindFirstObjectByType<BallManager>()?.GetComponent<Rigidbody>() != null;
+    }
+
     // Returns true if a point is actively being played
     public static bool PointInProgress()
     {
@@ -164,6 +190,12 @@ public class GameManager : MonoBehaviour
 
     public static void NextPoint()
     {
+        if (instance == null || !instance.HasRequiredMatchObjects())
+        {
+            Debug.LogWarning("GameManager cannot reset the point until four players and the ball are available.");
+            return;
+        }
+
         // Clear any active buffs/debuffs/stuns before resetting positions
         BuffsDebuffs.Instance.ClearAllEffects();
 
@@ -192,13 +224,14 @@ public class GameManager : MonoBehaviour
         instance.rightPlayer1.transform.position = instance.rightPlayer1Origin;
         instance.rightPlayer2.transform.position = instance.rightPlayer2Origin;
 
-        instance.leftPlayer1.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
-        instance.leftPlayer2.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
-        instance.rightPlayer1.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
-        instance.rightPlayer2.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
+        ResetPlayerRigidbody(instance.leftPlayer1);
+        ResetPlayerRigidbody(instance.leftPlayer2);
+        ResetPlayerRigidbody(instance.rightPlayer1);
+        ResetPlayerRigidbody(instance.rightPlayer2);
 
         // Reset ball physics completely
-        Rigidbody ballRb = BallManager.Instance.gameObject.GetComponent<Rigidbody>();
+        BallManager ballManager = FindFirstObjectByType<BallManager>();
+        Rigidbody ballRb = ballManager.GetComponent<Rigidbody>();
         ballRb.linearVelocity = Vector3.zero;
         ballRb.angularVelocity = Vector3.zero;
         ballRb.useGravity = false;
@@ -207,18 +240,26 @@ public class GameManager : MonoBehaviour
         if (instance.leftAttack)
         {
             instance.server.transform.position = instance.leftServeLocation;
-            BallManager.Instance.gameObject.transform.position =
+            ballManager.gameObject.transform.position =
                 instance.leftServeLocation + new Vector3(1, 0, 0);
         }
         else
         {
             instance.server.transform.position = instance.rightServeLocation;
-            BallManager.Instance.gameObject.transform.position =
+            ballManager.gameObject.transform.position =
                 instance.rightServeLocation - new Vector3(1, 0, 0);
         }
 
         // Reset the game manager fields
         instance.gameState = GameState.PointStart;
         instance.lastHit = null;
+    }
+
+    private static void ResetPlayerRigidbody(GameObject player)
+    {
+        if (!player.TryGetComponent(out Rigidbody rb)) return;
+
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
     }
 }

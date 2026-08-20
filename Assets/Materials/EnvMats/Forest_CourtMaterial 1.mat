@@ -123,9 +123,9 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _Max: 2.95
+    - _Max: 6.12
     - _Metallic: 0
-    - _Min: 6.66
+    - _Min: 2.95
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _QueueControl: 0
@@ -141,7 +141,7 @@ Material:
     - _ZTest: 4
     - _ZWrite: 1
     - _ZWriteControl: 0
-    - _shades: 0.78
+    - _shades: 1.41
     - _use3DTexture: 0
     m_Colors:
     - _BaseColor: {r: 1, g: 0.91523194, b: 0.64465404, a: 1}
