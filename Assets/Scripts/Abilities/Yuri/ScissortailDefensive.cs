@@ -10,6 +10,8 @@ public class ScissortailDefensive : BirdAbility
     public float threshold = 1.0f;
     public float lineDrawDuration = 0.3f; // How long the draw animation takes
     public Material lineMaterial;
+    public float lineHeight = 1.0f; // Consistent height of the defensive line above the ground
+
     private LineRenderer lr;
 
     void Start()
@@ -20,6 +22,7 @@ public class ScissortailDefensive : BirdAbility
         // Initializes the line
         lr.positionCount = 2;
         lr.startWidth = lineWidth;
+        lr.endWidth = lineWidth;
         lr.generateLightingData = true;
         lr.material = lineMaterial;
     }
@@ -51,6 +54,17 @@ public class ScissortailDefensive : BirdAbility
         }
     }
 
+    private Vector3 GetLinePosition(GameObject bird)
+    {
+        if (bird == null)
+            return Vector3.zero;
+
+        Vector3 position = bird.transform.position;
+        position.y = lineHeight;
+
+        return position;
+    }
+
     public IEnumerator Yuriful()
     {
         GameObject ally = GetAlly();
@@ -71,11 +85,9 @@ public class ScissortailDefensive : BirdAbility
         Debug.Log("Creating line....");
         lr.enabled = true;
 
-        // Snapshot positions at the moment of cast for the draw animation
-        Vector3 selfPos = gameObject.transform.Find("ContactPoint") == null // Use contact point (if it exists)
-            ? gameObject.transform.position : gameObject.transform.Find("ContactPoint").position; 
-        Vector3 allyPos = ally.transform.Find("ContactPoint") == null // Use contact point (if it exists)
-            ? ally.transform.position : ally.transform.Find("ContactPoint").position;
+        // Use a consistent elevation for the line regardless of bird root/contact point height.
+        Vector3 selfPos = GetLinePosition(gameObject);
+        Vector3 allyPos = GetLinePosition(ally);
         Vector3 toAlly = allyPos - selfPos;
 
         // Slerp the tip outward from self toward ally — sweeps like a quill stroke
@@ -93,13 +105,16 @@ public class ScissortailDefensive : BirdAbility
             yield return null;
         }
 
-        // Line is fully drawn — now track both players live for the uptime
+        // Line is fully drawn — now track both players live while maintaining
+        // the same elevation above the ground.
         float timer = 0f;
         while (timer < lineUptime)
         {
             timer += Time.deltaTime;
-            selfPos = gameObject.transform.position;
-            allyPos = ally.transform.position;
+
+            selfPos = GetLinePosition(gameObject);
+            allyPos = GetLinePosition(ally);
+
             lr.SetPosition(0, selfPos);
             lr.SetPosition(1, allyPos);
 
@@ -112,17 +127,21 @@ public class ScissortailDefensive : BirdAbility
             if (distanceToLine < threshold && GameManager.Instance.gameState != GameManager.GameState.Set)
             {
                 BallInteract interact = GetComponent<BallInteract>();
-                if (GameManager.Instance.gameState == GameManager.GameState.Bumped) interact.SetBall();
-                else interact.BumpBall();
+                if (GameManager.Instance.gameState == GameManager.GameState.Bumped)
+                    interact.SetBall();
+                else
+                    interact.BumpBall();
+
                 break;
             }
+
             yield return null;
         }
 
         // Disables the line and starts cooldown
         // Reverse slerp — tip retreats from ally back to self
-        Vector3 finalSelfPos = gameObject.transform.position;
-        Vector3 finalAllyPos = ally.transform.position;
+        Vector3 finalSelfPos = GetLinePosition(gameObject);
+        Vector3 finalAllyPos = GetLinePosition(ally);
         Vector3 finalToAlly = finalAllyPos - finalSelfPos;
 
         elapsed = 0f;
