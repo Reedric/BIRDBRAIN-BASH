@@ -79,7 +79,7 @@ public class BirdAbilityRuleService : MonoBehaviour
 
         // Birds whose abilities do not rely on game state or have their own special rules
         if (ballInteract.GetBirdType() == BirdType.OWL) return true;
-        if (ballInteract.GetBirdType() == BirdType.EAGLE) return true;
+        if (ballInteract.GetBirdType() == BirdType.EAGLE && GameManager.PointInProgress()) return true;
         if (ballInteract.GetBirdType() == BirdType.CHICKEN) return true;
         if (ballInteract.GetBirdType() == BirdType.CROW && GameManager.PointInProgress()) return true;
         if (ballInteract.GetBirdType() == BirdType.KIWI && GameManager.PointInProgress()) return true;

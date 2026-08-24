@@ -1346,6 +1346,7 @@ GameObject:
   - component: {fileID: 2302622177227890852}
   - component: {fileID: 753889259838285562}
   - component: {fileID: 2854967786865408388}
+  - component: {fileID: 593795491287120988}
   - component: {fileID: 6149386523847294288}
   - component: {fileID: 4333312448549621039}
   - component: {fileID: 5047306155560940207}
@@ -6358,6 +6359,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ee3f476d1e008b409f5d54418a1962f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &593795491287120988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4613607744422079812}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 3105639138
+  InScenePlacedSourceGlobalObjectIdHash: 3252463246
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  <InScenePlaced>k__BackingField: 0
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
 --- !u!114 &6149386523847294288
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6370,6 +6397,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3bd2834d7138ea44b9eeb436d77161d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   maxGroundSpeed: 3
   maxAirSpeed: 4
   jumpForce: 4
@@ -6409,7 +6437,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7ce7393f3be4e14887b4f803a969e6a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cooldown: 30
+  AbilitySlot: 0
+  _cooldownTime: 0
   buffAmount: 2
   buffLength: 10
 --- !u!114 &7222335296662843727
@@ -6424,7 +6453,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 053fb3908196cf84fa743edeb02687af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cooldown: 10
+  AbilitySlot: 0
+  _cooldownTime: 0
 --- !u!114 &5496654757475357335
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7602,7 +7632,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 146cb8e1752730b44a57a0e5eaab322c, type: 2}
+  - {fileID: 2100000, guid: 2e5b20d76e5532746a3c6fb1337d7718, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
