@@ -63,14 +63,16 @@ public class PenguinOffensive : BirdAbility
     {
         if (!usingSnowBall)
         {
-            StartSnowBall();
-            return true;
+            return StartSnowBall();
         }
         return false;
     }
 
-    void StartSnowBall()
+    bool StartSnowBall()
     {
+        if (ballInteraction == null || !ballInteraction.CanSpikeBall())
+            return false;
+
         iceMode = true;
         usingSnowBall = true;
         iceSpawned = false; // New: reset spawn flag every time the ability starts
@@ -98,6 +100,7 @@ public class PenguinOffensive : BirdAbility
         // Do not permanently consume the cooldown yet.
         // The cooldown will begin only if the enemy actually bumps the snowball
         // and the ice successfully spawns.
+        return true;
     }
 
     void CreateSnowballTrackEffect()

@@ -12,11 +12,23 @@ public class SeagullDefensive : BirdAbility
     public float shoveForce = 18f; //how much the seagull pushes others out of the way
     public float shoveRadius = 1.5f; //radius to shove objects around
     private Rigidbody rb;
+    private BallInteract ballInteraction;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        ballInteraction = GetComponent<BallInteract>();
+    }
+
+    private bool CanDashToBall()
+    {
+        if (ballInteraction == null || BallManager.Instance == null || !GameManager.PointInProgress())
+            return false;
+
+        Vector3 ballPosition = BallManager.Instance.transform.position;
+        bool ballIsOnOwnSide = (ballPosition.x < 0f) == ballInteraction.onLeft;
+        return ballIsOnOwnSide && ballInteraction.CanHit();
     }
     
     private IEnumerator DashToBall()
@@ -38,8 +50,11 @@ public class SeagullDefensive : BirdAbility
         //Always Dash to Ball until break
         while (true)
         {
-            //Update landing position every frame (ball might move)
-            Vector3 landingPos = BallManager.Instance.goingTo;
+            if (!CanDashToBall())
+                break;
+
+            // Chase the ball's current position rather than its destination.
+            Vector3 landingPos = BallManager.Instance.transform.position;
             landingPos.y = fixedY;
 
             //Direction toward the ball
@@ -77,22 +92,29 @@ public class SeagullDefensive : BirdAbility
         }
 
         // If the game state did not change, then successfully dashed to ball
-        if (dashState == GameManager.Instance.gameState)
+        if (dashState == GameManager.Instance.gameState && CanDashToBall())
         {
-            //Ensure seagull is exactly on the landing spot at a fixed Y
-            rb.MovePosition(new Vector3(BallManager.Instance.goingTo.x, fixedY, BallManager.Instance.goingTo.z));
+            // Ensure Seagull is exactly on the ball's current position.
+            Vector3 ballPosition = BallManager.Instance.transform.position;
+            rb.MovePosition(new Vector3(ballPosition.x, fixedY, ballPosition.z));
 
-            // while (Vector3.Distance(BallManager.Instance.transform.position, transform.position) > myBallInteract.interactionRadius) yield return null;
             while (Vector3.Distance(BallManager.Instance.transform.position, transform.position) > myBallInteract.interactionRadius && dashState == GameManager.Instance.gameState)
             {
-                Debug.Log(Vector3.Distance(BallManager.Instance.transform.position, transform.position));
+                if (!CanDashToBall())
+                    break;
                 yield return null;
             }
-            if (GameManager.Instance.gameState == GameManager.GameState.Bumped) myBallInteract.SetBall();
-            else myBallInteract.BumpBall();
 
-            int playerID = GetComponent<BallInteract>().playerID;
-            HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
+            if (dashState == GameManager.Instance.gameState
+                && CanDashToBall()
+                && Vector3.Distance(BallManager.Instance.transform.position, transform.position) <= myBallInteract.interactionRadius)
+            {
+                if (GameManager.Instance.gameState == GameManager.GameState.Bumped) myBallInteract.SetBall();
+                else myBallInteract.BumpBall();
+
+                int playerID = GetComponent<BallInteract>().playerID;
+                HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
+            }
         }
 
         //Unfreeze Y movments
@@ -127,10 +149,10 @@ public class SeagullDefensive : BirdAbility
 
     override protected bool Activate()
     {
-        StartCoroutine(DashToBall());
+        if (!CanDashToBall())
+            return false;
 
-        // If seagull was last one to hit, successfully activated ability
-        if (GameManager.Instance.lastHit == gameObject) return true;
-        else return false;
+        StartCoroutine(DashToBall());
+        return true;
     }
 }

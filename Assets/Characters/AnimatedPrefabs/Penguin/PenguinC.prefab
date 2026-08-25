@@ -7692,7 +7692,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 2508250761
+  GlobalObjectIdHash: 1756626148
   InScenePlacedSourceGlobalObjectIdHash: 1756626148
   DeferredDespawnTick: 0
   Ownership: 1
@@ -7810,8 +7810,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilitySlot: 1
   _cooldownTime: 5
-  dashDuration: 1
-  dashSpeed: 6
+  dashDuration: 0.8
+  dashSpeed: 10
   rotationSpeed: 8
   isDashing: 0
 --- !u!114 &6458781572301610545
