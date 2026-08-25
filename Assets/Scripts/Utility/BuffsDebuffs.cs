@@ -16,7 +16,7 @@ public class BuffsDebuffs : MonoBehaviour
 
     private Dictionary<GameObject, Dictionary<EffectType, GameObject>> activeVFX = new();
     private Dictionary<GameObject, Dictionary<EffectType, Coroutine>> activeEffects = new();
-    private Dictionary<GameObject, (float groundSpeed, float airSpeed, float jumpForce, float aiGroundSpeed, float aiAirSpeed)> stunOriginalValues = new();
+    private Dictionary<GameObject, (float groundSpeed, float airSpeed, float jumpForce, float aiGroundSpeed, float aiAirSpeed, float aiJumpForce)> stunOriginalValues = new();
     private HashSet<RagdollManager> activeRagdolls = new();
     private Dictionary<GameObject, HashSet<EffectType>> preservedEffects = new();
 
@@ -82,6 +82,13 @@ public class BuffsDebuffs : MonoBehaviour
         preservedEffects[bird].Remove(type);
         if (preservedEffects[bird].Count == 0)
             preservedEffects.Remove(bird);
+    }
+
+    public bool IsEffectActive(EffectType type, GameObject bird)
+    {
+        return bird != null
+            && activeEffects.ContainsKey(bird)
+            && activeEffects[bird].ContainsKey(type);
     }
 
     private bool IsEffectPreserved(GameObject bird, EffectType type)
@@ -254,9 +261,51 @@ public class BuffsDebuffs : MonoBehaviour
                 break;
 
             case EffectType.Stun:
-                movement?.controlMovement(!enable, !enable);
-                ability?.SetAbilitiesDisabled(enable);
-                ai?.DisableAbilities(enable);
+                if (enable)
+                {
+                    if (!stunOriginalValues.ContainsKey(bird))
+                    {
+                        stunOriginalValues[bird] = (
+                            movement != null ? movement.maxGroundSpeed : 0f,
+                            movement != null ? movement.maxAirSpeed : 0f,
+                            movement != null ? movement.jumpForce : 0f,
+                            ai != null ? ai.maxGroundSpeed : 0f,
+                            ai != null ? ai.maxAirSpeed : 0f,
+                            ai != null ? ai.jumpForce : 0f);
+                    }
+
+                    if (movement != null)
+                    {
+                        movement.maxGroundSpeed = 1f;
+                        movement.maxAirSpeed = 1f;
+                        movement.jumpForce = 1f;
+                    }
+
+                    if (ai != null)
+                    {
+                        ai.maxGroundSpeed = 1f;
+                        ai.maxAirSpeed = 1f;
+                        ai.jumpForce = 1f;
+                    }
+                }
+                else if (stunOriginalValues.TryGetValue(bird, out var originalValues))
+                {
+                    if (movement != null)
+                    {
+                        movement.maxGroundSpeed = originalValues.groundSpeed;
+                        movement.maxAirSpeed = originalValues.airSpeed;
+                        movement.jumpForce = originalValues.jumpForce;
+                    }
+
+                    if (ai != null)
+                    {
+                        ai.maxGroundSpeed = originalValues.aiGroundSpeed;
+                        ai.maxAirSpeed = originalValues.aiAirSpeed;
+                        ai.jumpForce = originalValues.aiJumpForce;
+                    }
+
+                    stunOriginalValues.Remove(bird);
+                }
                 break;
         }
     }
@@ -268,7 +317,7 @@ public class BuffsDebuffs : MonoBehaviour
 
         foreach (var bird in activeEffectsCopy.Keys)
         {
-            foreach (var kvp in activeEffectsCopy[bird])
+            foreach (var kvp in new Dictionary<EffectType, Coroutine>(activeEffectsCopy[bird]))
             {
                 if (IsEffectPreserved(bird, kvp.Key))
                     continue;
@@ -287,7 +336,7 @@ public class BuffsDebuffs : MonoBehaviour
         var vfxCopy = new Dictionary<GameObject, Dictionary<EffectType, GameObject>>(activeVFX);
         foreach (var bird in vfxCopy.Keys)
         {
-            foreach (var kvp in vfxCopy[bird])
+            foreach (var kvp in new Dictionary<EffectType, GameObject>(vfxCopy[bird]))
             {
                 if (IsEffectPreserved(bird, kvp.Key))
                     continue;

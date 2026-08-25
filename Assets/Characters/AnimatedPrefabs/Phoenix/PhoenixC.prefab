@@ -182,7 +182,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 3327249144
+  GlobalObjectIdHash: 1506481391
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -5211,7 +5211,7 @@ MonoBehaviour:
   reviveHeightOffset: 2
   reviveUpwardForce: 8
   reviveHorizontalNudge: {x: 0, y: 0, z: 0}
-  ashesEffect: {fileID: 3499421978768982111, guid: 65dd961a133d06544a01fbb63fce7f8e, type: 3}
+  ashesEffect: {fileID: 3499421978768982111, guid: 66aa06e056d39944d9b4ee3f71efefdd, type: 3}
 --- !u!114 &7684089768501702471
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5226,11 +5226,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilitySlot: 0
   _cooldownTime: 20
-  rotisserieChickenPrefab: {fileID: 0}
+  rotisserieChickenPrefab: {fileID: 2542862373079838714, guid: 9526b1981644d5f4aa1e27513dc3c23e, type: 3}
   transformationRadius: 12
   rotisserieDuration: 8
-  transformEffectPrefab: {fileID: 0}
-  restoreEffectPrefab: {fileID: 0}
+  transformEffectPrefab: {fileID: 3499421978768982111, guid: 66aa06e056d39944d9b4ee3f71efefdd, type: 3}
+  restoreEffectPrefab: {fileID: 3499421978768982111, guid: 1ff8e1793b226d74fa57c201f581304c, type: 3}
 --- !u!4 &2270947853423276928 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: c58857022b26f0c4f8c6482396b69ab2, type: 3}
