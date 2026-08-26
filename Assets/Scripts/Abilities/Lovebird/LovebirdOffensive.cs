@@ -24,6 +24,9 @@ public class LovebirdOffensive : BirdAbility
 
     override protected bool Activate()
     {
+        if (!GameManager.PointInProgress())
+            return false;
+
         DebuffEnemy();
 
         // Ability successfully activated
@@ -63,6 +66,9 @@ public class LovebirdOffensive : BirdAbility
 
     public void DebuffEnemy()
     {
+        if (!GameManager.PointInProgress())
+            return;
+
         // Play offensive sound
         AudioManager.PlayBirdSound(BirdType.LOVEBIRD, SoundType.OFFENSIVE, 1.0f);
 

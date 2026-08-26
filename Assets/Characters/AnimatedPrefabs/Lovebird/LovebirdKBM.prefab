@@ -2891,6 +2891,7 @@ GameObject:
   - component: {fileID: 7434730456167146018}
   - component: {fileID: 7455394585479129417}
   - component: {fileID: 848053975570483248}
+  - component: {fileID: 8289053532130908891}
   - component: {fileID: 3212491187832716172}
   - component: {fileID: 5952528260641251201}
   - component: {fileID: 5661730444322572434}
@@ -2912,7 +2913,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8864791499710885871}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: -6.72, z: 0}
   m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
   m_ConstrainProportionsScale: 1
@@ -2932,7 +2933,7 @@ Transform:
   - {fileID: 1739945365631711662}
   - {fileID: 501865417668491347}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!23 &2350447768573788242
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -2988,7 +2989,7 @@ Animator:
   m_GameObject: {fileID: 8864791499710885871}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: f706e9ba1e8e3b24ebd65d774d716ed5, type: 2}
+  m_Controller: {fileID: 9100000, guid: 3c230af39c8da86408492958758a8c90, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -7883,6 +7884,32 @@ MonoBehaviour:
   m_DefaultActionMap: Player
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
+--- !u!114 &8289053532130908891
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8864791499710885871}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 1553716854
+  InScenePlacedSourceGlobalObjectIdHash: 3044209930
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  <InScenePlaced>k__BackingField: 0
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
 --- !u!114 &3212491187832716172
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7895,12 +7922,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3bd2834d7138ea44b9eeb436d77161d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   maxGroundSpeed: 4
   maxAirSpeed: 3
   jumpForce: 5
   rotationSpeed: 10
-  rotationOffsetEuler: {x: 0, y: 0, z: 0}
-  animator: {fileID: 0}
+  rotationOffsetEuler: {x: 0, y: 90, z: 0}
+  animator: {fileID: 402788883553786238}
   grounded: 0
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
@@ -7934,7 +7962,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06dd2ca91fa327948af6da71c34e2622, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cooldown: 6
+  AbilitySlot: 0
+  _cooldownTime: 0
   dashSpeed: 60
   dashToDistance: 2
 --- !u!54 &346766123451097148
@@ -7976,8 +8005,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 593700650f8d8a043851550585a9d6f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  AbilitySlot: 0
+  _cooldownTime: 0
   DebuffLength: 2
-  cooldown: 20
   walkSpeed: 1
   hearts: {fileID: 2103532663826045379, guid: aa26f21b86994d044a963dfff8ce2292, type: 3}
   heartsOffset: 1.15

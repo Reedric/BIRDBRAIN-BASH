@@ -63,13 +63,16 @@ public class PenguinOffensive : BirdAbility
     {
         if (!usingSnowBall)
         {
-            StartSnowBall();
-            return true;
+            return StartSnowBall();
         }
         return false;
     }
-    void StartSnowBall()
+
+    bool StartSnowBall()
     {
+        if (ballInteraction == null || !ballInteraction.CanSpikeBall())
+            return false;
+
         iceMode = true;
         usingSnowBall = true;
         iceSpawned = false; // New: reset spawn flag every time the ability starts
@@ -88,13 +91,16 @@ public class PenguinOffensive : BirdAbility
         }
 
         // will spawn ice after the conditions in the coroutine are confirmed true
-        if (iceMode && !iceSpawned) spawnIceCoroutine = StartCoroutine(SpawnIce());
+        if (iceMode && !iceSpawned)
+            spawnIceCoroutine = StartCoroutine(SpawnIce());
 
         // Christofort: swap the dodgeball's material to the snowball material
         ApplySnowballMaterial();
 
-        int playerID = GetComponent<BallInteract>().playerID;
-        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
+        // Do not permanently consume the cooldown yet.
+        // The cooldown will begin only if the enemy actually bumps the snowball
+        // and the ice successfully spawns.
+        return true;
     }
 
     void CreateSnowballTrackEffect()
@@ -126,11 +132,13 @@ public class PenguinOffensive : BirdAbility
             Debug.LogError("No renderers found on dodgeBall in ApplySnowballMaterial", this);
             return;
         }
+
         if (snowballMaterial == null)
         {
             Debug.LogError("snowballMaterial reference is null in ApplySnowballMaterial", this);
             return;
         }
+
         foreach (Renderer rend in dodgeBallRenderers)
         {
             if (rend != null)
@@ -143,6 +151,7 @@ public class PenguinOffensive : BirdAbility
                 Debug.LogWarning("Renderer is null in ApplySnowballMaterial loop", this);
             }
         }
+
         Debug.Log("Snowball material applied to all renderers", this);
     }
 
@@ -191,11 +200,13 @@ public class PenguinOffensive : BirdAbility
             Debug.LogError("No renderers found on dodgeBall in RestoreNormalBallMaterial", this);
             return;
         }
+
         if (normalBallMaterial == null)
         {
             Debug.LogError("normalBallMaterial reference is null in RestoreNormalBallMaterial", this);
             return;
         }
+
         foreach (Renderer rend in dodgeBallRenderers)
         {
             if (rend != null)
@@ -208,82 +219,182 @@ public class PenguinOffensive : BirdAbility
                 Debug.LogWarning("Renderer is null in RestoreNormalBallMaterial loop", this);
             }
         }
+
         Debug.Log("Normal ball material restored to all renderers", this);
     }
 
     IEnumerator SpawnIce()
     {
-        // wait until the snowball gets touched by someone and the state becomes
-        // either Bumped or Blocked. These are the states that mean the other side made contact.
         GameManager gameManager = GameManager.Instance;
-        yield return new WaitUntil(() =>
-            usingSnowBall &&
-            gameManager.lastHit != null &&
-            (gameManager.gameState == GameManager.GameState.Bumped ||
-            gameManager.gameState == GameManager.GameState.Blocked));
 
-        // if the snowball got canceled while waiting, stop here
-        if (!usingSnowBall || gameManager == null || gameManager.lastHit == null)
-            yield break;
-
-        // make sure the player who touched it is actually on the opposing team
-        if (!IsOpponentPlayer(gameManager.lastHit))
-            yield break;
-
-        if (!iceSpawned)
+        if (gameManager == null)
         {
-            // spawn the ice under the opposing player who last touched the ball
-            Vector3 hitterPos = gameManager.lastHit.transform.position;
-            Vector3 iceSpawnPos = new Vector3(hitterPos.x, 0, hitterPos.z);
+            CancelSnowballAndRefund();
+            yield break;
+        }
 
-            iceInstance = Instantiate(tempIce, iceSpawnPos, Quaternion.identity);
-            PrepareIceForFade(iceInstance);
-            StartCoroutine(FadeInIce(iceInstance, iceSpawnFadeTime));
-            iceSpawned = true;
-
-            if (iceCircularMaskPrefab != null)
+        // Wait until the snowball is either bumped, blocked, or the point ends.
+        // Only an enemy bump is allowed to actually spawn the ice.
+        while (usingSnowBall)
+        {
+            if (gameManager.gameState == GameManager.GameState.Bumped)
             {
-                if (iceMaskInstance != null)
+                if (gameManager.lastHit != null && IsOpponentPlayer(gameManager.lastHit))
                 {
-                    Destroy(iceMaskInstance);
-                    iceMaskInstance = null;
-                }
-                if (iceMaskCoroutine != null)
-                {
-                    StopCoroutine(iceMaskCoroutine);
-                    iceMaskCoroutine = null;
+                    SpawnIceAtOpponent(gameManager.lastHit);
+                    spawnIceCoroutine = null;
+                    yield break;
                 }
 
-                iceMaskInstance = Instantiate(iceCircularMaskPrefab, iceInstance.transform);
-                iceMaskInstance.transform.localPosition = Vector3.zero;
-                iceMaskInstance.transform.localRotation = Quaternion.identity;
-                iceMaskInstance.transform.localScale = Vector3.zero;
-                PrepareIceMaskForFade(iceMaskInstance);
-                iceMaskCoroutine = StartCoroutine(AnimateIceMask(iceMaskInstance, iceSpawnFadeTime));
+                // A teammate bumped it, so the ability did not successfully trigger.
+                CancelSnowballAndRefund();
+                yield break;
             }
 
-            iceCollider = iceInstance.GetComponent<BoxCollider>();
-            if (ballCollider != null && iceCollider != null)
-                Physics.IgnoreCollision(ballCollider, iceCollider, true);
-
-            // disable the ball snow effect and restore the normal texture when the ice hits the ground
-            if (snowballTrackInstance != null)
+            if (gameManager.gameState == GameManager.GameState.Blocked)
             {
-                Destroy(snowballTrackInstance);
-                snowballTrackInstance = null;
+                // A block never creates ice.
+                CancelSnowballAndRefund();
+                yield break;
             }
-            Debug.Log("Reverting ball material after ice spawns", this);
-            RestoreNormalBallMaterial();
 
-            // play a ground particle effect attached to the ice while it exists
-            if (iceSpawnBurstPrefab != null)
+            if (gameManager.gameState == GameManager.GameState.PointEnd)
             {
-                GameObject burstInstance = Instantiate(iceSpawnBurstPrefab, iceInstance.transform);
-                burstInstance.transform.localPosition = Vector3.zero;
+                // Point ended before the enemy bumped it.
+                CancelSnowballAndRefund();
+                yield break;
             }
+
+            yield return null;
         }
 
         spawnIceCoroutine = null;
+    }
+
+    void SpawnIceAtOpponent(GameObject opponent)
+    {
+        if (!usingSnowBall || iceSpawned || opponent == null)
+            return;
+
+        if (tempIce == null)
+        {
+            Debug.LogWarning("PenguinOffensive: tempIce is not assigned.", this);
+            CancelSnowballAndRefund();
+            return;
+        }
+
+        // spawn the ice under the opposing player who bumped the ball
+        Vector3 hitterPos = opponent.transform.position;
+        Vector3 iceSpawnPos = new Vector3(hitterPos.x, 0, hitterPos.z);
+
+        iceInstance = Instantiate(tempIce, iceSpawnPos, Quaternion.identity);
+        PrepareIceForFade(iceInstance);
+        StartCoroutine(FadeInIce(iceInstance, iceSpawnFadeTime));
+        iceSpawned = true;
+
+        if (iceCircularMaskPrefab != null)
+        {
+            if (iceMaskInstance != null)
+            {
+                Destroy(iceMaskInstance);
+                iceMaskInstance = null;
+            }
+
+            if (iceMaskCoroutine != null)
+            {
+                StopCoroutine(iceMaskCoroutine);
+                iceMaskCoroutine = null;
+            }
+
+            iceMaskInstance = Instantiate(iceCircularMaskPrefab, iceInstance.transform);
+            iceMaskInstance.transform.localPosition = Vector3.zero;
+            iceMaskInstance.transform.localRotation = Quaternion.identity;
+            iceMaskInstance.transform.localScale = Vector3.zero;
+            PrepareIceMaskForFade(iceMaskInstance);
+            iceMaskCoroutine = StartCoroutine(AnimateIceMask(iceMaskInstance, iceSpawnFadeTime));
+        }
+
+        iceCollider = iceInstance.GetComponent<BoxCollider>();
+
+        if (ballCollider != null && iceCollider != null)
+            Physics.IgnoreCollision(ballCollider, iceCollider, true);
+
+        // disable the ball snow effect and restore the normal texture when the ice hits the ground
+        if (snowballTrackInstance != null)
+        {
+            Destroy(snowballTrackInstance);
+            snowballTrackInstance = null;
+        }
+
+        Debug.Log("Reverting ball material after ice spawns", this);
+        RestoreNormalBallMaterial();
+
+        // play a ground particle effect attached to the ice while it exists
+        if (iceSpawnBurstPrefab != null)
+        {
+            GameObject burstInstance = Instantiate(iceSpawnBurstPrefab, iceInstance.transform);
+            burstInstance.transform.localPosition = Vector3.zero;
+        }
+
+        // The ability has successfully triggered, so NOW start its cooldown.
+        StartCooldown(_cooldownTime);
+
+        int playerID = GetComponent<BallInteract>().playerID;
+
+        if (HUDManager.Instance != null)
+        {
+            HUDManager.Instance.TriggerOffensiveCooldown(
+                playerID,
+                _cooldownTime
+            );
+        }
+    }
+
+    void CancelSnowballAndRefund()
+    {
+        if (!usingSnowBall)
+            return;
+
+        Debug.Log("Penguin Offensive: Snowball did not hit an opposing player. Refunding cooldown.", this);
+
+        if (spawnIceCoroutine != null)
+        {
+            StopCoroutine(spawnIceCoroutine);
+            spawnIceCoroutine = null;
+        }
+
+        iceMode = false;
+        iceSpawned = false;
+        usingSnowBall = false;
+
+        if (iceMaskCoroutine != null)
+        {
+            StopCoroutine(iceMaskCoroutine);
+            iceMaskCoroutine = null;
+        }
+
+        if (iceInstance != null)
+        {
+            Destroy(iceInstance);
+            iceInstance = null;
+        }
+
+        if (iceMaskInstance != null)
+        {
+            Destroy(iceMaskInstance);
+            iceMaskInstance = null;
+        }
+
+        if (snowballTrackInstance != null)
+        {
+            Destroy(snowballTrackInstance);
+            snowballTrackInstance = null;
+        }
+
+        RestoreNormalBallMaterial();
+
+        // Explicitly refund the ability.
+        _cooldownRemaining = 0f;
     }
 
     void PrepareIceForFade(GameObject ice)
@@ -292,6 +403,7 @@ public class PenguinOffensive : BirdAbility
             return;
 
         Renderer[] renderers = ice.GetComponentsInChildren<Renderer>(true);
+
         foreach (Renderer renderer in renderers)
         {
             if (renderer == null)
@@ -314,6 +426,7 @@ public class PenguinOffensive : BirdAbility
             return;
 
         Renderer[] renderers = mask.GetComponentsInChildren<Renderer>(true);
+
         foreach (Renderer renderer in renderers)
         {
             if (renderer == null)
@@ -357,6 +470,7 @@ public class PenguinOffensive : BirdAbility
                     }
                 }
             }
+
             yield return null;
         }
 
@@ -375,6 +489,7 @@ public class PenguinOffensive : BirdAbility
                     }
                 }
             }
+
             Destroy(mask);
         }
     }
@@ -396,10 +511,12 @@ public class PenguinOffensive : BirdAbility
         {
             elapsed += Time.deltaTime;
             float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+
             foreach (Renderer renderer in iceRenderers)
             {
                 if (renderer == null)
                     continue;
+
                 foreach (Material material in renderer.materials)
                 {
                     if (material != null)
@@ -410,10 +527,12 @@ public class PenguinOffensive : BirdAbility
             if (mask != null)
             {
                 mask.transform.localScale = Vector3.Lerp(Vector3.one, Vector3.zero, t);
+
                 foreach (Renderer renderer in maskRenderers)
                 {
                     if (renderer == null)
                         continue;
+
                     foreach (Material material in renderer.materials)
                     {
                         if (material != null)
@@ -427,6 +546,7 @@ public class PenguinOffensive : BirdAbility
 
         if (ice != null)
             Destroy(ice);
+
         if (mask != null)
             Destroy(mask);
     }
@@ -443,6 +563,7 @@ public class PenguinOffensive : BirdAbility
         {
             elapsed += Time.deltaTime;
             float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+
             foreach (Renderer renderer in renderers)
             {
                 if (renderer == null)
@@ -454,6 +575,7 @@ public class PenguinOffensive : BirdAbility
                         SetMaterialAlpha(material, t);
                 }
             }
+
             yield return null;
         }
 
@@ -509,12 +631,25 @@ public class PenguinOffensive : BirdAbility
             return false;
         }
 
-        // Always return true if game state is Blocked or Bumped
         GameManager gameManager = GameManager.Instance;
-        if (gameManager.gameState == GameManager.GameState.Blocked || gameManager.gameState == GameManager.GameState.Bumped)
+
+        if (gameManager == null || ballInteraction == null)
+            return false;
+
+        BallInteract playerBallInteract = player.GetComponent<BallInteract>();
+
+        if (playerBallInteract != null)
         {
-            return true;
+            return playerBallInteract.onLeft != ballInteraction.onLeft;
         }
+
+        AIBehavior aiBehavior = player.GetComponent<AIBehavior>();
+
+        if (aiBehavior != null)
+        {
+            return aiBehavior.onLeft != ballInteraction.onLeft;
+        }
+
         return false;
     }
 
@@ -533,7 +668,7 @@ public class PenguinOffensive : BirdAbility
 
     // private void OnEnable()
     // {
-    //     // Christofort: Check if ballManager exists first to avoid errors
+    //     // Christofort: Check if BallManager exists first to avoid errors
     //     BallManager.Instance.onBallCollision += checkNetCollision;
     // }
 

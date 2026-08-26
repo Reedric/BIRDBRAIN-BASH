@@ -236,7 +236,7 @@ public class BallInteract : MonoBehaviour
     }
 
     // Check if the player can hit the ball
-    private bool CanHit()
+    public bool CanHit()
     {
         // During a serve, the server and ball are intentionally on the same side.
         if (GameManager.Instance.gameState == GameManager.GameState.PointStart
@@ -369,6 +369,16 @@ public class BallInteract : MonoBehaviour
     }
 
     // Spike the ball
+    public bool CanSpikeBall()
+    {
+        if (GameManager.Instance == null
+            || (GameManager.Instance.gameState != GameManager.GameState.Bumped
+                && GameManager.Instance.gameState != GameManager.GameState.Set))
+            return false;
+
+        return CanHit() && IsPlayerNearBall();
+    }
+
     public void SpikeBall()
     {
         // Set the spiking location to middle-back of court on the rightside as default

@@ -18,6 +18,9 @@ public class PelicanOffensive : BirdAbility
 
     override protected bool Activate()
     {
+        if (!GameManager.PointInProgress())
+            return false;
+
         StartCoroutine(SlipFish());
 
         // Ability successfully activated

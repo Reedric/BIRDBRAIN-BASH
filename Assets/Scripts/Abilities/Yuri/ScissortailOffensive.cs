@@ -6,10 +6,12 @@ public class ScissortailOffensive : BirdAbility
     private bool shotHappened; // Whether or not the ability happened for return purposes
     override protected bool Activate()
     {
-        StartCoroutine(ScissorShot());
+        BallInteract ballInteraction = GetComponent<BallInteract>();
+        if (ballInteraction == null || !ballInteraction.CanSpikeBall())
+            return false;
 
-        Debug.Log(shotHappened);
-        return shotHappened; // This might not work due to race conditions but we will see
+        StartCoroutine(ScissorShot());
+        return true;
     }
 
     private IEnumerator ScissorShot()
@@ -17,11 +19,15 @@ public class ScissortailOffensive : BirdAbility
         // Ability has not yet happened
         shotHappened = false;
 
+        BallInteract ballInteraction = GetComponent<BallInteract>();
+        if (ballInteraction == null || !ballInteraction.CanSpikeBall())
+            yield break;
+
         // Get the ball's halfway point from the ground
         float ballMidHeight = BallManager.Instance.gameObject.transform.position.y / 2;
 
         // Spike the ball
-        GetComponent<BallInteract>().SpikeBall();
+        ballInteraction.SpikeBall();
 
         // Wait for ball to get to halfway point
         Rigidbody ballRb = BallManager.Instance.GetComponent<Rigidbody>();

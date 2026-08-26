@@ -6703,7 +6703,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 80
   m_CollisionDetection: 0
 --- !u!114 &9137096644898875963
 MonoBehaviour:
@@ -6729,8 +6729,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6dca93e819a6fc47a03b72b82e10caf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  birdType: 0
+  birdType: 9
   onLeft: 0
+  playerID: -1
   interactionRadius: 3
   animator: {fileID: 2321073107955504055}
   maxGroundSpeed: 3
@@ -7394,7 +7395,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: f354d4323961c8f44907dd043d0a4f39, type: 2}
+  - {fileID: 2100000, guid: 2e5b20d76e5532746a3c6fb1337d7718, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

@@ -102,7 +102,7 @@ public class PhoenixDefensive : BirdAbility
         Vector3 revivePosition = contactPoint + Vector3.up * reviveHeightOffset;
 
         actualBallRb.position = revivePosition;
-        actualBallRb.velocity = Vector3.zero;
+        actualBallRb.linearVelocity = Vector3.zero;
         actualBallRb.angularVelocity = Vector3.zero;
         actualBallRb.useGravity = true;
 

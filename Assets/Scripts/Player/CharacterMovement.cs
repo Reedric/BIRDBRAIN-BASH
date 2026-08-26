@@ -23,12 +23,10 @@ public class CharacterMovement : NetworkBehaviour
     private float originalMaxAirSpeed = 1.0f; // Original max air speed before buff
     // private float originalJumpForce = 1.0f; // Original jump force before buff
     private Rigidbody rb; // Rigid body of the character
-    // christofort: changed grounded to public to allow PenguinScript to access it
     public bool grounded = false; // If the character is touching the ground
 
     private bool canJump = true; // christofort: defaulted to false, ability scripts must set this to true
     private bool canMove = true; // christofort: defaulted to false, ability scripts must set this to true
-    private PenguinScript penguinScript; // Reference to penguin dash script
     private ParticleSystem dustParticles; // Reference to particle system for ground dust
     private PlayerInput playerInput; // Input for the player
     
@@ -41,7 +39,6 @@ public class CharacterMovement : NetworkBehaviour
         // Get the Rigidbody of the character
         playerInput = GetComponent<PlayerInput>();
         rb = GetComponent<Rigidbody>();
-        penguinScript = GetComponent<PenguinScript>();
         dustParticles = GetComponent<ParticleSystem>();
 
         // grab animator if not assigned in inspector (mirrors AIBehavior logic)
@@ -65,12 +62,10 @@ public class CharacterMovement : NetworkBehaviour
         // Check for player inputs for lateral movement
         Vector2 inputDirection = playerInput.actions.FindAction("Move").ReadValue<Vector2>();
 
-        // Don't process movement input if penguin is dashing
-        bool isDashing = penguinScript != null && penguinScript.isDashing;
         
         // Update the current direction and speed of the character based on player input
         // christofort: added check for canMove to be true
-        if (!inputDirection.Equals(Vector2.zero) && !isDashing && canMove)
+        if (!inputDirection.Equals(Vector2.zero) && canMove)
         {
             // Calculate new velocity, ensure it doesn't exceed max ground or air speed, then assign the velocity
             Vector2 newVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.z) + inputDirection * Time.fixedDeltaTime * directionChangeWeight;
