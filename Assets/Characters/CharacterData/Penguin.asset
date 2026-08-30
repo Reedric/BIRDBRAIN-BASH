@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9d5e324aebf6c04b82581d8efbd45af, type: 3}
+  m_Name: Penguin
+  m_EditorClassIdentifier: 
+  birdName: Penguin
+  icon: {fileID: 2800000, guid: 2610f189495dcff4fac6358f7a888ebd, type: 3}
+  description: Although flightless, penguin rivals the competition when on the court
+    and is a champion snow angel maker off the court.
+  offensiveAbility: "Snowball Spike - Turns the ball into a snowball and creates
+    a patch of slippery ice with a 4m radius, centered around where it\u2019s bumped.
+    (12s cooldown)"
+  offensiveIcon: {fileID: 2800000, guid: 3665feb3291b43b4cbd1c976dba0cd7c, type: 3}
+  defensiveAbility: Belly Blitz - Penguin dashes by sliding on its belly. (5s cooldown)
+  defensiveIcon: {fileID: 2800000, guid: a3a2916322133d7469a93a381f4af267, type: 3}
+  groundSpeed: 4
+  jumpForce: 4
+  strength: 3

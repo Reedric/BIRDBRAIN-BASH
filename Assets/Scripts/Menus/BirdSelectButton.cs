@@ -56,6 +56,17 @@ public class BirdSelectButton : MonoBehaviour
         }
     }
 
+    public void OnPressed()
+    {
+        AviaryManager manager = AviaryManager.Instance;
+        if (manager != null)
+        {
+            manager.SetPlayerBirdIndex(birdIndex);
+            // Optional: visual feedback
+            if (highlightImage != null) StartCoroutine(BriefFlash());
+        }
+    }
+
     private bool IsPlayerCursorOverButton(int playerIndex)
     {
         CharacterSelectManager manager = CharacterSelectManager.Instance;

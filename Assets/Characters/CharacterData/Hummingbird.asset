@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9d5e324aebf6c04b82581d8efbd45af, type: 3}
+  m_Name: Hummingbird
+  m_EditorClassIdentifier: 
+  birdName: Hummingbird
+  icon: {fileID: 2800000, guid: 61a2205138fc8ed45b8338b1de41ea67, type: 3}
+  description: Flying fast always looking to get their fix of that sweet, sweet nectar.
+    It makes them really hyper, and they can do some crazy stunts like flying backwards.
+  offensiveAbility: Sweet Tongue - Shoots its tongue at an opponent, slowing them
+    down with sticky nectar for 3s (15s cooldown)
+  offensiveIcon: {fileID: 2800000, guid: d47584169a2a4fa4f83ba6fe891ff944, type: 3}
+  defensiveAbility: Zip Zap - Teleport to a directional position (10s cooldown)
+  defensiveIcon: {fileID: 2800000, guid: a159d7a143e12004c9a7bad3080ca8c3, type: 3}
+  groundSpeed: 10
+  jumpForce: 3
+  strength: 3

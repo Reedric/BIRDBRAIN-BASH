@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9d5e324aebf6c04b82581d8efbd45af, type: 3}
+  m_Name: Phoenix
+  m_EditorClassIdentifier: 
+  birdName: Phoenix
+  icon: {fileID: 2800000, guid: 0bbd022a36a86f94a979510a91f5fb40, type: 3}
+  description: "This bird is a symbol of renewal and rebirth, so they get a steady
+    offering of wood to keep themselves lit. They also like to quote, \u201CLike
+    the Phoenix, I have risen from the ashes! And into my fire, you shall fall!\u201D
+    - TMNT Shredder 2003, for some reason."
+  offensiveAbility: Burn ball - turn enemies into rotisserie chickens, unable to
+    use abilities if hit (8s cooldown for rotisserie chickens) (20s cooldown for
+    ability)
+  offensiveIcon: {fileID: 2800000, guid: 8373ac9aec4d220459ec4fdf3286c39d, type: 3}
+  defensiveAbility: Revive - One missed ball during a rally can be revived (from
+    the ashes) to be back in play (20s cooldown)
+  defensiveIcon: {fileID: 2800000, guid: 271a88fe78ba3fb4f8ba150c508528be, type: 3}
+  groundSpeed: 8
+  jumpForce: 3
+  strength: 3

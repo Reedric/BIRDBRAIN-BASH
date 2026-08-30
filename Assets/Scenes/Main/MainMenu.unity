@@ -4247,6 +4247,15 @@ MonoBehaviour:
     block: []
     defensive: []
     offensive: []
+  shimaenagaSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
   scoringSounds:
   - {fileID: 8300000, guid: eb33c0f9c80807641add146b4c6d0873, type: 3}
   ballPlayerInteractionSounds:
@@ -4670,7 +4679,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1205306876}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1933689302}
+        m_TargetAssemblyTypeName: MainMenu, Assembly-CSharp
+        m_MethodName: AviaryButton
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &1224288344
 GameObject:
   m_ObjectHideFlags: 0
@@ -5764,6 +5785,7 @@ MonoBehaviour:
   creditsAnimator: {fileID: 298716578}
   creditsDuration: 30
   gameSceneName: Game
+  aviarySceneName: Aviary
 --- !u!114 &1933689303
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5789,6 +5811,7 @@ MonoBehaviour:
   numPlayersPanel: {fileID: 363993055}
   inputDeadzone: 0.5
   inputRepeatDelay: 0.12
+  panelSwitchInputBlockDuration: 0.18
 --- !u!114 &1933689304
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9d5e324aebf6c04b82581d8efbd45af, type: 3}
+  m_Name: 31rd
+  m_EditorClassIdentifier: 
+  birdName: 31rd
+  icon: {fileID: 2800000, guid: 0c87fda651acb9649b84969d8885c82d, type: 3}
+  description: Friends will assure you that robopigeon is definitely a real Bird,
+    no Involvement with the government at all!
+  offensiveAbility: "\u201CPoops On You\u201D - Robopigeon summons a government drone
+    strike. A large circular region will appear on the opponent court, and after
+    a 2s delay any bird in the region will be stunned for 5 seconds. (40s cooldown)\r\n"
+  offensiveIcon: {fileID: 2800000, guid: 8476a1e73670c4644b28df752a921be2, type: 3}
+  defensiveAbility: Hardware Hacking - spawn a mini 31rd minion that can also hit
+    for the player, controlled by a hard cpu that will always hit. Lasts for 10s,
+    40s cooldown.
+  defensiveIcon: {fileID: 2800000, guid: 96c482fcdf1d3e845a9398da96e73bfa, type: 3}
+  groundSpeed: 7
+  jumpForce: 7
+  strength: 7

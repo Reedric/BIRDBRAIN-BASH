@@ -24,6 +24,9 @@ public class MainMenu : MonoBehaviour
              "Should be the actual match scene, not CharSelect or HowToPlay.")]
     [SerializeField] private string gameSceneName = "Game";
 
+    [Header("Aviary")]
+    [SerializeField] private string aviarySceneName = "Aviary";
+
     private bool isShowingCredits = false;
 
     /// <summary>
@@ -81,6 +84,11 @@ public class MainMenu : MonoBehaviour
     {
         if (isShowingCredits) return;
         StartCoroutine(PlayCredits());
+    }
+
+    public void AviaryButton()
+    {
+        SceneManager.LoadScene(aviarySceneName);
     }
 
     private IEnumerator PlayCredits()

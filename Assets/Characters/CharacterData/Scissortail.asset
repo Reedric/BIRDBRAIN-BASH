@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9d5e324aebf6c04b82581d8efbd45af, type: 3}
+  m_Name: Scissortail
+  m_EditorClassIdentifier: 
+  birdName: Scissortail
+  icon: {fileID: 2800000, guid: 1f648f34794c1ad4f8a121b1060e8d72, type: 3}
+  description: Flycatcher loves women, and is very good at making other women also
+    love women. Did I mention she loves women?
+  offensiveAbility: "Scissor Shot! - Flycatcher\u2019s next spike will randomly change
+    direction mid-flight (8s cooldown, starts after spike changes direction)"
+  offensiveIcon: {fileID: 2800000, guid: 216af781db28e114aa41fee157383186, type: 3}
+  defensiveAbility: Yuriful - creates a connecting red string of fate between Flycatcher
+    and her partner, which can bump up a ball that hits that line (12s cooldown,
+    cooldown starts after ball touches string OR after string disappears, string
+    lasts 5s)
+  defensiveIcon: {fileID: 2800000, guid: b8b3c8cec79c6ae4ba01b8dd9e7c9953, type: 3}
+  groundSpeed: 7
+  jumpForce: 6
+  strength: 4

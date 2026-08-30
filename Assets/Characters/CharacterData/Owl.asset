@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9d5e324aebf6c04b82581d8efbd45af, type: 3}
+  m_Name: Owl
+  m_EditorClassIdentifier: 
+  birdName: Owl
+  icon: {fileID: 2800000, guid: 803de41dc7c7b364d95cd8c4818d021d, type: 3}
+  description: Owl immerses herself in mystery novels, obsessed with solving their
+    cases. Her notably high intuition guides many of her decisions.
+  offensiveAbility: Capture Clue - Owl sketches a line in the sand using her quill
+    across the middle of the enemy court, preventing enemies from crossing it. (25s
+    cooldown after line disappears, line lasts up to 8s)
+  offensiveIcon: {fileID: 2800000, guid: 82c7eb26361cdf34c80f7f873f0b0a79, type: 3}
+  defensiveAbility: Investigation - Owl predicts the trajectory of the ball visualized
+    by a line.  (15s cooldown after line disappears, 1 meter ahead, line lasts up
+    to 10s)
+  defensiveIcon: {fileID: 2800000, guid: ce0394fdb0892ba47b440d7b1b967c1c, type: 3}
+  groundSpeed: 7
+  jumpForce: 6
+  strength: 7
