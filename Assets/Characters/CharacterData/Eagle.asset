@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9d5e324aebf6c04b82581d8efbd45af, type: 3}
+  m_Name: Eagle
+  m_EditorClassIdentifier: 
+  birdName: Eagle
+  icon: {fileID: 2800000, guid: 2e9ce01aed3aa1e41a0b51dbe66fdc62, type: 3}
+  description: "Eagle\u2019s a Dog-loving Must Fordang-driving American patriot,
+    and will make sure everyone knows it. And NO, Eagle is NOT balding, thank you
+    very much!!!"
+  offensiveAbility: Star Spangled Stun - Eagle inspires patriotism in all other birds
+    on the court, briefly rooting them in a heartfelt salute. (13s cooldown)
+  offensiveIcon: {fileID: 2800000, guid: 217170793c9760b4bb077160e4dc0225, type: 3}
+  defensiveAbility: Land of the Free - Eagle summons 5 stars at random spots on the
+    allied court. If the ball lands on a star, bump it back up automatically. (20s
+    cooldown, stars last up to 10s)
+  defensiveIcon: {fileID: 2800000, guid: 93fdaadbe995a8e4b820047a1005177a, type: 3}
+  groundSpeed: 8
+  jumpForce: 5
+  strength: 8

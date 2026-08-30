@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9d5e324aebf6c04b82581d8efbd45af, type: 3}
+  m_Name: Pukeko
+  m_EditorClassIdentifier: 
+  birdName: Pukeko
+  icon: {fileID: 2800000, guid: c5fac3c4fb92d1a47ba6398cfe37af50, type: 3}
+  description: 'Cover your ears and steer clear of this loud and proud bird. '
+  offensiveAbility: Sonic Squawk- sound wave (4m x2m x 8m, x,z,y) that silences birds
+    (making them unable to use abilities for 3 seconds) and pushes them back roughly
+    2m, pierces targets (40s cooldown)
+  offensiveIcon: {fileID: 2800000, guid: b7485c51519f34e4fb20e2a3418d21ee, type: 3}
+  defensiveAbility: 'Playing Dirty- dash towards the net and instantly block the
+    ball if you collide (20s cooldown) '
+  defensiveIcon: {fileID: 2800000, guid: bfca9efa176bf2a40b0dbeb0794be8dd, type: 3}
+  groundSpeed: 6
+  jumpForce: 5
+  strength: 3
