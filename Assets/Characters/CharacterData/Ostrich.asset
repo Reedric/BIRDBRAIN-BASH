@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9d5e324aebf6c04b82581d8efbd45af, type: 3}
+  m_Name: Ostrich
+  m_EditorClassIdentifier: 
+  birdName: Ostrich
+  icon: {fileID: 2800000, guid: 157cc028f5d53ec45a60ca1cdc5ef408, type: 3}
+  description: "Ostrich is 2 meters tall, built like a tank, and the fastest bird
+    on land. If not for Ostrich\u2019s nasty temper, they\u2019d already be signed
+    to the best bird-ball team in the country."
+  offensiveAbility: "Incredible Violence - Ostrich is infused with Rage for 30 seconds.
+    While enraged, every point the opposing team scores will increase Ostrich\u2019s
+    strength by 1 with a cap at 10, and every point Ostrich\u2019s team scores extends
+    the duration of Rage by 3 seconds. (30s cooldown, starting after the end of the
+    previous Rage duration)"
+  offensiveIcon: {fileID: 2800000, guid: da27aae65636ccb44bc36529c053522f, type: 3}
+  defensiveAbility: "Australian - Ostrich is immune to all debuffs (enamor, stun,
+    weakness, silence). This does not include environmental effects, such as Pelican\u2019s
+    slip fish, Penguin\u2019s snowball, or Chicken\u2019s egg throw. (Passive)"
+  defensiveIcon: {fileID: 2800000, guid: bf0f2392d794b8b4da13f85f1c12b22d, type: 3}
+  groundSpeed: 7
+  jumpForce: 6
+  strength: 7

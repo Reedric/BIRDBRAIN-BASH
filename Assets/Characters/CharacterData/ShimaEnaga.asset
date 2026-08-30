@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9d5e324aebf6c04b82581d8efbd45af, type: 3}
+  m_Name: ShimaEnaga
+  m_EditorClassIdentifier: 
+  birdName: Shima Enaga
+  icon: {fileID: 2800000, guid: a5f0d19b7e499034b982b45f923e8f6f, type: 3}
+  description: This round bird loves to snuggle, unless you are its enemy! Seemingly
+    sweet, it keeps its allies warm in the cold and its enemies chilled by its mischief.
+  offensiveAbility: Cottonball Bounce - Shima Enaga prunes its feathers to create
+    3 bouncy cotton balls that will bounce enemies in a random direction if touched!
+    (last for 8s, 30s cooldown)
+  offensiveIcon: {fileID: 2800000, guid: 6c0789d8a65367f4481e4c980f3a0a93, type: 3}
+  defensiveAbility: Helping Hand - Ally and self have a 30% cooldown reduction on
+    their next ability use. This ability can be activated mid-ally cooldown to reduce
+    it. (20s cooldown, this cooldown is immune)
+  defensiveIcon: {fileID: 2800000, guid: d2f9cf5e2f5823d4ebc536bb92dd5a66, type: 3}
+  groundSpeed: 4
+  jumpForce: 7
+  strength: 4

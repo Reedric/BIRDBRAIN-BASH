@@ -9,6 +9,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Main/MainMenu.unity
     guid: b0b1bc74d298e5c43accfb94963121e4
   - enabled: 1
+    path: Assets/Scenes/Main/Aviary.unity
+    guid: 3a6a6147360cd60418365030e6569087
+  - enabled: 1
     path: Assets/Scenes/Main/CharSelect.unity
     guid: e32d653b83d3c424aa75cd49bf20490a
   - enabled: 1
@@ -16,10 +19,10 @@ EditorBuildSettings:
     guid: 588580040eb08644888e9e11ba574aef
   - enabled: 1
     path: Assets/Scenes/Main/Game_Forest.unity
-    guid: c21e7d168a247474e9e1310948636959
+    guid: 33bf9cb173716674f8253514cf6a3e41
   - enabled: 1
     path: Assets/Scenes/Main/Game_Iceberg.unity
-    guid: c50309428f406f14a9e4d8be88b5fa61
+    guid: 27a5cea2f0206d446a0d2784945b97a3
   - enabled: 1
     path: Assets/Scenes/Main/HowToPlay.unity
     guid: eb5a04b682e42ed4b9f9b10c3b871776

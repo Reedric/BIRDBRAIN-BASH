@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9d5e324aebf6c04b82581d8efbd45af, type: 3}
+  m_Name: Crow
+  m_EditorClassIdentifier: 
+  birdName: Crow
+  icon: {fileID: 2800000, guid: 93b8112f940f4794b836c974e1fec07a, type: 3}
+  description: Cool bird that likes shiny objects and flaunting his stuff.
+  offensiveAbility: Silence - Disable enemy abilities for a short period of time
+  offensiveIcon: {fileID: 2800000, guid: 694d41a11f1c7384ea209e42ee9242a5, type: 3}
+  defensiveAbility: Shiny - Collect shiny objects on the ground for a stat boost
+    during the rally, cooldown starts once the third coin has been collected
+  defensiveIcon: {fileID: 2800000, guid: 6230294239affcc40a1f21d64c004843, type: 3}
+  groundSpeed: 5
+  jumpForce: 5
+  strength: 5

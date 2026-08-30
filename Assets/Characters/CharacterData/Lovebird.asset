@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9d5e324aebf6c04b82581d8efbd45af, type: 3}
+  m_Name: Lovebird
+  m_EditorClassIdentifier: 
+  birdName: Lovebird
+  icon: {fileID: 2800000, guid: e2ec55d6bf069aa4e9bc9ae063f3c3ac, type: 3}
+  description: "Lovebird is a hopeless romantic searching for true love! In a dating
+    scene full of twerking and deadbeat dads, Lovebird just wants to find someone
+    who\u2019ll build nests and seductively wiggle their feathers the good-ol\u2019-fashioned
+    way."
+  offensiveAbility: Lovebomb - Enamor enemies and make them walk slowly towards you
+    for a brief duration, during which they cannot move freely. (10s cooldown, effect
+    lasts 1s)
+  offensiveIcon: {fileID: 2800000, guid: ba3c60570e481c74ab89d9ee015bed4b, type: 3}
+  defensiveAbility: "Romantic Rush - Slingshot to your ally bird\u2019s position.
+    (6s cooldown)"
+  defensiveIcon: {fileID: 2800000, guid: 2018f15563f048e4890de7949cc63aef, type: 3}
+  groundSpeed: 4
+  jumpForce: 6
+  strength: 4
