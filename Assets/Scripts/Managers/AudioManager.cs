@@ -138,6 +138,17 @@ public class AudioManager : MonoBehaviour
     [Tooltip("Plays when a debuff expires.")]
     [SerializeField] private AudioClip debuffEndSound;
 
+    [Header("UI Sounds")]
+    [Tooltip("Plays when a cursor enters a new UI button.")]
+    [SerializeField] private AudioClip buttonHoverSound;
+    [Tooltip("Plays when a UI button is selected.")]
+    [SerializeField] private AudioClip buttonSelectSound;
+
+    [Header("Stun Sound")]
+    [Tooltip("Loops on each stunned bird until its stun effect ends.")]
+    [SerializeField] private AudioClip stunLoopSound;
+    [SerializeField, Range(0f, 1f)] private float stunLoopVolume = 1f;
+
     [Header("Background Music")]
     [SerializeField] private AudioClip[] backgroundTracks;
     
@@ -160,6 +171,7 @@ public class AudioManager : MonoBehaviour
     private static AudioManager instance;
     private AudioSource audioSource;
     private AudioSource backgroundAudioSource;
+    private readonly System.Collections.Generic.Dictionary<GameObject, AudioSource> stunLoopSources = new();
     void Awake()
     {
         // Assign instance
@@ -176,7 +188,7 @@ public class AudioManager : MonoBehaviour
         {
             if (!isGameScene)
             {
-                PlayBackgroundTrack(backgroundTracks[0]);
+                PlayRandomTrack(backgroundTracks);
             }
         }
     }
@@ -300,24 +312,41 @@ public class AudioManager : MonoBehaviour
 
     public static void PlayDefaultBackground()
     {
-        if (instance.backgroundTracks != null && instance.backgroundTracks.Length > 0)
-        {
-            PlayBackgroundTrack(instance.backgroundTracks[0]);
-        }
+        PlayRandomTrack(instance.backgroundTracks);
     }
 
     // Play game-specific music (called after countdown finishes)
     public static void PlayGameMusic()
     {
-        if (instance.gameMusicTracks != null && instance.gameMusicTracks.Length > 0)
+        if (HasPlayableTrack(instance.gameMusicTracks))
         {
-            PlayBackgroundTrack(instance.gameMusicTracks[0]);
+            PlayRandomTrack(instance.gameMusicTracks);
         }
-        else if (instance.backgroundTracks != null && instance.backgroundTracks.Length > 0)
+        else
         {
             // Fallback to regular background if no game music defined
-            PlayBackgroundTrack(instance.backgroundTracks[0]);
+            PlayRandomTrack(instance.backgroundTracks);
         }
+    }
+
+    private static bool HasPlayableTrack(AudioClip[] tracks)
+    {
+        if (tracks == null) return false;
+
+        foreach (AudioClip track in tracks)
+        {
+            if (track != null) return true;
+        }
+
+        return false;
+    }
+
+    private static void PlayRandomTrack(AudioClip[] tracks)
+    {
+        if (instance == null || !HasPlayableTrack(tracks)) return;
+
+        AudioClip[] playableTracks = System.Array.FindAll(tracks, track => track != null);
+        PlayBackgroundTrack(playableTracks[Random.Range(0, playableTracks.Length)]);
     }
 
     // Play a scoring sound when a point is scored
@@ -437,6 +466,49 @@ public class AudioManager : MonoBehaviour
     {
         if (instance.debuffEndSound != null)
             instance.audioSource.PlayOneShot(instance.debuffEndSound, volume);
+    }
+
+    public static void PlayButtonHoverSound(float volume = 1.0f)
+    {
+        if (instance != null && instance.buttonHoverSound != null)
+            instance.audioSource.PlayOneShot(instance.buttonHoverSound, volume);
+    }
+
+    public static void PlayButtonSelectSound(float volume = 1.0f)
+    {
+        if (instance != null && instance.buttonSelectSound != null)
+            instance.audioSource.PlayOneShot(instance.buttonSelectSound, volume);
+    }
+
+    public static void PlayStunLoop(GameObject bird)
+    {
+        if (instance == null || instance.stunLoopSound == null || bird == null) return;
+
+        if (!instance.stunLoopSources.TryGetValue(bird, out AudioSource source) || source == null)
+        {
+            source = bird.AddComponent<AudioSource>();
+            source.loop = true;
+            source.spatialBlend = 1f;
+            instance.stunLoopSources[bird] = source;
+        }
+
+        source.clip = instance.stunLoopSound;
+        source.volume = instance.stunLoopVolume;
+        if (!source.isPlaying)
+            source.Play();
+    }
+
+    public static void StopStunLoop(GameObject bird)
+    {
+        if (instance == null || bird == null || !instance.stunLoopSources.TryGetValue(bird, out AudioSource source)) return;
+
+        if (source != null)
+        {
+            source.Stop();
+            Destroy(source);
+        }
+
+        instance.stunLoopSources.Remove(bird);
     }
 
     // Set whether this is a game scene (stops background music on awake if true)

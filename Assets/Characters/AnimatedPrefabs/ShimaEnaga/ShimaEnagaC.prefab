@@ -184,6 +184,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a6579ce9967a5fe43b04e24c00d104be, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1495538199463263672}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a6579ce9967a5fe43b04e24c00d104be, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -6241600469701696855}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a6579ce9967a5fe43b04e24c00d104be, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -7003105630942795269}
   m_SourcePrefab: {fileID: 100100000, guid: a6579ce9967a5fe43b04e24c00d104be, type: 3}
 --- !u!1 &1676793963249137159 stripped
 GameObject:
@@ -229,8 +235,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  maxGroundSpeed: 4
-  maxAirSpeed: 4
+  maxGroundSpeed: 6
+  maxAirSpeed: 6
   jumpForce: 7
   rotationSpeed: 10
   rotationOffsetEuler: {x: 0, y: 180, z: 0}
@@ -284,10 +290,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.86
-  m_Height: 2.03
+  m_Radius: 0.77
+  m_Height: 2.06
   m_Direction: 1
-  m_Center: {x: 0, y: 0.98, z: 0.24}
+  m_Center: {x: 0, y: 1.16, z: 0.24}
 --- !u!95 &9141691455182430379
 Animator:
   serializedVersion: 7
@@ -377,7 +383,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5218fa23fafadc54d807b4f114cfd911, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  abilityController: {fileID: 0}
+  abilityController: {fileID: 4005507707592732092}
 --- !u!114 &1495538199463263672
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -396,6 +402,47 @@ MonoBehaviour:
   spikeStat: 4
   birdType: 18
   playerID: 0
+--- !u!114 &-6241600469701696855
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1676793963249137159}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2683a7c67d3b8e4cb9021f735eacaa5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  AbilitySlot: 1
+  _cooldownTime: 20
+  cooldownReduction: 0.3
+--- !u!114 &-7003105630942795269
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1676793963249137159}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71ce02549846b984a8601bb7a850d690, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  AbilitySlot: 0
+  _cooldownTime: 30
+  cottonballPrefab: {fileID: 6897839624328568988, guid: 6616f61c7e69a2a49be3808e142ef673, type: 3}
+  cottonballCount: 3
+  cottonballLifetime: 8
+  throwDuration: 0.65
+  throwArcHeight: 2
+  spawnHeightOffset: 0.5
+  courtSideMinX: 0.5
+  courtSideMaxX: 7
+  courtMinZ: -4
+  courtMaxZ: 4
+  minimumLandingSpacing: 2
+  landingHeight: 0.5
 --- !u!4 &2021829900747123901 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: a6579ce9967a5fe43b04e24c00d104be, type: 3}
