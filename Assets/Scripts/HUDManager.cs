@@ -32,20 +32,27 @@ public class HUDManager : MonoBehaviour
         // Call this to kick off the cooldown animation
         public IEnumerator RunCooldown(float duration)
         {
-            SetOnCooldown(true);
+            yield return RunCooldown(duration, duration);
+        }
+
+        public IEnumerator RunCooldown(float remainingDuration, float totalDuration)
+        {
+            totalDuration = Mathf.Max(totalDuration, 0.0001f);
+            remainingDuration = Mathf.Clamp(remainingDuration, 0f, totalDuration);
+            SetOnCooldown(true, remainingDuration / totalDuration);
 
             float elapsed = 0f;
-            while (elapsed < duration)
+            while (elapsed < remainingDuration)
             {
                 // Only elapse time if the point is in progress
                 if (GameManager.PointInProgress())
                 {
                     elapsed += Time.deltaTime;
-                    float remaining = duration - elapsed;
+                    float remaining = Mathf.Max(0f, remainingDuration - elapsed);
 
                     // fillAmount 1 = fully covered, 0 = fully revealed
                     if (cooldownOverlay != null)
-                        cooldownOverlay.fillAmount = 1f - (elapsed / duration);
+                        cooldownOverlay.fillAmount = remaining / totalDuration;
 
                     if (cooldownText != null)
                         cooldownText.text = Mathf.CeilToInt(remaining).ToString();
@@ -57,11 +64,11 @@ public class HUDManager : MonoBehaviour
             SetOnCooldown(false);
         }
 
-        private void SetOnCooldown(bool onCooldown)
+        private void SetOnCooldown(bool onCooldown, float fillAmount = 1f)
         {
             if (cooldownOverlay != null)
             {
-                cooldownOverlay.fillAmount = onCooldown ? 1f : 0f;
+            cooldownOverlay.fillAmount = onCooldown ? fillAmount : 0f;
                 cooldownOverlay.gameObject.SetActive(onCooldown);
             }
             if (cooldownText != null)
@@ -331,6 +338,32 @@ public class HUDManager : MonoBehaviour
         defensiveCooldowns[playerIndex] = StartCoroutine(RunDefensiveCooldownWithSFX(icon, playerIndex, duration));
     }
 
+    public void UpdateOffensiveCooldown(int playerIndex, float remainingDuration, float totalDuration)
+    {
+        AbilityIconUI icon = GetOffensiveIcon(playerIndex);
+        if (icon == null) return;
+
+        if (offensiveCooldowns[playerIndex] != null)
+            StopCoroutine(offensiveCooldowns[playerIndex]);
+
+        offensiveCooldowns[playerIndex] = StartCoroutine(
+            RunOffensiveCooldownWithSFX(icon, playerIndex, remainingDuration, totalDuration)
+        );
+    }
+
+    public void UpdateDefensiveCooldown(int playerIndex, float remainingDuration, float totalDuration)
+    {
+        AbilityIconUI icon = GetDefensiveIcon(playerIndex);
+        if (icon == null) return;
+
+        if (defensiveCooldowns[playerIndex] != null)
+            StopCoroutine(defensiveCooldowns[playerIndex]);
+
+        defensiveCooldowns[playerIndex] = StartCoroutine(
+            RunDefensiveCooldownWithSFX(icon, playerIndex, remainingDuration, totalDuration)
+        );
+    }
+
     // Runs the offensive cooldown animation then fires the ability-ready SFX.
     private IEnumerator RunOffensiveCooldownWithSFX(AbilityIconUI icon, int playerIndex, float duration)
     {
@@ -346,6 +379,26 @@ public class HUDManager : MonoBehaviour
     private IEnumerator RunDefensiveCooldownWithSFX(AbilityIconUI icon, int playerIndex, float duration)
     {
         yield return StartCoroutine(icon.RunCooldown(duration));
+
+        if (playerIndex <= 1)
+            AudioManager.PlayTeam1DefensiveReadySound();
+        else
+            AudioManager.PlayTeam2DefensiveReadySound();
+    }
+
+    private IEnumerator RunOffensiveCooldownWithSFX(AbilityIconUI icon, int playerIndex, float remainingDuration, float totalDuration)
+    {
+        yield return StartCoroutine(icon.RunCooldown(remainingDuration, totalDuration));
+
+        if (playerIndex <= 1)
+            AudioManager.PlayTeam1OffensiveReadySound();
+        else
+            AudioManager.PlayTeam2OffensiveReadySound();
+    }
+
+    private IEnumerator RunDefensiveCooldownWithSFX(AbilityIconUI icon, int playerIndex, float remainingDuration, float totalDuration)
+    {
+        yield return StartCoroutine(icon.RunCooldown(remainingDuration, totalDuration));
 
         if (playerIndex <= 1)
             AudioManager.PlayTeam1DefensiveReadySound();

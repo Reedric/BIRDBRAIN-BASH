@@ -12,6 +12,7 @@ public abstract class BirdAbility : MonoBehaviour
     protected float _cooldownRemaining;
     private bool _abilitiesDisabled;
     protected bool _delayCooldownStart;
+    private float _nextCooldownReduction;
 
     public bool IsReady => _cooldownRemaining <= 0 && !_abilitiesDisabled;
 
@@ -42,7 +43,14 @@ public abstract class BirdAbility : MonoBehaviour
         if (Activate())
         {
             if (!_delayCooldownStart)
-                _cooldownRemaining = _cooldownTime;
+            {
+                _cooldownRemaining = _cooldownTime * (1f - _nextCooldownReduction);
+                bool usedCooldownReduction = _nextCooldownReduction > 0f;
+                _nextCooldownReduction = 0f;
+
+                if (usedCooldownReduction)
+                    UpdateCooldownUI();
+            }
 
             Debug.Log($"[BirdAbility] {GetType().Name} activated successfully.");
             return true;
@@ -54,6 +62,53 @@ public abstract class BirdAbility : MonoBehaviour
 
     // TODO: make this return bool, true means the cooldown will start, false means it won't (for abilities with multiple activations)
     protected abstract bool Activate();
+
+    public void ApplyCooldownReduction(float reduction)
+    {
+        reduction = Mathf.Clamp01(reduction);
+
+        if (_cooldownRemaining > 0f)
+        {
+            _cooldownRemaining = Mathf.Max(0f, _cooldownRemaining - _cooldownTime * reduction);
+            UpdateCooldownUI();
+            return;
+        }
+
+        _nextCooldownReduction = reduction;
+    }
+
+    private void UpdateCooldownUI()
+    {
+        if (HUDManager.Instance == null) return;
+
+        int playerID = GetPlayerID();
+        if (playerID < 0) return;
+
+        if (_cooldownRemaining <= 0f)
+        {
+            if (AbilitySlot == AbilitySlot.Offensive)
+                HUDManager.Instance.ResetOffensiveCooldown(playerID);
+            else if (AbilitySlot == AbilitySlot.Defensive)
+                HUDManager.Instance.ResetDefensiveCooldown(playerID);
+        }
+        else if (AbilitySlot == AbilitySlot.Offensive)
+        {
+            HUDManager.Instance.UpdateOffensiveCooldown(playerID, _cooldownRemaining, _cooldownTime);
+        }
+        else if (AbilitySlot == AbilitySlot.Defensive)
+        {
+            HUDManager.Instance.UpdateDefensiveCooldown(playerID, _cooldownRemaining, _cooldownTime);
+        }
+    }
+
+    private int GetPlayerID()
+    {
+        BallInteract ballInteract = GetComponent<BallInteract>();
+        if (ballInteract != null) return ballInteract.playerID;
+
+        AIBehavior aiBehavior = GetComponent<AIBehavior>();
+        return aiBehavior != null ? aiBehavior.playerID : -1;
+    }
 
     public void SetAbilitiesDisabled(bool disabled) { _abilitiesDisabled = disabled; }
 }

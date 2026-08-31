@@ -370,7 +370,7 @@ public class AviaryManager : MonoBehaviour
             cursor.name = $"Cursor_Player1";
 
         
-        RectTransform rt = playerCursor.GetComponent<RectTransform>();
+        RectTransform rt = cursor.GetComponent<RectTransform>();
         if (rt != null)
             rt.pivot = new Vector2(0f, 1f); // Top-left pivot for pointer-style cursor accuracy
 
@@ -492,7 +492,7 @@ public class AviaryManager : MonoBehaviour
         {
             Vector2 screenPos = state.cursorPosition;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                mainCanvas.GetComponent<RectTransform>(),
+                cursor.parent as RectTransform,
                 screenPos,
                 mainCanvas.worldCamera,
                 out Vector2 localPosKBM
@@ -600,7 +600,7 @@ public class AviaryManager : MonoBehaviour
 
         // Convert final screen position to canvas local and apply
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            mainCanvas.GetComponent<RectTransform>(),
+            cursor.parent as RectTransform,
             finalScreenPos,
             mainCanvas.worldCamera,
             out Vector2 localPos

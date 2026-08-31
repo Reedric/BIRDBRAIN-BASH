@@ -172,8 +172,12 @@ public class ShimaEnagaCottonball : MonoBehaviour
         // touches don't leave two coroutines fighting over the
         // cottonball's scale.
         if (squashStretchRoutine != null)
+        {
             StopCoroutine(squashStretchRoutine);
+            squashStretchRoutine = null;
+        }
 
+        transform.localScale = originalScale;
         squashStretchRoutine = StartCoroutine(SquashAndStretch());
 
         // Allow another bird collision after the animation has
@@ -303,6 +307,8 @@ public class ShimaEnagaCottonball : MonoBehaviour
 
     private IEnumerator SquashAndStretch()
     {
+        transform.localScale = originalScale;
+
         Vector3 squashScale = new Vector3(
             originalScale.x * stretchAmount,
             originalScale.y * squashAmount,
