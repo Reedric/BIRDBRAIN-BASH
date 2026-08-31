@@ -16846,6 +16846,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: AudioManager
       objectReference: {fileID: 0}
+    - target: {fileID: 6141832642446464456, guid: d04f87b1a02a645449fe516780e818bf, type: 3}
+      propertyPath: stunLoopSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 46dd069d04fd14f48bcc6fea911e1810, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

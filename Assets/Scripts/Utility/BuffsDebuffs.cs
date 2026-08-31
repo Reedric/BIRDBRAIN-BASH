@@ -287,6 +287,8 @@ public class BuffsDebuffs : MonoBehaviour
                         ai.maxAirSpeed = 1f;
                         ai.jumpForce = 1f;
                     }
+
+                    AudioManager.PlayStunLoop(bird);
                 }
                 else if (stunOriginalValues.TryGetValue(bird, out var originalValues))
                 {
@@ -306,6 +308,9 @@ public class BuffsDebuffs : MonoBehaviour
 
                     stunOriginalValues.Remove(bird);
                 }
+
+                if (!enable)
+                    AudioManager.StopStunLoop(bird);
                 break;
         }
     }
