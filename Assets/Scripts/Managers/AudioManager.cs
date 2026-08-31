@@ -176,7 +176,7 @@ public class AudioManager : MonoBehaviour
         {
             if (!isGameScene)
             {
-                PlayBackgroundTrack(backgroundTracks[0]);
+                PlayRandomTrack(backgroundTracks);
             }
         }
     }
@@ -300,24 +300,41 @@ public class AudioManager : MonoBehaviour
 
     public static void PlayDefaultBackground()
     {
-        if (instance.backgroundTracks != null && instance.backgroundTracks.Length > 0)
-        {
-            PlayBackgroundTrack(instance.backgroundTracks[0]);
-        }
+        PlayRandomTrack(instance.backgroundTracks);
     }
 
     // Play game-specific music (called after countdown finishes)
     public static void PlayGameMusic()
     {
-        if (instance.gameMusicTracks != null && instance.gameMusicTracks.Length > 0)
+        if (HasPlayableTrack(instance.gameMusicTracks))
         {
-            PlayBackgroundTrack(instance.gameMusicTracks[0]);
+            PlayRandomTrack(instance.gameMusicTracks);
         }
-        else if (instance.backgroundTracks != null && instance.backgroundTracks.Length > 0)
+        else
         {
             // Fallback to regular background if no game music defined
-            PlayBackgroundTrack(instance.backgroundTracks[0]);
+            PlayRandomTrack(instance.backgroundTracks);
         }
+    }
+
+    private static bool HasPlayableTrack(AudioClip[] tracks)
+    {
+        if (tracks == null) return false;
+
+        foreach (AudioClip track in tracks)
+        {
+            if (track != null) return true;
+        }
+
+        return false;
+    }
+
+    private static void PlayRandomTrack(AudioClip[] tracks)
+    {
+        if (instance == null || !HasPlayableTrack(tracks)) return;
+
+        AudioClip[] playableTracks = System.Array.FindAll(tracks, track => track != null);
+        PlayBackgroundTrack(playableTracks[Random.Range(0, playableTracks.Length)]);
     }
 
     // Play a scoring sound when a point is scored

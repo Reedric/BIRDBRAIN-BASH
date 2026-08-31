@@ -480,7 +480,7 @@ MonoBehaviour:
   debuffEndSound: {fileID: 8300000, guid: e2d36106489778e44b79f609b33048f3, type: 3}
   backgroundTracks:
   - {fileID: 8300000, guid: 28365f4d9e9c6cb41b7177163b0ec5af, type: 3}
-  - {fileID: 8300000, guid: 17572aaaee732254c973a4c8bd47e114, type: 3}
+  - {fileID: 8300000, guid: 9262c1386f81ff143bcc964417568358, type: 3}
   gameMusicTracks: []
   countdownSfx:
   - {fileID: 8300000, guid: fcfadfccc03355c4db8b1636605e3c75, type: 3}
