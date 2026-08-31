@@ -138,6 +138,12 @@ public class AudioManager : MonoBehaviour
     [Tooltip("Plays when a debuff expires.")]
     [SerializeField] private AudioClip debuffEndSound;
 
+    [Header("UI Sounds")]
+    [Tooltip("Plays when a cursor enters a new UI button.")]
+    [SerializeField] private AudioClip buttonHoverSound;
+    [Tooltip("Plays when a UI button is selected.")]
+    [SerializeField] private AudioClip buttonSelectSound;
+
     [Header("Stun Sound")]
     [Tooltip("Loops on each stunned bird until its stun effect ends.")]
     [SerializeField] private AudioClip stunLoopSound;
@@ -460,6 +466,18 @@ public class AudioManager : MonoBehaviour
     {
         if (instance.debuffEndSound != null)
             instance.audioSource.PlayOneShot(instance.debuffEndSound, volume);
+    }
+
+    public static void PlayButtonHoverSound(float volume = 1.0f)
+    {
+        if (instance != null && instance.buttonHoverSound != null)
+            instance.audioSource.PlayOneShot(instance.buttonHoverSound, volume);
+    }
+
+    public static void PlayButtonSelectSound(float volume = 1.0f)
+    {
+        if (instance != null && instance.buttonSelectSound != null)
+            instance.audioSource.PlayOneShot(instance.buttonSelectSound, volume);
     }
 
     public static void PlayStunLoop(GameObject bird)

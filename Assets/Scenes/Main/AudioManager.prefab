@@ -478,6 +478,8 @@ MonoBehaviour:
   buffEndSound: {fileID: 8300000, guid: 8de0206387e331e46828c309c6575809, type: 3}
   debuffStartSound: {fileID: 8300000, guid: 1b292f26c6fee984bac7d2a318fdc02a, type: 3}
   debuffEndSound: {fileID: 8300000, guid: e2d36106489778e44b79f609b33048f3, type: 3}
+  buttonHoverSound: {fileID: 8300000, guid: 6e023eb8cf8da2044903fc5e891a5dc4, type: 3}
+  buttonSelectSound: {fileID: 8300000, guid: 395ee636bcc72bb4da745b94a0a5f093, type: 3}
   stunLoopSound: {fileID: 8300000, guid: 46dd069d04fd14f48bcc6fea911e1810, type: 3}
   stunLoopVolume: 1
   backgroundTracks:

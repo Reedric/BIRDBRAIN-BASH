@@ -161,6 +161,7 @@ public class AviaryManager : MonoBehaviour
     private bool isHoveringTarget;
     // Per-player currently selected Selectable (for navigation)
     private Selectable currentSelectable;
+    private GameObject hoveredUIElement;
     // Preserve the original scale of each cursor instance.
     private Vector3 cursorBaseScale;
 
@@ -441,6 +442,7 @@ public class AviaryManager : MonoBehaviour
         if (state.isKBM)
         {
             state.cursorPosition = Mouse.current.position.ReadValue();
+            UpdateMouseHoverSound(state.cursorPosition);
 
             if (Mouse.current.leftButton.wasPressedThisFrame)
             {
@@ -468,6 +470,9 @@ public class AviaryManager : MonoBehaviour
                     int targetIndex = currentTargetIndex;
                     if (targetIndex >= 0)
                         activated = TryActivateTargetAtIndex(targetIndex);
+
+                    if (activated)
+                        AudioManager.PlayButtonSelectSound();
 
                     if (!activated)
                         HandlePlayerButtonPress();
@@ -545,6 +550,7 @@ public class AviaryManager : MonoBehaviour
                         desiredScreenPosition = GetPreferredScreenPosition(uiTargets[idx]);
                         isHoveringTarget = false;
                         lastMoveTime= Time.time;
+                        AudioManager.PlayButtonHoverSound();
                         // Also update EventSystem selection for consistency
                         if (EventSystem.current != null)
                             EventSystem.current.SetSelectedGameObject(next.gameObject);
@@ -673,6 +679,7 @@ public class AviaryManager : MonoBehaviour
             if (birdButton != null)
             {
                 birdButton.OnPressed();
+                AudioManager.PlayButtonSelectSound();
                 return;
             }
 
@@ -680,8 +687,43 @@ public class AviaryManager : MonoBehaviour
             if (uiButton != null)
             {
                 uiButton.onClick.Invoke();
+                AudioManager.PlayButtonSelectSound();
                 return;
             }
+        }
+    }
+
+    private void UpdateMouseHoverSound(Vector2 screenPosition)
+    {
+        if (EventSystem.current == null) return;
+
+        PointerEventData pointerData = new(EventSystem.current) { position = screenPosition };
+        List<RaycastResult> results = new();
+        EventSystem.current.RaycastAll(pointerData, results);
+
+        GameObject hoveredElement = null;
+        foreach (RaycastResult result in results)
+        {
+            BirdSelectButton birdButton = result.gameObject.GetComponentInParent<BirdSelectButton>();
+            if (birdButton != null)
+            {
+                hoveredElement = birdButton.gameObject;
+                break;
+            }
+
+            Button button = result.gameObject.GetComponentInParent<Button>();
+            if (button != null && button.interactable)
+            {
+                hoveredElement = button.gameObject;
+                break;
+            }
+        }
+
+        if (hoveredElement != hoveredUIElement)
+        {
+            hoveredUIElement = hoveredElement;
+            if (hoveredElement != null)
+                AudioManager.PlayButtonHoverSound();
         }
     }
 
@@ -789,6 +831,12 @@ public class AviaryManager : MonoBehaviour
     // Setting the player's bird index (used by BirdSelectButton.cs)
     public void SetPlayerBirdIndex(int birdIndex)
     {
+        const int randomBirdIndex = 19;
+        const int birdCount = 19;
+
+        if (birdIndex == randomBirdIndex)
+            birdIndex = Random.Range(0, birdCount);
+
         if (birdIndex < 0 || birdIndex >= availableBirds.Count) return;
 
         chosenBirdIndex = birdIndex;
