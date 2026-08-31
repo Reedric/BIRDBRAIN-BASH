@@ -5207,7 +5207,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   AbilitySlot: 1
-  _cooldownTime: 9
+  _cooldownTime: 30
   reviveHeightOffset: 2
   reviveUpwardForce: 8
   reviveHorizontalNudge: {x: 0, y: 0, z: 0}

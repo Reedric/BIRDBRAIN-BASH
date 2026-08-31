@@ -416,15 +416,22 @@ MonoBehaviour:
     offensive:
     - {fileID: 8300000, guid: 1e1c49f80c59c5442a7928610cb29267, type: 3}
   phoenixSounds:
-    happy: []
-    sad: []
-    bump: []
-    set: []
-    spike: []
+    happy:
+    - {fileID: 8300000, guid: cd81f2ae30f3a6149b2195a50d242062, type: 3}
+    sad:
+    - {fileID: 8300000, guid: 64ba5c9a03820ba47a528ed5fa977297, type: 3}
+    bump:
+    - {fileID: 8300000, guid: d182a9c0e010ad747a458bf0cd2d9260, type: 3}
+    set:
+    - {fileID: 8300000, guid: 715a74218b47f684aa44b9efd559e182, type: 3}
+    spike:
+    - {fileID: 8300000, guid: dda05c8550cb9b34892cd505137dcfae, type: 3}
     block:
     - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
-    defensive: []
-    offensive: []
+    defensive:
+    - {fileID: 8300000, guid: f5e403d4cda24e64f8cff9ea49080d37, type: 3}
+    offensive:
+    - {fileID: 8300000, guid: ce2055f8a919440468a61aa6f06e517d, type: 3}
   robopigeonSounds:
     happy: []
     sad: []
