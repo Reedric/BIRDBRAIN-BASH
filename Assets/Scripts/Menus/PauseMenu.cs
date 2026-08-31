@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class PauseMenu : MonoBehaviour
 {
@@ -23,6 +25,13 @@ public class PauseMenu : MonoBehaviour
     void Awake()
     {
         Instance = this;
+
+        foreach (Button button in GetComponentsInChildren<Button>(true))
+        {
+            button.onClick.AddListener(() => AudioManager.PlayButtonSelectSound());
+            if (button.GetComponent<PauseMenuButtonAudio>() == null)
+                button.gameObject.AddComponent<PauseMenuButtonAudio>();
+        }
     }
 
     void Start()
@@ -152,5 +161,22 @@ public class PauseMenu : MonoBehaviour
     public void MusicValue(float value)
     {
         Debug.Log("Music Volume: " + value);
+    }
+}
+
+public class PauseMenuButtonAudio : MonoBehaviour, IPointerEnterHandler, ISelectHandler
+{
+    private int lastPlayedFrame = -1;
+
+    public void OnPointerEnter(PointerEventData eventData) => PlayHoverSound();
+
+    public void OnSelect(BaseEventData eventData) => PlayHoverSound();
+
+    private void PlayHoverSound()
+    {
+        if (lastPlayedFrame == Time.frameCount) return;
+
+        lastPlayedFrame = Time.frameCount;
+        AudioManager.PlayButtonHoverSound();
     }
 }

@@ -63,27 +63,10 @@ public class PhoenixOffensive : BirdAbility
         if (ballInteraction == null || BallManager.Instance == null || GameManager.Instance == null)
             return false;
 
-        GameManager gameManager = GameManager.Instance;
-
-        // Phoenix can only use the offensive after a teammate has bumped or set the ball.
-        if (gameManager.gameState != GameManager.GameState.Bumped &&
-            gameManager.gameState != GameManager.GameState.Set)
+        // Match the normal spike rules: legal turn, valid ball state, and range.
+        if (!ballInteraction.CanSpikeBall())
         {
-            Debug.Log("[PhoenixOffensive] Cannot activate: ball is not ready to be spiked.");
-            return false;
-        }
-
-        // Make sure the previous hit was made by Phoenix's team.
-        if (gameManager.leftAttack != ballInteraction.onLeft)
-        {
-            Debug.Log("[PhoenixOffensive] Cannot activate: it is the opposing team's turn.");
-            return false;
-        }
-
-        // Make sure the ball is physically on Phoenix's side of the court.
-        if (BallManager.Instance.transform.position.x * transform.position.x < 0)
-        {
-            Debug.Log("[PhoenixOffensive] Cannot activate: ball is on the opposing side.");
+            Debug.Log("[PhoenixOffensive] Cannot activate: Phoenix cannot legally spike this ball.");
             return false;
         }
 

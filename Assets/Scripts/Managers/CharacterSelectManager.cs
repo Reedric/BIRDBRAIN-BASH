@@ -125,6 +125,7 @@ public class CharacterSelectManager : MonoBehaviour
     private bool[] isHoveringTarget = new bool[4];
     // Per-player currently selected Selectable (for navigation)
     private Selectable[] currentSelectable = new Selectable[4];
+    private GameObject[] hoveredUIElements = new GameObject[4];
     // Preserve the original scale of each cursor instance.
     private Vector3[] cursorBaseScales = new Vector3[4];
 
@@ -390,6 +391,7 @@ public class CharacterSelectManager : MonoBehaviour
         if (state.isKBM)
         {
             state.cursorPosition = Mouse.current.position.ReadValue();
+            UpdateMouseHoverSound(playerIndex, state.cursorPosition);
 
             if (Mouse.current.leftButton.wasPressedThisFrame)
             {
@@ -417,6 +419,9 @@ public class CharacterSelectManager : MonoBehaviour
                     int targetIndex = currentTargetIndex[playerIndex];
                     if (targetIndex >= 0)
                         activated = TryActivateTargetAtIndex(targetIndex, playerIndex);
+
+                    if (activated)
+                        AudioManager.PlayButtonSelectSound();
 
                     if (!activated)
                         HandlePlayerButtonPress(playerIndex);
@@ -497,6 +502,7 @@ public class CharacterSelectManager : MonoBehaviour
                         desiredScreenPositions[playerIndex] = GetPreferredScreenPosition(uiTargets[idx]);
                         isHoveringTarget[playerIndex] = false;
                         lastMoveTime[playerIndex] = Time.time;
+                        AudioManager.PlayButtonHoverSound();
                         // Also update EventSystem selection for consistency
                         if (EventSystem.current != null)
                             EventSystem.current.SetSelectedGameObject(next.gameObject);
@@ -770,6 +776,7 @@ public class CharacterSelectManager : MonoBehaviour
             if (birdButton != null)
             {
                 birdButton.OnPressed(playerIndex);
+                AudioManager.PlayButtonSelectSound();
                 return;
             }
 
@@ -777,8 +784,42 @@ public class CharacterSelectManager : MonoBehaviour
             if (uiButton != null)
             {
                 uiButton.onClick.Invoke();
+                AudioManager.PlayButtonSelectSound();
                 return;
             }
+        }
+    }
+
+    private void UpdateMouseHoverSound(int playerIndex, Vector2 screenPosition)
+    {
+        if (EventSystem.current == null) return;
+
+        PointerEventData pointerData = new(EventSystem.current) { position = screenPosition };
+        List<RaycastResult> results = new();
+        EventSystem.current.RaycastAll(pointerData, results);
+
+        GameObject hoveredElement = null;
+        foreach (RaycastResult result in results)
+        {
+            if (result.gameObject.GetComponentInParent<BirdSelectButton>() != null)
+            {
+                hoveredElement = result.gameObject.GetComponentInParent<BirdSelectButton>().gameObject;
+                break;
+            }
+
+            Button button = result.gameObject.GetComponentInParent<Button>();
+            if (button != null && button.interactable)
+            {
+                hoveredElement = button.gameObject;
+                break;
+            }
+        }
+
+        if (hoveredElement != hoveredUIElements[playerIndex])
+        {
+            hoveredUIElements[playerIndex] = hoveredElement;
+            if (hoveredElement != null)
+                AudioManager.PlayButtonHoverSound();
         }
     }
 

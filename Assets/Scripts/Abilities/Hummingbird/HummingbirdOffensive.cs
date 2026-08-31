@@ -12,6 +12,8 @@ public class HummingbirdOffensive : BirdAbility
 	[SerializeField] private float jumpReduction = 4f;
 	[SerializeField] private float lingerDuration = 1f;
 	[SerializeField] private float nectarFadeDuration = 0.5f;
+	[SerializeField] private float nectarHeightOffset = 0.1f;
+	[SerializeField] private float groundRayStartHeight = 10f;
 
 	[Header("Tongue Visual")]
 	[SerializeField] private Color tongueColor = new Color(1f, 0.2f, 0.65f, 1f);
@@ -44,7 +46,7 @@ public class HummingbirdOffensive : BirdAbility
 			return false;
 		}
 
-		Vector3 spawnPosition = opponent.transform.position;
+		Vector3 spawnPosition = GetNectarSpawnPosition(opponent.transform.position);
 		GameObject nectar = Instantiate(nectarPrefab, spawnPosition, Quaternion.identity);
 		HummingbirdNectar nectarZone = nectar.GetComponent<HummingbirdNectar>();
 		if (nectarZone == null)
@@ -66,6 +68,16 @@ public class HummingbirdOffensive : BirdAbility
 		AudioManager.PlayBirdSound(BirdType.HUMMINGBIRD, SoundType.OFFENSIVE, 1.0f);
 		HUDManager.Instance.TriggerOffensiveCooldown(hummingbird.playerID, _cooldownTime);
 		return true;
+	}
+
+	private Vector3 GetNectarSpawnPosition(Vector3 opponentPosition)
+	{
+		Vector3 rayStart = opponentPosition + Vector3.up * groundRayStartHeight;
+		int courtLayerMask = 1 << 6;
+		if (Physics.Raycast(rayStart, Vector3.down, out RaycastHit groundHit, Mathf.Infinity, courtLayerMask))
+			return groundHit.point + Vector3.up * nectarHeightOffset;
+
+		return new Vector3(opponentPosition.x, nectarHeightOffset, opponentPosition.z);
 	}
 
 	private GameObject FindNearestOpponent(bool isLeft, GameManager gameManager)

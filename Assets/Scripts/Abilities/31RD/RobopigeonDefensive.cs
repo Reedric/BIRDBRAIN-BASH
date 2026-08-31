@@ -30,6 +30,9 @@ public class RobopigeonDefensive : BirdAbility
     {
         Debug.Log("[RobopigeonDefensive] Activate called.");
 
+        if (!GameManager.PointInProgress())
+            return false;
+
         if (activeMinion != null)
             return false;
 

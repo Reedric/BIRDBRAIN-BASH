@@ -5189,7 +5189,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   onLeft: 0
-  interactionRadius: 5
+  interactionRadius: 2.5
   animator: {fileID: 0}
   spikeStat: 3
   birdType: 15
@@ -5207,7 +5207,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   AbilitySlot: 1
-  _cooldownTime: 9
+  _cooldownTime: 30
   reviveHeightOffset: 2
   reviveUpwardForce: 8
   reviveHorizontalNudge: {x: 0, y: 0, z: 0}

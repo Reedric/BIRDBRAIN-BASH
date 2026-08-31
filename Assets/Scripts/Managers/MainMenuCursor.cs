@@ -112,6 +112,7 @@ public class MainMenuCursor : MonoBehaviour
         // On the NumPlayers panel, B confirms and proceeds to CharSelect.
         if (numPlayersActive && pad.bButton.wasPressedThisFrame)
         {
+            AudioManager.PlayButtonSelectSound();
             NavigateToPlay();
             return;
         }
@@ -173,6 +174,7 @@ public class MainMenuCursor : MonoBehaviour
                     desiredCursorPosition = GetPreferredScreenPosition(uiTargets[nextIndex]);
                     if (EventSystem.current != null)
                         EventSystem.current.SetSelectedGameObject(next.gameObject);
+                    AudioManager.PlayButtonHoverSound();
                     lastMoveTime = Time.time;
                 }
                 else if (next == null)
@@ -182,6 +184,7 @@ public class MainMenuCursor : MonoBehaviour
                     {
                         currentTargetIndex = fallback;
                         desiredCursorPosition = GetPreferredScreenPosition(uiTargets[fallback]);
+                        AudioManager.PlayButtonHoverSound();
                         lastMoveTime = Time.time;
                     }
                 }
@@ -197,7 +200,8 @@ public class MainMenuCursor : MonoBehaviour
             PlayCursorPressAnimation();
             if (currentTargetIndex >= 0)
             {
-                TryActivateTargetAtIndex(currentTargetIndex);
+                if (TryActivateTargetAtIndex(currentTargetIndex))
+                    AudioManager.PlayButtonSelectSound();
             }
             else
             {
@@ -250,6 +254,7 @@ public class MainMenuCursor : MonoBehaviour
             if (birdButton != null)
             {
                 birdButton.OnPressed(0);
+                AudioManager.PlayButtonSelectSound();
                 return;
             }
 
@@ -258,6 +263,7 @@ public class MainMenuCursor : MonoBehaviour
             if (uiButton != null && uiButton.interactable)
             {
                 uiButton.onClick.Invoke();
+                AudioManager.PlayButtonSelectSound();
                 return;
             }
         }
@@ -422,28 +428,31 @@ public class MainMenuCursor : MonoBehaviour
         return best;
     }
 
-    private void TryActivateTargetAtIndex(int index)
+    private bool TryActivateTargetAtIndex(int index)
     {
-        if (index < 0 || index >= uiSelectables.Count) return;
+        if (index < 0 || index >= uiSelectables.Count) return false;
         Selectable selectable = uiSelectables[index];
-        if (selectable == null) return;
+        if (selectable == null) return false;
 
         if (selectable.TryGetComponent<Button>(out Button uiButton) && uiButton.interactable)
         {
             uiButton.onClick.Invoke();
-            return;
+            return true;
         }
 
         if (selectable.TryGetComponent<BirdSelectButton>(out BirdSelectButton birdButton))
         {
             birdButton.OnPressed(0);
-            return;
+            return true;
         }
 
         if (EventSystem.current != null && selectable.IsInteractable())
         {
             BaseEventData eventData = new BaseEventData(EventSystem.current);
             ExecuteEvents.Execute(selectable.gameObject, eventData, ExecuteEvents.submitHandler);
+            return true;
         }
+
+        return false;
     }
 }
