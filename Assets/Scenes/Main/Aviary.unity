@@ -2365,6 +2365,70 @@ PrefabInstance:
       propertyPath: 'backgroundTracks.Array.data[0]'
       value: 
       objectReference: {fileID: 8300000, guid: f3d5d2cca2b6e9c42881ed89b0962151, type: 3}
+    - target: {fileID: 6141832642446464456, guid: d04f87b1a02a645449fe516780e818bf, type: 3}
+      propertyPath: robopigeonSounds.sad.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6141832642446464456, guid: d04f87b1a02a645449fe516780e818bf, type: 3}
+      propertyPath: robopigeonSounds.set.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6141832642446464456, guid: d04f87b1a02a645449fe516780e818bf, type: 3}
+      propertyPath: robopigeonSounds.bump.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6141832642446464456, guid: d04f87b1a02a645449fe516780e818bf, type: 3}
+      propertyPath: robopigeonSounds.block.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6141832642446464456, guid: d04f87b1a02a645449fe516780e818bf, type: 3}
+      propertyPath: robopigeonSounds.happy.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6141832642446464456, guid: d04f87b1a02a645449fe516780e818bf, type: 3}
+      propertyPath: robopigeonSounds.spike.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6141832642446464456, guid: d04f87b1a02a645449fe516780e818bf, type: 3}
+      propertyPath: 'robopigeonSounds.sad.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8300000, guid: efd9161e76c52db4b85592aa762b058a, type: 3}
+    - target: {fileID: 6141832642446464456, guid: d04f87b1a02a645449fe516780e818bf, type: 3}
+      propertyPath: 'robopigeonSounds.set.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8300000, guid: 65a8d4e3f0ccdb04fa52753b67431634, type: 3}
+    - target: {fileID: 6141832642446464456, guid: d04f87b1a02a645449fe516780e818bf, type: 3}
+      propertyPath: 'robopigeonSounds.bump.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8300000, guid: 196b67ae55d957448a90a04d2609c496, type: 3}
+    - target: {fileID: 6141832642446464456, guid: d04f87b1a02a645449fe516780e818bf, type: 3}
+      propertyPath: 'robopigeonSounds.block.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8300000, guid: d2d2859be837a3a4693141df7d0389c5, type: 3}
+    - target: {fileID: 6141832642446464456, guid: d04f87b1a02a645449fe516780e818bf, type: 3}
+      propertyPath: 'robopigeonSounds.happy.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8300000, guid: 917dd21e2ad610d4c9580bc987893997, type: 3}
+    - target: {fileID: 6141832642446464456, guid: d04f87b1a02a645449fe516780e818bf, type: 3}
+      propertyPath: 'robopigeonSounds.spike.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8300000, guid: 0ae74f1c2ba793d4ba067e4b74a0b44b, type: 3}
+    - target: {fileID: 6141832642446464456, guid: d04f87b1a02a645449fe516780e818bf, type: 3}
+      propertyPath: robopigeonSounds.defensive.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6141832642446464456, guid: d04f87b1a02a645449fe516780e818bf, type: 3}
+      propertyPath: robopigeonSounds.offensive.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6141832642446464456, guid: d04f87b1a02a645449fe516780e818bf, type: 3}
+      propertyPath: 'robopigeonSounds.defensive.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8300000, guid: 64e35c1425e50494db2b2e69be048c39, type: 3}
+    - target: {fileID: 6141832642446464456, guid: d04f87b1a02a645449fe516780e818bf, type: 3}
+      propertyPath: 'robopigeonSounds.offensive.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8300000, guid: b685f2793b6491240a37da557c8f329a, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

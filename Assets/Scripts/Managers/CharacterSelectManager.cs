@@ -57,12 +57,17 @@ public class CharacterSelectManager : MonoBehaviour
     public RawImage shimaenagaTexture;
     public RawImage randomTexture;
 
+    // [Header("Match Settings")]
+    // [SerializeField] private UnityEngine.UIElements.UIDocument matchSettings;
+
     [Header("Bird Database")]
     [SerializeField] private BirdDatabase database; // Holds all the bird data (used for bird stat overlay)
     
     [Header("Player Overlays")]
     [SerializeField] private CanvasGroup p1Overlay; // Stat overlay for player 1
     [SerializeField] private CanvasGroup p2Overlay; // Stat overlay for player 2
+    [SerializeField] private CanvasGroup p3Overlay; // Stat overlay for player 3
+    [SerializeField] private CanvasGroup p4Overlay; // Stat overlay for player 4
 
     [Header("Stat Indicators")]
     [SerializeField] private Texture spIndicator; // Ground speed texture
@@ -160,6 +165,7 @@ public class CharacterSelectManager : MonoBehaviour
         public Vector2 cursorPosition; // Screen space
         public Vector2 inputDirection; // For gamepad stick input
         public bool readyPressed = false;
+        public bool canSelect = true;
 
         public PlayerInputState(int index, bool kbm, InputDevice dev)
         {
@@ -243,6 +249,11 @@ public class CharacterSelectManager : MonoBehaviour
         // Ensure that overlays are not visible
         p1Overlay.alpha = 0f;
         p2Overlay.alpha = 0f;
+        p3Overlay.alpha = 0f;
+        p4Overlay.alpha = 0f;
+
+        // Disable the match settings (done here to allow the scripts to set themself up)
+        // matchSettings.enabled = false;
     }
 
     private void OnDestroy()
@@ -260,6 +271,9 @@ public class CharacterSelectManager : MonoBehaviour
             NavigateBackToMainMenu();
             return;
         }
+
+        // Either all input states are enabled or disabled
+        if (!playerInputStates[0].canSelect) return;
 
         // Update cursor positions and handle input for each player
         for (int i = 0; i < playerInputStates.Count; ++i)
@@ -1148,8 +1162,8 @@ public class CharacterSelectManager : MonoBehaviour
         {
             0 => p1Overlay,
             1 => p2Overlay,
-            2 => null,
-            3 => null,
+            2 => p3Overlay,
+            3 => p4Overlay,
             _ => null
         };
     }
@@ -1208,7 +1222,7 @@ public class CharacterSelectManager : MonoBehaviour
 
         if (action)
         {
-            GetPlayerOverlay(playerIndex).alpha = 1 - p1Overlay.alpha;
+            GetPlayerOverlay(playerIndex).alpha = 1 - GetPlayerOverlay(playerIndex).alpha;
         }
     }
 
@@ -1240,6 +1254,11 @@ public class CharacterSelectManager : MonoBehaviour
         return playerReady[playerIndex];
     }
 
+    // private void ToggleCanSelect(PlayerInputState state)
+    // {
+    //     state.canSelect = !state.canSelect;
+    // }
+
     /// <summary>
     /// Once again, this is just a placeholder for now since we don't have a lot of UI elements yet,
     /// but this is where you would update any UI to reflect whether the player is ready or not when they press the ready button.
@@ -1255,4 +1274,10 @@ public class CharacterSelectManager : MonoBehaviour
     {
         SceneManager.LoadScene(mainMenuSceneName);
     }
+
+    // public void ShowMatchSettings()
+    // {
+    //     matchSettings.enabled = true;
+    //     playerInputStates.ForEach(ToggleCanSelect);
+    // }
 }
