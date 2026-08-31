@@ -1302,7 +1302,8 @@ GameObject:
   - component: {fileID: 1510532581050380456}
   - component: {fileID: 1888167937364490171}
   - component: {fileID: 6692956434037389797}
-  - component: {fileID: 2208340120330343143}
+  - component: {fileID: 4499935246107313118}
+  - component: {fileID: 2282577738996056911}
   m_Layer: 0
   m_Name: dododoC
   m_TagString: Player
@@ -1522,7 +1523,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 2776845814
+  GlobalObjectIdHash: 2861956407
   InScenePlacedSourceGlobalObjectIdHash: 2861956407
   DeferredDespawnTick: 0
   Ownership: 1
@@ -6414,7 +6415,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   abilityController: {fileID: 1888167937364490171}
---- !u!114 &2208340120330343143
+--- !u!114 &4499935246107313118
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -6423,12 +6424,36 @@ MonoBehaviour:
   m_GameObject: {fileID: 2089501926914818372}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3c57a2d70224e2e439fd5049e62abdfa, type: 3}
+  m_Script: {fileID: 11500000, guid: c182b4153d37ac04ba801991f3add9ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  AbilitySlot: 1
+  _cooldownTime: 2
+  animator: {fileID: 2179466929208135898}
+--- !u!114 &2282577738996056911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2089501926914818372}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2622704bbc662a0449c64ae15ce50afc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   AbilitySlot: 0
-  _cooldownTime: 0
-  animator: {fileID: 2179466929208135898}
+  _cooldownTime: 30
+  firstDodoPrefab: {fileID: 6433217917404483356, guid: a26ee57e09bd1904384e42cf4c43507e, type: 3}
+  secondDodoPrefab: {fileID: 6433217917404483356, guid: bea7c0041099a114d91803e9a3257e10, type: 3}
+  spawnVfxPrefab: {fileID: 3499421978768982111, guid: 1ff8e1793b226d74fa57c201f581304c, type: 3}
+  despawnVfxPrefab: {fileID: 3499421978768982111, guid: 1ff8e1793b226d74fa57c201f581304c, type: 3}
+  dodoLifetime: 7
+  spawnHeight: 10
+  courtXOffset: 3.5
+  firstDodoZ: -3
+  secondDodoZ: 3
+  minimumDodoSpacing: 6
 --- !u!1 &2207434857914322780
 GameObject:
   m_ObjectHideFlags: 0

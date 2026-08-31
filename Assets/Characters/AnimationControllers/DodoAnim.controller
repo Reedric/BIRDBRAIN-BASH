@@ -334,7 +334,7 @@ AnimatorController:
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 9100000}
-  - m_Name: OffensiveAbility
+  - m_Name: DefensiveAbility
     m_Type: 9
     m_DefaultFloat: 0
     m_DefaultInt: 0
@@ -467,7 +467,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: OffensiveAbility
+    m_ConditionEvent: DefensiveAbility
     m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -2559079092096013581}
@@ -551,7 +551,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: OffensiveAbility
+    m_ConditionEvent: DefensiveAbility
     m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -2559079092096013581}
