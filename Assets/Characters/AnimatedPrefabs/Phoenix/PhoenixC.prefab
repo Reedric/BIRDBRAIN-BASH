@@ -5189,7 +5189,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   onLeft: 0
-  interactionRadius: 5
+  interactionRadius: 2.5
   animator: {fileID: 0}
   spikeStat: 3
   birdType: 15

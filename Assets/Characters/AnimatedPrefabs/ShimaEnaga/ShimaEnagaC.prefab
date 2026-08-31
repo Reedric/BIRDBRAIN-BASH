@@ -430,7 +430,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   AbilitySlot: 0
-  _cooldownTime: 0
+  _cooldownTime: 30
   cottonballPrefab: {fileID: 6897839624328568988, guid: 6616f61c7e69a2a49be3808e142ef673, type: 3}
   cottonballCount: 3
   cottonballLifetime: 8

@@ -402,7 +402,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   onLeft: 0
-  interactionRadius: 5
+  interactionRadius: 3
   animator: {fileID: 2795019128993556928}
   spikeStat: 3
   birdType: 17
@@ -443,7 +443,7 @@ MonoBehaviour:
   AbilitySlot: 0
   _cooldownTime: 15
   nectarPrefab: {fileID: 176422398747366568, guid: 289e00a9738558b4a8e1a340969fa210, type: 3}
-  birdNectarVfxPrefab: {fileID: 275026080947077387, guid: 2457b308716f9d841a2f67c40b2eed78, type: 3}
+  birdNectarVfxPrefab: {fileID: 0}
   nectarLifetime: 10
   slowAmount: 4
   jumpReduction: 4

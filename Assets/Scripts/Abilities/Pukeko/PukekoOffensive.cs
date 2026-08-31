@@ -44,15 +44,10 @@ public class PukekoOffensiveAbility : BirdAbility
         if (squawkParticlesPrefab != null)
         {
             Quaternion facingRotation = Quaternion.LookRotation(firingForward, Vector3.up);
-
-            // Rotate particles so emission matches bird facing
-            float sideRotation = transform.position.x < 0 ? -90f : 90f;
-
-            Quaternion correctedRotation =
-                facingRotation * Quaternion.Euler(0f, sideRotation, 0f);
+            Quaternion vfxRotation = facingRotation * Quaternion.Euler(0f, -90f, 0f);
 
             GameObject particles =
-                Instantiate(squawkParticlesPrefab, transform.position, correctedRotation);
+                Instantiate(squawkParticlesPrefab, transform.position, vfxRotation);
 
             ParticleSystem[] allSystems = particles.GetComponentsInChildren<ParticleSystem>(true);
             foreach (ParticleSystem ps in allSystems)

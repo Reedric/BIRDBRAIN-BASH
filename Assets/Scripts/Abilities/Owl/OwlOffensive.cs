@@ -15,6 +15,9 @@ public class OwlOffensive : BirdAbility
 
     override protected bool Activate()
     {
+        if (!GameManager.PointInProgress())
+            return false;
+
         CaptureCure();
 
         // Ability successfully activated
