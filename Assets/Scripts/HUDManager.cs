@@ -445,6 +445,17 @@ public class HUDManager : MonoBehaviour
     private PlayerCardUI[] GetOrderedCards() =>
         new[] { player1Card, player2Card, player3Card, player4Card };
 
+    /// Returns the defensive ability icon texture for a given bird type (used by abilities
+    /// that temporarily borrow another bird's icon, e.g. Macaw's Repeat After You).
+    public Texture GetDefensiveIconForBird(BirdType bird) => GetBirdHUDData(bird)?.defensiveIcon;
+
+    /// Overrides the defensive ability icon shown for a player without touching cooldown state.
+    public void SetDefensiveIcon(int playerIndex, Texture icon)
+    {
+        AbilityIconUI ability = GetDefensiveIcon(playerIndex);
+        if (ability?.baseIcon != null) ability.baseIcon.texture = icon;
+    }
+
     public void RefreshPlayerCard(int playerIndex)
     {
         if (DataTransferManager.selectedBirds == null ||
