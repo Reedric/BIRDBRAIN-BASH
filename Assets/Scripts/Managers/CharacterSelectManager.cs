@@ -62,6 +62,7 @@ public class CharacterSelectManager : MonoBehaviour
     
     [Header("Player Overlays")]
     [SerializeField] private CanvasGroup p1Overlay; // Stat overlay for player 1
+    [SerializeField] private CanvasGroup p2Overlay; // Stat overlay for player 2
 
     [Header("Stat Indicators")]
     [SerializeField] private Texture spIndicator; // Ground speed texture
@@ -240,7 +241,8 @@ public class CharacterSelectManager : MonoBehaviour
         if (goButton != null) goButton.enabled = false;
 
         // Ensure that overlays are not visible
-        // p1Overlay.alpha = 0f;
+        p1Overlay.alpha = 0f;
+        p2Overlay.alpha = 0f;
     }
 
     private void OnDestroy()
@@ -264,6 +266,7 @@ public class CharacterSelectManager : MonoBehaviour
         {
             UpdatePlayerInput(i);
             UpdatePlayerCursor(i);
+            CheckOverlayToggle(i);
         }
     }
 
@@ -1144,9 +1147,10 @@ public class CharacterSelectManager : MonoBehaviour
         return playerIndex switch
         {
             0 => p1Overlay,
-            1 => null,
+            1 => p2Overlay,
             2 => null,
-            3 => null
+            3 => null,
+            _ => null
         };
     }
 
@@ -1194,6 +1198,17 @@ public class CharacterSelectManager : MonoBehaviour
             {
                 strengthIndicators.Find("Strength" + (i + 1)).GetComponent<RawImage>().texture = eIndicator;
             }
+        }
+    }
+
+    private void CheckOverlayToggle(int playerIndex)
+    {
+        // If player pressed button to toggle overlay, toggle overlay
+        bool action = ((Gamepad) playerInputStates[playerIndex].device).yButton.wasPressedThisFrame;
+
+        if (action)
+        {
+            GetPlayerOverlay(playerIndex).alpha = 1 - p1Overlay.alpha;
         }
     }
 
