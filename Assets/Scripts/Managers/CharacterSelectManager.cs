@@ -57,6 +57,18 @@ public class CharacterSelectManager : MonoBehaviour
     public RawImage shimaenagaTexture;
     public RawImage randomTexture;
 
+    [Header("Bird Database")]
+    [SerializeField] private BirdDatabase database; // Holds all the bird data (used for bird stat overlay)
+    
+    [Header("Player Overlays")]
+    [SerializeField] private CanvasGroup p1Overlay; // Stat overlay for player 1
+
+    [Header("Stat Indicators")]
+    [SerializeField] private Texture spIndicator; // Ground speed texture
+    [SerializeField] private Texture jIndicator; // Jump force texture
+    [SerializeField] private Texture strIndicator; // Strength texture
+    [SerializeField] private Texture eIndicator; // Empty texture
+
     [Header("Ready Indicators")]
     public RawImage p1Ready;
     public RawImage p2Ready;
@@ -225,6 +237,9 @@ public class CharacterSelectManager : MonoBehaviour
         if (p3Ready != null) p3Ready.enabled = false;
         if (p4Ready != null) p4Ready.enabled = false;
         if (goButton != null) goButton.enabled = false;
+
+        // Ensure that overlays are not visible
+        // p1Overlay.alpha = 0f;
     }
 
     private void OnDestroy()
@@ -890,6 +905,7 @@ public class CharacterSelectManager : MonoBehaviour
         playerReady[playerIndex] = true;
         UpdatePlayerReadyUI(playerIndex);
         UpdatePlayerBirdUI(playerIndex);
+        UpdatePlayerOverlay(playerIndex);
         CheckAllPlayersReady();
     }
 
@@ -1052,6 +1068,92 @@ public class CharacterSelectManager : MonoBehaviour
             BirdType.OTHER => randomTexture,
             _ => null
         };
+    }
+
+    private BirdData GetBirdData(BirdType birdType)
+    {
+        return birdType switch
+        {
+            BirdType.PENGUIN => database.GetBirdData("Penguin"),
+            BirdType.CROW => database.GetBirdData("Crow"),
+            BirdType.SCISSORTAIL => database.GetBirdData("Scissortail"),
+            BirdType.LOVEBIRD => database.GetBirdData("Lovebird"),
+            BirdType.DODO => database.GetBirdData("Dodo"),
+            BirdType.PELICAN => database.GetBirdData("Pelican"),
+            BirdType.SEAGULL => database.GetBirdData("Seagull"),
+            BirdType.OWL => database.GetBirdData("Owl"),
+            BirdType.TOUCAN => database.GetBirdData("Toucan"),
+            BirdType.PUKEKO => database.GetBirdData("Pukeko"),
+            BirdType.KIWI => database.GetBirdData("Kiwi"),
+            BirdType.CHICKEN => database.GetBirdData("Chicken"),
+            BirdType.OSTRICH => database.GetBirdData("Ostrich"),
+            BirdType.EAGLE => database.GetBirdData("Eagle"),
+            BirdType.MACAW => database.GetBirdData("Macaw"),
+            BirdType.PHOENIX => database.GetBirdData("Phoenix"),
+            BirdType.ROBOPIGEON => database.GetBirdData("31rd"),
+            BirdType.HUMMINGBIRD => database.GetBirdData("Hummingbird"),
+            BirdType.SHIMAENAGA => database.GetBirdData("Shima Enaga"),
+            BirdType.OTHER => new BirdData(),
+            _ => null
+        };
+    }
+
+    private CanvasGroup GetPlayerOverlay(int playerIndex)
+    {
+        return playerIndex switch
+        {
+            0 => p1Overlay,
+            1 => null,
+            2 => null,
+            3 => null
+        };
+    }
+
+    private void UpdatePlayerOverlay(int playerIndex)
+    {
+        // Get the overlay and indicators for this player
+        CanvasGroup overlay = GetPlayerOverlay(playerIndex);
+        Transform speedIndicators = overlay.transform.Find("SpeedIndicators");
+        Transform jumpIndicators = overlay.transform.Find("JumpIndicators");
+        Transform strengthIndicators = overlay.transform.Find("StrengthIndicators");
+
+        // Get the bird data for the chosen bird
+        BirdType bird = GetSelectedBird(playerIndex);
+        BirdData data = GetBirdData(bird);
+
+        // Update overlay using bird data
+        for (int i = 0; i < 10; i++)
+        {
+            // Speed
+            if (i < data.groundSpeed)
+            {
+                speedIndicators.Find("Speed" + (i + 1)).GetComponent<RawImage>().texture = spIndicator;
+            }
+            else
+            {
+                speedIndicators.Find("Speed" + (i + 1)).GetComponent<RawImage>().texture = eIndicator;
+            }
+
+            // Jump
+            if (i < data.jumpForce)
+            {
+                jumpIndicators.Find("Jump" + (i + 1)).GetComponent<RawImage>().texture = jIndicator;
+            }
+            else
+            {
+                jumpIndicators.Find("Jump" + (i + 1)).GetComponent<RawImage>().texture = eIndicator;
+            }
+
+            // Strength
+            if (i < data.strength)
+            {
+                strengthIndicators.Find("Strength" + (i + 1)).GetComponent<RawImage>().texture = strIndicator;
+            }
+            else
+            {
+                strengthIndicators.Find("Strength" + (i + 1)).GetComponent<RawImage>().texture = eIndicator;
+            }
+        }
     }
 
     public void BeginMatch()
