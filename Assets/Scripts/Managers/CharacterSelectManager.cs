@@ -57,6 +57,24 @@ public class CharacterSelectManager : MonoBehaviour
     public RawImage shimaenagaTexture;
     public RawImage randomTexture;
 
+    // [Header("Match Settings")]
+    // [SerializeField] private UnityEngine.UIElements.UIDocument matchSettings;
+
+    [Header("Bird Database")]
+    [SerializeField] private BirdDatabase database; // Holds all the bird data (used for bird stat overlay)
+    
+    [Header("Player Overlays")]
+    [SerializeField] private CanvasGroup p1Overlay; // Stat overlay for player 1
+    [SerializeField] private CanvasGroup p2Overlay; // Stat overlay for player 2
+    [SerializeField] private CanvasGroup p3Overlay; // Stat overlay for player 3
+    [SerializeField] private CanvasGroup p4Overlay; // Stat overlay for player 4
+
+    [Header("Stat Indicators")]
+    [SerializeField] private Texture spIndicator; // Ground speed texture
+    [SerializeField] private Texture jIndicator; // Jump force texture
+    [SerializeField] private Texture strIndicator; // Strength texture
+    [SerializeField] private Texture eIndicator; // Empty texture
+
     [Header("Ready Indicators")]
     public RawImage p1Ready;
     public RawImage p2Ready;
@@ -147,6 +165,7 @@ public class CharacterSelectManager : MonoBehaviour
         public Vector2 cursorPosition; // Screen space
         public Vector2 inputDirection; // For gamepad stick input
         public bool readyPressed = false;
+        public bool canSelect = true;
 
         public PlayerInputState(int index, bool kbm, InputDevice dev)
         {
@@ -226,6 +245,15 @@ public class CharacterSelectManager : MonoBehaviour
         if (p3Ready != null) p3Ready.enabled = false;
         if (p4Ready != null) p4Ready.enabled = false;
         if (goButton != null) goButton.enabled = false;
+
+        // Ensure that overlays are not visible
+        p1Overlay.alpha = 0f;
+        p2Overlay.alpha = 0f;
+        p3Overlay.alpha = 0f;
+        p4Overlay.alpha = 0f;
+
+        // Disable the match settings (done here to allow the scripts to set themself up)
+        // matchSettings.enabled = false;
     }
 
     private void OnDestroy()
@@ -244,11 +272,15 @@ public class CharacterSelectManager : MonoBehaviour
             return;
         }
 
+        // Either all input states are enabled or disabled
+        if (!playerInputStates[0].canSelect) return;
+
         // Update cursor positions and handle input for each player
         for (int i = 0; i < playerInputStates.Count; ++i)
         {
             UpdatePlayerInput(i);
             UpdatePlayerCursor(i);
+            CheckOverlayToggle(i);
         }
     }
 
@@ -931,6 +963,7 @@ public class CharacterSelectManager : MonoBehaviour
         playerReady[playerIndex] = true;
         UpdatePlayerReadyUI(playerIndex);
         UpdatePlayerBirdUI(playerIndex);
+        UpdatePlayerOverlay(playerIndex);
         CheckAllPlayersReady();
     }
 
@@ -1095,6 +1128,104 @@ public class CharacterSelectManager : MonoBehaviour
         };
     }
 
+    private BirdData GetBirdData(BirdType birdType)
+    {
+        return birdType switch
+        {
+            BirdType.PENGUIN => database.GetBirdData("Penguin"),
+            BirdType.CROW => database.GetBirdData("Crow"),
+            BirdType.SCISSORTAIL => database.GetBirdData("Scissortail"),
+            BirdType.LOVEBIRD => database.GetBirdData("Lovebird"),
+            BirdType.DODO => database.GetBirdData("Dodo"),
+            BirdType.PELICAN => database.GetBirdData("Pelican"),
+            BirdType.SEAGULL => database.GetBirdData("Seagull"),
+            BirdType.OWL => database.GetBirdData("Owl"),
+            BirdType.TOUCAN => database.GetBirdData("Toucan"),
+            BirdType.PUKEKO => database.GetBirdData("Pukeko"),
+            BirdType.KIWI => database.GetBirdData("Kiwi"),
+            BirdType.CHICKEN => database.GetBirdData("Chicken"),
+            BirdType.OSTRICH => database.GetBirdData("Ostrich"),
+            BirdType.EAGLE => database.GetBirdData("Eagle"),
+            BirdType.MACAW => database.GetBirdData("Macaw"),
+            BirdType.PHOENIX => database.GetBirdData("Phoenix"),
+            BirdType.ROBOPIGEON => database.GetBirdData("31rd"),
+            BirdType.HUMMINGBIRD => database.GetBirdData("Hummingbird"),
+            BirdType.SHIMAENAGA => database.GetBirdData("Shima Enaga"),
+            BirdType.OTHER => new BirdData(),
+            _ => null
+        };
+    }
+
+    private CanvasGroup GetPlayerOverlay(int playerIndex)
+    {
+        return playerIndex switch
+        {
+            0 => p1Overlay,
+            1 => p2Overlay,
+            2 => p3Overlay,
+            3 => p4Overlay,
+            _ => null
+        };
+    }
+
+    private void UpdatePlayerOverlay(int playerIndex)
+    {
+        // Get the overlay and indicators for this player
+        CanvasGroup overlay = GetPlayerOverlay(playerIndex);
+        Transform speedIndicators = overlay.transform.Find("SpeedIndicators");
+        Transform jumpIndicators = overlay.transform.Find("JumpIndicators");
+        Transform strengthIndicators = overlay.transform.Find("StrengthIndicators");
+
+        // Get the bird data for the chosen bird
+        BirdType bird = GetSelectedBird(playerIndex);
+        BirdData data = GetBirdData(bird);
+
+        // Update overlay using bird data
+        for (int i = 0; i < 10; i++)
+        {
+            // Speed
+            if (i < data.groundSpeed)
+            {
+                speedIndicators.Find("Speed" + (i + 1)).GetComponent<RawImage>().texture = spIndicator;
+            }
+            else
+            {
+                speedIndicators.Find("Speed" + (i + 1)).GetComponent<RawImage>().texture = eIndicator;
+            }
+
+            // Jump
+            if (i < data.jumpForce)
+            {
+                jumpIndicators.Find("Jump" + (i + 1)).GetComponent<RawImage>().texture = jIndicator;
+            }
+            else
+            {
+                jumpIndicators.Find("Jump" + (i + 1)).GetComponent<RawImage>().texture = eIndicator;
+            }
+
+            // Strength
+            if (i < data.strength)
+            {
+                strengthIndicators.Find("Strength" + (i + 1)).GetComponent<RawImage>().texture = strIndicator;
+            }
+            else
+            {
+                strengthIndicators.Find("Strength" + (i + 1)).GetComponent<RawImage>().texture = eIndicator;
+            }
+        }
+    }
+
+    private void CheckOverlayToggle(int playerIndex)
+    {
+        // If player pressed button to toggle overlay, toggle overlay
+        bool action = ((Gamepad) playerInputStates[playerIndex].device).yButton.wasPressedThisFrame;
+
+        if (action)
+        {
+            GetPlayerOverlay(playerIndex).alpha = 1 - GetPlayerOverlay(playerIndex).alpha;
+        }
+    }
+
     public void BeginMatch()
     {
         // Ensure every player has actually chosen a bird before allowing the match to start
@@ -1123,6 +1254,11 @@ public class CharacterSelectManager : MonoBehaviour
         return playerReady[playerIndex];
     }
 
+    // private void ToggleCanSelect(PlayerInputState state)
+    // {
+    //     state.canSelect = !state.canSelect;
+    // }
+
     /// <summary>
     /// Once again, this is just a placeholder for now since we don't have a lot of UI elements yet,
     /// but this is where you would update any UI to reflect whether the player is ready or not when they press the ready button.
@@ -1138,4 +1274,10 @@ public class CharacterSelectManager : MonoBehaviour
     {
         SceneManager.LoadScene(mainMenuSceneName);
     }
+
+    // public void ShowMatchSettings()
+    // {
+    //     matchSettings.enabled = true;
+    //     playerInputStates.ForEach(ToggleCanSelect);
+    // }
 }
