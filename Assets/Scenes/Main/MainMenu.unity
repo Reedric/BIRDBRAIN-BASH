@@ -4596,7 +4596,7 @@ MonoBehaviour:
       m_Calls: []
   m_text: How many players?
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: f51c00cfc017ae948bac8106ce1640a7, type: 2}
   m_sharedMaterial: {fileID: -1081790109219817819, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -4663,7 +4663,7 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: 0, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
-  m_hasFontAssetChanged: 0
+  m_hasFontAssetChanged: 1
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
 --- !u!222 &1331175076

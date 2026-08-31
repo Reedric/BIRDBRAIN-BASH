@@ -287,8 +287,8 @@ MonoBehaviour:
 
     Press BUTTON NORTH to skip to game'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
-  m_sharedMaterial: {fileID: -1081790109219817819, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: f51c00cfc017ae948bac8106ce1640a7, type: 2}
+  m_sharedMaterial: {fileID: -1081790109219817819, guid: f51c00cfc017ae948bac8106ce1640a7, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -425,8 +425,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: ACTION
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
-  m_sharedMaterial: {fileID: -1081790109219817819, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: f51c00cfc017ae948bac8106ce1640a7, type: 2}
+  m_sharedMaterial: {fileID: -1081790109219817819, guid: f51c00cfc017ae948bac8106ce1640a7, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -721,8 +721,8 @@ MonoBehaviour:
 
     Press BUTTON EAST to go straight to the game'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
-  m_sharedMaterial: {fileID: -1081790109219817819, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: f51c00cfc017ae948bac8106ce1640a7, type: 2}
+  m_sharedMaterial: {fileID: -1081790109219817819, guid: f51c00cfc017ae948bac8106ce1640a7, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -929,6 +929,10 @@ MonoBehaviour:
   - {fileID: 32900000, guid: 588b22aa621a4364594916be28f1b5f7, type: 3}
   - {fileID: 32900000, guid: 3a71c5070d49b5b47a70091df90eaf54, type: 3}
   - {fileID: 32900000, guid: f26636ec2f3a5e04c9762eeed4fdeb50, type: 3}
+  gameSceneNames:
+  - Game_Beach
+  - Game_Forest
+  - Game_Iceberg
 --- !u!1 &945688230
 GameObject:
   m_ObjectHideFlags: 0
@@ -1067,8 +1071,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: INFORMATION ABOUT CONTROLS
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
-  m_sharedMaterial: {fileID: -1081790109219817819, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: f51c00cfc017ae948bac8106ce1640a7, type: 2}
+  m_sharedMaterial: {fileID: -1081790109219817819, guid: f51c00cfc017ae948bac8106ce1640a7, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1245,44 +1249,176 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   muteBackgroundMusic: 0
   penguinSounds:
-  - {fileID: 8300000, guid: 8af3d13ded60b634e8b576b1f92a2a56, type: 3}
-  - {fileID: 8300000, guid: 4209d1a8e38a3334cb586e8ac04a80e1, type: 3}
-  - {fileID: 8300000, guid: de646397ced512b4488c799523f9cf00, type: 3}
-  - {fileID: 8300000, guid: 62ab6da83c603ee46a2b6d1b80ffecc8, type: 3}
-  - {fileID: 8300000, guid: 3a4cce6906f42f34f80b08491a84544d, type: 3}
-  - {fileID: 0}
-  - {fileID: 8300000, guid: ac5a0ff18126b13419c13d9dbd6720a7, type: 3}
-  - {fileID: 0}
-  crowSounds: []
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  crowSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
   scissortailSounds:
-  - {fileID: 8300000, guid: 001d2edea88aff24e9a0daf7e187d76f, type: 3}
-  - {fileID: 8300000, guid: 874d0e4a212049e42af75050a79da7e7, type: 3}
-  - {fileID: 8300000, guid: bfcd36449fa8e954bb1c9e15f300dd9c, type: 3}
-  - {fileID: 8300000, guid: b3faf003d6a652648b14ac82348c726b, type: 3}
-  - {fileID: 8300000, guid: 49d96296e3e29e742a2632e5aa16c13d, type: 3}
-  - {fileID: 0}
-  - {fileID: 8300000, guid: 81912487c56a3e942b03b9cc6a3c9784, type: 3}
-  - {fileID: 8300000, guid: 8ce969f916eeae545bc560008a10d940, type: 3}
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
   lovebirdSounds:
-  - {fileID: 8300000, guid: 93981666575f3e844aeec5432c1bde04, type: 3}
-  - {fileID: 8300000, guid: 3b025b89ed4cdc44988d1abc018c6c19, type: 3}
-  - {fileID: 8300000, guid: 29d4ab88c5fd0c74b84d18eb1ae87a74, type: 3}
-  - {fileID: 8300000, guid: 81ac9f7cfd2394243bde2459c83b096e, type: 3}
-  - {fileID: 8300000, guid: fa41255b7e6cfbe47a4b2b04e7c3f7bf, type: 3}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 8300000, guid: 11c62da8e049ea545a35e2da331f8bbf, type: 3}
-  dodoSounds: []
-  seagullSounds: []
-  pelicanSounds: []
-  toucanSounds: []
-  pukekoSounds: []
-  chickenSounds: []
-  ostrichSounds: []
-  eagleSounds: []
-  kiwiSounds: []
-  macawSounds: []
-  owlSounds: []
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  dodoSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  seagullSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  pelicanSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  toucanSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  pukekoSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  chickenSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  ostrichSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  eagleSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  kiwiSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  macawSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  owlSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  phoenixSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  robopigeonSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  hummingbirdSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  shimaenagaSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
   scoringSounds:
   - {fileID: 8300000, guid: eb33c0f9c80807641add146b4c6d0873, type: 3}
   ballPlayerInteractionSounds:
@@ -1306,8 +1442,20 @@ MonoBehaviour:
   buffEndSound: {fileID: 0}
   debuffStartSound: {fileID: 0}
   debuffEndSound: {fileID: 0}
+  buttonHoverSound: {fileID: 0}
+  buttonSelectSound: {fileID: 0}
+  stunLoopSound: {fileID: 0}
+  stunLoopVolume: 1
   backgroundTracks:
   - {fileID: 8300000, guid: f3d5d2cca2b6e9c42881ed89b0962151, type: 3}
+  gameMusicTracks: []
+  countdownSfx:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  playBackgroundOnAwake: 1
+  isGameScene: 0
   pauseTrack: {fileID: 0}
 --- !u!82 &1169676016
 AudioSource:
