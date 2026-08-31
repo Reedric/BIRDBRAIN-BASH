@@ -442,25 +442,39 @@ MonoBehaviour:
     defensive: []
     offensive: []
   hummingbirdSounds:
-    happy: []
-    sad: []
-    bump: []
-    set: []
-    spike: []
+    happy:
+    - {fileID: 8300000, guid: dee814afeecb2e2458b3447076ca505b, type: 3}
+    sad:
+    - {fileID: 8300000, guid: 5787e5490aa6acd4ba75966e3dc4377b, type: 3}
+    bump:
+    - {fileID: 8300000, guid: 8d57f837846dde044935219b3d1e8b27, type: 3}
+    set:
+    - {fileID: 8300000, guid: 851802863e9f8bd4a882e565720e9712, type: 3}
+    spike:
+    - {fileID: 8300000, guid: d39632920b3a027459287669df0b61a2, type: 3}
     block:
     - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
-    defensive: []
-    offensive: []
+    defensive:
+    - {fileID: 8300000, guid: 83d55cc8543004c4aa3546e23191b0c2, type: 3}
+    offensive:
+    - {fileID: 8300000, guid: c347325e0ce9a2c4c9f5121a0e5112f4, type: 3}
   shimaenagaSounds:
-    happy: []
-    sad: []
-    bump: []
-    set: []
-    spike: []
+    happy:
+    - {fileID: 8300000, guid: 1e8c7e54437187d4e9e7ac70a372ad1d, type: 3}
+    sad:
+    - {fileID: 8300000, guid: 5162d54dab74efb4290de24e1066801f, type: 3}
+    bump:
+    - {fileID: 8300000, guid: 046a221695e8d424b975da876ea2e88d, type: 3}
+    set:
+    - {fileID: 8300000, guid: 4fabb10744e912e4086b781b1be4b8e5, type: 3}
+    spike:
+    - {fileID: 8300000, guid: c4b9751ecca577f46bc17485a3299e97, type: 3}
     block:
     - {fileID: 8300000, guid: 54d0f25eff094634b9f102897f56b39d, type: 3}
-    defensive: []
-    offensive: []
+    defensive:
+    - {fileID: 8300000, guid: e89c010f62573aa42ac899112daf73da, type: 3}
+    offensive:
+    - {fileID: 8300000, guid: 3749c256bed24f5469a71b33f98d4a5c, type: 3}
   scoringSounds:
   - {fileID: 8300000, guid: eb33c0f9c80807641add146b4c6d0873, type: 3}
   - {fileID: 8300000, guid: b824cfbb869d83345955b0e6a6d029c9, type: 3}
