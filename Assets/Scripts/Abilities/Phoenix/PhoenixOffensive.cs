@@ -310,12 +310,12 @@ public class PhoenixOffensive : BirdAbility
                 follower.target = chicken.transform;
         }
 
-        ConfigureChicken(chicken, onLeft, playerID);
+        ConfigureChicken(chicken, onLeft, playerID, chickenTarget.wasAI);
 
         activeChickenTargets.Add(chickenTarget);
     }
 
-    private void ConfigureChicken(GameObject chicken, bool onLeft, int playerID)
+    private void ConfigureChicken(GameObject chicken, bool onLeft, int playerID, bool wasAI)
     {
         if (chicken == null)
             return;
@@ -324,17 +324,19 @@ public class PhoenixOffensive : BirdAbility
         CharacterMovement chickenMovement = chicken.GetComponent<CharacterMovement>();
         BallInteract chickenBallInteract = chicken.GetComponent<BallInteract>();
 
+        // Only let the AI drive the chicken if the original player was AI-controlled.
+        // Human players stay in control of their chicken via Input System -> CharacterMovement/BallInteract.
         if (chickenAI != null)
         {
             chickenAI.SetIdentity(onLeft, playerID);
-            chickenAI.enabled = true;
+            chickenAI.enabled = wasAI;
         }
 
         if (chickenMovement != null)
         {
-            chickenMovement.enabled = chickenAI == null;
+            chickenMovement.enabled = !wasAI;
 
-            if (chickenAI == null)
+            if (!wasAI)
                 chickenMovement.controlMovement(true, true);
         }
 
