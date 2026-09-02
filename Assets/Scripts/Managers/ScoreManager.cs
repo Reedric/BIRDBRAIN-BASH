@@ -77,7 +77,7 @@ public class ScoreManager : MonoBehaviour
     // Lets a defensive ability (e.g. Phoenix) intercept a ground-touch point before it's scored.
     // leftConceding is true when the point is about to go against the LEFT side (a "Side1" touch).
     // A subscriber returns true to save/revive the ball; ScoreManager then skips the score entirely.
-    public static event Func<bool, Rigidbody, Vector3, bool> InterceptPoint;
+    public static event Func<bool, Rigidbody, Vector3, bool, bool> InterceptPoint;
 
     private static ScoreManager instance; // Private instance of the GameManager that other classes cannot reference
 
@@ -165,7 +165,7 @@ public class ScoreManager : MonoBehaviour
                 Debug.LogWarning("ScoreManager: could not resolve ball Rigidbody for Side1 collision.");
 
             // Give any subscribed defensive ability a chance to save the point first
-            if (RaiseInterceptPoint(true, ballRb, collision.GetContact(0).point))
+            if (RaiseInterceptPoint(true, ballRb, collision.GetContact(0).point, false))
             {
                 pointIntercepted = true;
                 return;
@@ -191,7 +191,7 @@ public class ScoreManager : MonoBehaviour
             if (ballRb == null)
                 Debug.LogWarning("ScoreManager: could not resolve ball Rigidbody for Side2 collision.");
 
-            if (RaiseInterceptPoint(false, ballRb, collision.GetContact(0).point))
+            if (RaiseInterceptPoint(false, ballRb, collision.GetContact(0).point, false))
             {
                 pointIntercepted = true;
                 return;
@@ -217,14 +217,14 @@ public class ScoreManager : MonoBehaviour
     // Invokes InterceptPoint by hand instead of calling the multicast delegate directly, so that if
     // more than one ability is ever subscribed, each one gets checked — calling a non-void multicast
     // delegate directly only returns the LAST subscriber's result, silently ignoring the others.
-    private bool RaiseInterceptPoint(bool leftConceding, Rigidbody ballRb, Vector3 contactPoint)
+    private bool RaiseInterceptPoint(bool leftConceding, Rigidbody ballRb, Vector3 contactPoint, bool isOut)
     {
         if (InterceptPoint == null)
             return false;
 
-        foreach (Func<bool, Rigidbody, Vector3, bool> handler in InterceptPoint.GetInvocationList())
+        foreach (Func<bool, Rigidbody, Vector3, bool, bool> handler in InterceptPoint.GetInvocationList())
         {
-            if (handler(leftConceding, ballRb, contactPoint))
+            if (handler(leftConceding, ballRb, contactPoint, isOut))
                 return true;
         }
 
@@ -292,7 +292,8 @@ public class ScoreManager : MonoBehaviour
                     ? ballRb.position
                     : transform.position;
 
-                if (RaiseInterceptPoint(leftConceding, ballRb, contactPoint))
+                // Out
+                if (RaiseInterceptPoint(leftConceding, ballRb, contactPoint, true))
                 {
                     // Phoenix saved the point.
                     // DO NOT award a score.

@@ -46,15 +46,24 @@ public class PhoenixDefensive : BirdAbility
 
     // Called by ScoreManager right before it registers a ground-touch point against this bird's side.
     // Returning true consumes/saves the point; ScoreManager then skips the score increment entirely.
-    private bool TryRevive(bool leftConceding, Rigidbody ballRb, Vector3 contactPoint)
+    private bool TryRevive(bool leftConceding, Rigidbody ballRb, Vector3 contactPoint, bool isOut)
     {
         Debug.Log(
             $"PHOENIX INTERCEPT: leftConceding={leftConceding}, " +
-            $"phoenixOnLeft={_onLeft}, cooldown={_cooldownRemaining}");
+            $"phoenixOnLeft={_onLeft}, isOut={isOut}, cooldown={_cooldownRemaining}");
 
         // Only step in when the miss is against MY side, not the opponent's
         if (leftConceding != _onLeft)
             return false;
+
+        // Phoenix cannot revive a ball that has gone out.
+        // The ScoreManager tells us directly when this intercept came from
+        // an "Out" collision rather than a valid court-side collision.
+        if (isOut)
+        {
+            Debug.Log("PHOENIX INTERCEPT: Ball is out. Revive cancelled.");
+            return false;
+        }
 
         // Still cooling down from the last revive
         if (_cooldownRemaining > 0f)
