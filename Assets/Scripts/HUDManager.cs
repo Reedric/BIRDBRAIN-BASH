@@ -89,6 +89,7 @@ public class HUDManager : MonoBehaviour
         public RawImage playerIcon;
         public AbilityIconUI offensiveAbility;
         public AbilityIconUI defensiveAbility;
+        public RawImage offensiveArmedIcon; // Shown only for birds whose offensive ability arms-then-fires on spike (Penguin, Phoenix)
     }
 
     [Header("Player Cards (Player 1 → 4)")]
@@ -217,9 +218,16 @@ public class HUDManager : MonoBehaviour
     private static HUDManager instance;
     public static HUDManager Instance => instance;
 
+    [Header("Offensive Armed Indicator")]
+    [SerializeField] private Color offensiveArmedColor = Color.yellow;
+    [SerializeField] private Color offensiveUnarmedColor = Color.gray;
+    [SerializeField] private float armedFlourishDuration = 0.2f;
+    [SerializeField] private float armedFlourishScale = 1.4f;
+
     // Tracks running cooldown coroutines so we can cancel them if needed
     private Coroutine[] offensiveCooldowns = new Coroutine[4];
     private Coroutine[] defensiveCooldowns = new Coroutine[4];
+    private Coroutine[] armedFlourishCoroutines = new Coroutine[4];
 
     private class BirdHUDData
     {
@@ -227,6 +235,7 @@ public class HUDManager : MonoBehaviour
         public Texture playerIcon;
         public Texture offensiveIcon;
         public Texture defensiveIcon;
+        public bool showOffensiveArmedIcon;
     }
 
 
@@ -304,6 +313,12 @@ public class HUDManager : MonoBehaviour
         if (card.playerIcon != null)                        card.playerIcon.texture = data.playerIcon;
         if (card.offensiveAbility?.baseIcon != null)        card.offensiveAbility.baseIcon.texture = data.offensiveIcon;
         if (card.defensiveAbility?.baseIcon != null)        card.defensiveAbility.baseIcon.texture = data.defensiveIcon;
+
+        if (card.offensiveArmedIcon != null)
+        {
+            card.offensiveArmedIcon.gameObject.SetActive(data.showOffensiveArmedIcon);
+            card.offensiveArmedIcon.color = offensiveUnarmedColor;
+        }
     }
 
     // Public Cooldown API — call these from bird ability scripts
@@ -426,6 +441,52 @@ public class HUDManager : MonoBehaviour
         icon?.ResetImmediately();
     }
 
+    /// Updates the "offensive armed" indicator for abilities that arm on button press and fire on the next spike
+    /// (Penguin, Phoenix). Pass playFeedback = false to revert the indicator silently, e.g. once the ability fires.
+    public void SetOffensiveArmed(int playerIndex, bool armed, bool playFeedback = true)
+    {
+        PlayerCardUI[] cards = GetOrderedCards();
+        if (playerIndex < 0 || playerIndex >= cards.Length || cards[playerIndex] == null) return;
+
+        RawImage indicator = cards[playerIndex].offensiveArmedIcon;
+        if (indicator == null) return;
+
+        indicator.color = armed ? offensiveArmedColor : offensiveUnarmedColor;
+
+        if (!playFeedback) return;
+
+        if (armed)
+            AudioManager.PlayAbilityArmedSound();
+        else
+            AudioManager.PlayAbilityUnarmedSound();
+
+        if (armedFlourishCoroutines[playerIndex] != null)
+            StopCoroutine(armedFlourishCoroutines[playerIndex]);
+
+        armedFlourishCoroutines[playerIndex] = StartCoroutine(PunchScale(indicator.rectTransform));
+    }
+
+    private IEnumerator PunchScale(RectTransform rectTransform)
+    {
+        if (rectTransform == null)
+            yield break;
+
+        Vector3 originalScale = rectTransform.localScale;
+        float elapsed = 0f;
+
+        while (elapsed < armedFlourishDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / armedFlourishDuration;
+            float bounce = Mathf.Sin(t * Mathf.PI);
+            float scale = 1f + (armedFlourishScale - 1f) * bounce;
+            rectTransform.localScale = originalScale * scale;
+            yield return null;
+        }
+
+        rectTransform.localScale = originalScale;
+    }
+
     // Helpers
 
     private AbilityIconUI GetOffensiveIcon(int playerIndex)
@@ -472,7 +533,7 @@ public class HUDManager : MonoBehaviour
     {
         return bird switch
         {
-            BirdType.PENGUIN     => new BirdHUDData { displayName = penguinDisplayName,     playerIcon = penguinPlayerIcon,     offensiveIcon = penguinOffensiveIcon,     defensiveIcon = penguinDefensiveIcon },
+            BirdType.PENGUIN     => new BirdHUDData { displayName = penguinDisplayName,     playerIcon = penguinPlayerIcon,     offensiveIcon = penguinOffensiveIcon,     defensiveIcon = penguinDefensiveIcon,     showOffensiveArmedIcon = true },
             BirdType.CROW        => new BirdHUDData { displayName = crowDisplayName,        playerIcon = crowPlayerIcon,        offensiveIcon = crowOffensiveIcon,        defensiveIcon = crowDefensiveIcon },
             BirdType.SCISSORTAIL => new BirdHUDData { displayName = scissortailDisplayName, playerIcon = scissortailPlayerIcon, offensiveIcon = scissortailOffensiveIcon, defensiveIcon = scissortailDefensiveIcon },
             BirdType.LOVEBIRD    => new BirdHUDData { displayName = lovebirdDisplayName,    playerIcon = lovebirdPlayerIcon,    offensiveIcon = lovebirdOffensiveIcon,    defensiveIcon = lovebirdDefensiveIcon },
@@ -487,7 +548,7 @@ public class HUDManager : MonoBehaviour
             BirdType.OSTRICH     => new BirdHUDData { displayName = ostrichDisplayName,     playerIcon = ostrichPlayerIcon,     offensiveIcon = ostrichOffensiveIcon,     defensiveIcon = ostrichDefensiveIcon },
             BirdType.EAGLE       => new BirdHUDData { displayName = eagleDisplayName,       playerIcon = eaglePlayerIcon,       offensiveIcon = eagleOffensiveIcon,       defensiveIcon = eagleDefensiveIcon },
             BirdType.MACAW       => new BirdHUDData { displayName = macawDisplayName,       playerIcon = macawPlayerIcon,       offensiveIcon = macawOffensiveIcon,       defensiveIcon = macawDefensiveIcon },
-            BirdType.PHOENIX     => new BirdHUDData { displayName = phoenixDisplayName,     playerIcon = phoenixPlayerIcon,     offensiveIcon = phoenixOffensiveIcon,     defensiveIcon = phoenixDefensiveIcon },
+            BirdType.PHOENIX     => new BirdHUDData { displayName = phoenixDisplayName,     playerIcon = phoenixPlayerIcon,     offensiveIcon = phoenixOffensiveIcon,     defensiveIcon = phoenixDefensiveIcon,     showOffensiveArmedIcon = true },
             BirdType.ROBOPIGEON  => new BirdHUDData { displayName = robopigeonDisplayName,  playerIcon = robopigeonPlayerIcon,  offensiveIcon = robopigeonOffensiveIcon,  defensiveIcon = robopigeonDefensiveIcon },
             BirdType.HUMMINGBIRD => new BirdHUDData { displayName = hummingbirdDisplayName, playerIcon = hummingbirdPlayerIcon, offensiveIcon = hummingbirdOffensiveIcon, defensiveIcon = hummingbirdDefensiveIcon },
             BirdType.SHIMAENAGA  => new BirdHUDData { displayName = shimaenagaDisplayName,  playerIcon = shimaenagaPlayerIcon,  offensiveIcon = shimaenagaOffensiveIcon,  defensiveIcon = shimaenagaDefensiveIcon },

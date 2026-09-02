@@ -16,6 +16,11 @@ public abstract class BirdAbility : MonoBehaviour
 
     public bool IsReady => _cooldownRemaining <= 0 && !_abilitiesDisabled;
 
+    /// True for abilities that arm on button press and only fire on the player's next normal spike.
+    public virtual bool RequiresSpikeToActivate => false;
+
+    public bool IsArmed { get; private set; }
+
     public void TickCooldown(float deltaTime)
     {
         if (_cooldownRemaining > 0 && GameManager.PointInProgress()) _cooldownRemaining -= deltaTime;
@@ -40,6 +45,52 @@ public abstract class BirdAbility : MonoBehaviour
             return false;
         }
 
+        return ActivateAndStartCooldown();
+    }
+
+    /// Arms the ability without activating it; used by abilities that only fire on the player's next spike.
+    public bool TryArm()
+    {
+        if (IsArmed) return true;
+
+        if (!IsReady)
+        {
+            Debug.Log($"[BirdAbility] {GetType().Name} not ready to arm ({_cooldownRemaining:F1}s remaining).");
+            return false;
+        }
+
+        if (!BirdAbilityRuleService.Instance.CanUseAbility(gameObject, AbilitySlot))
+        {
+            Debug.Log($"[BirdAbility] {GetType().Name} denied by rules for slot {AbilitySlot}.");
+            return false;
+        }
+
+        IsArmed = true;
+        Debug.Log($"[BirdAbility] {GetType().Name} armed.");
+        UpdateArmedUI(true, true);
+        return true;
+    }
+
+    public void Disarm()
+    {
+        if (!IsArmed) return;
+
+        IsArmed = false;
+        UpdateArmedUI(false, true);
+    }
+
+    /// Called when the player performs a normal spike while this ability is armed.
+    public bool TriggerArmed()
+    {
+        if (!IsArmed) return false;
+
+        IsArmed = false;
+        UpdateArmedUI(false, false);
+        return ActivateAndStartCooldown();
+    }
+
+    private bool ActivateAndStartCooldown()
+    {
         if (Activate())
         {
             if (!_delayCooldownStart)
@@ -75,6 +126,16 @@ public abstract class BirdAbility : MonoBehaviour
         }
 
         _nextCooldownReduction = reduction;
+    }
+
+    private void UpdateArmedUI(bool armed, bool playFeedback)
+    {
+        if (AbilitySlot != AbilitySlot.Offensive || HUDManager.Instance == null) return;
+
+        int playerID = GetPlayerID();
+        if (playerID < 0) return;
+
+        HUDManager.Instance.SetOffensiveArmed(playerID, armed, playFeedback);
     }
 
     private void UpdateCooldownUI()

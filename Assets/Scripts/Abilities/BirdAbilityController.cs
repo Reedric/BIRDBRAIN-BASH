@@ -42,8 +42,30 @@ public class BirdAbilityController : MonoBehaviour
             return;
         }
 
+        if (ability.RequiresSpikeToActivate)
+        {
+            if (ability.IsArmed)
+            {
+                Debug.Log($"[BirdAbilityController] Disarming {slot} on {gameObject.name} with {ability.GetType().Name}.");
+                ability.Disarm();
+            }
+            else
+            {
+                Debug.Log($"[BirdAbilityController] Arming {slot} on {gameObject.name} with {ability.GetType().Name}.");
+                ability.TryArm();
+            }
+            return;
+        }
+
         Debug.Log($"[BirdAbilityController] UseAbility {slot} on {gameObject.name} with {ability.GetType().Name}.");
         ability.TryActivate(slot);
+    }
+
+    /// Called by BallInteract when the player performs a normal spike, so any armed ability for the slot can fire.
+    public void TryTriggerArmedAbility(AbilitySlot slot)
+    {
+        if (abilities.TryGetValue(slot, out var ability) && ability.RequiresSpikeToActivate)
+            ability.TriggerArmed();
     }
 
     public void SetAbility(AbilitySlot slot, BirdAbility ability)

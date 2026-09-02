@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class PenguinOffensive : BirdAbility
 {
+    public override bool RequiresSpikeToActivate => true;
+
     [Header("Snowball Ability")]
     public Collider ballCollider; // Christofort: grabs the dodgeball's collider
     public BoxCollider iceCollider; // Christofort: grabs the ice's collider
@@ -70,7 +72,7 @@ public class PenguinOffensive : BirdAbility
 
     bool StartSnowBall()
     {
-        if (ballInteraction == null || !ballInteraction.CanSpikeBall())
+        if (ballInteraction == null)
             return false;
 
         iceMode = true;
@@ -79,9 +81,8 @@ public class PenguinOffensive : BirdAbility
         // hitNet = false; // New: reset net flag every time the ability starts
         iceTimer = iceLength;
 
-        // New: spawn the snowball particles on the spike before the ball hits the ground
+        // The ball has already been spiked by BallInteract; attach the snowball trail now.
         CreateSnowballTrackEffect();
-        ballInteraction.SpikeBall();
 
         // New: stop any old coroutine before starting a new one
         if (spawnIceCoroutine != null)

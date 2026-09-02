@@ -425,6 +425,9 @@ public class BallInteract : MonoBehaviour
         {
             animator.SetTrigger("Spike");
         }
+
+        // Fire any offensive ability that was armed before this spike (e.g. Penguin, Phoenix).
+        GetComponent<BirdAbilityController>()?.TryTriggerArmedAbility(AbilitySlot.Offensive);
     }
 
     public void ServeBall()

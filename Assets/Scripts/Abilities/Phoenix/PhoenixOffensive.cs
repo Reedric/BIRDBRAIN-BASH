@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PhoenixOffensive : BirdAbility
 {
+    public override bool RequiresSpikeToActivate => true;
+
     [Header("Rotisserie Chicken")]
     [SerializeField] private GameObject rotisserieChickenPrefab;
     [SerializeField] private float transformationRadius = 3f;
@@ -63,13 +65,6 @@ public class PhoenixOffensive : BirdAbility
         if (ballInteraction == null || BallManager.Instance == null || GameManager.Instance == null)
             return false;
 
-        // Match the normal spike rules: legal turn, valid ball state, and range.
-        if (!ballInteraction.CanSpikeBall())
-        {
-            Debug.Log("[PhoenixOffensive] Cannot activate: Phoenix cannot legally spike this ball.");
-            return false;
-        }
-
         StartRotisserie();
 
         return true;
@@ -80,9 +75,7 @@ public class PhoenixOffensive : BirdAbility
         waitingForEnemyHit = true;
         cooldownPending = false;
 
-        // Spike the ball and arm the rotisserie effect.
-        ballInteraction.SpikeBall();
-
+        // The ball has already been spiked by BallInteract; start watching for the enemy touch.
         waitForEnemyHitCoroutine = StartCoroutine(WaitForEnemyHit());
 
         Debug.Log("[PhoenixOffensive] Ball is armed with Burn Ball.");

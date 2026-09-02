@@ -138,6 +138,12 @@ public class AudioManager : MonoBehaviour
     [Tooltip("Plays when a debuff expires.")]
     [SerializeField] private AudioClip debuffEndSound;
 
+    [Header("Ability Armed Sounds")]
+    [Tooltip("Plays when a spike-triggered ability (e.g. Penguin, Phoenix) is armed.")]
+    [SerializeField] private AudioClip abilityArmedSound;
+    [Tooltip("Plays when a spike-triggered ability is unarmed.")]
+    [SerializeField] private AudioClip abilityUnarmedSound;
+
     [Header("UI Sounds")]
     [Tooltip("Plays when a cursor enters a new UI button.")]
     [SerializeField] private AudioClip buttonHoverSound;
@@ -466,6 +472,18 @@ public class AudioManager : MonoBehaviour
     {
         if (instance.debuffEndSound != null)
             instance.audioSource.PlayOneShot(instance.debuffEndSound, volume);
+    }
+
+    public static void PlayAbilityArmedSound(float volume = 1.0f)
+    {
+        if (instance.abilityArmedSound != null)
+            instance.audioSource.PlayOneShot(instance.abilityArmedSound, volume);
+    }
+
+    public static void PlayAbilityUnarmedSound(float volume = 1.0f)
+    {
+        if (instance.abilityUnarmedSound != null)
+            instance.audioSource.PlayOneShot(instance.abilityUnarmedSound, volume);
     }
 
     public static void PlayButtonHoverSound(float volume = 1.0f)
