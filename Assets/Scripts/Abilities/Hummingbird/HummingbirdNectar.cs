@@ -160,16 +160,16 @@ public class HummingbirdNectar : MonoBehaviour
     {
         if (affected.movement != null)
         {
-            affected.movement.maxGroundSpeed = Mathf.Max(0f, affected.groundSpeed - slowAmount);
-            affected.movement.maxAirSpeed = Mathf.Max(0f, affected.airSpeed - slowAmount);
-            affected.movement.jumpForce = Mathf.Max(0f, affected.jumpForce - jumpReduction);
+            affected.movement.maxGroundSpeed = Mathf.Max(1f, affected.groundSpeed - slowAmount);
+            affected.movement.maxAirSpeed = Mathf.Max(1f, affected.airSpeed - slowAmount);
+            affected.movement.jumpForce = Mathf.Max(1f, affected.jumpForce - jumpReduction);
         }
 
         if (affected.ai != null)
         {
-            affected.ai.maxGroundSpeed = Mathf.Max(0f, affected.aiGroundSpeed - slowAmount);
-            affected.ai.maxAirSpeed = Mathf.Max(0f, affected.aiAirSpeed - slowAmount);
-            affected.ai.jumpForce = Mathf.Max(0f, affected.aiJumpForce - jumpReduction);
+            affected.ai.maxGroundSpeed = Mathf.Max(1f, affected.aiGroundSpeed - slowAmount);
+            affected.ai.maxAirSpeed = Mathf.Max(1f, affected.aiAirSpeed - slowAmount);
+            affected.ai.jumpForce = Mathf.Max(1f, affected.aiJumpForce - jumpReduction);
         }
     }
 

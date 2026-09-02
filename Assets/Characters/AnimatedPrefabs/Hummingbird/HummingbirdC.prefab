@@ -445,10 +445,12 @@ MonoBehaviour:
   nectarPrefab: {fileID: 176422398747366568, guid: 289e00a9738558b4a8e1a340969fa210, type: 3}
   birdNectarVfxPrefab: {fileID: 0}
   nectarLifetime: 10
-  slowAmount: 4
-  jumpReduction: 4
+  slowAmount: 3
+  jumpReduction: 3
   lingerDuration: 1
   nectarFadeDuration: 0.5
+  nectarHeightOffset: 0.1
+  groundRayStartHeight: 10
   tongueColor: {r: 1, g: 0.2, b: 0.65, a: 1}
   tongueWidth: 0.12
   tongueExtendDuration: 0.25
