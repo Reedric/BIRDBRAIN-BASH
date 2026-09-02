@@ -933,6 +933,7 @@ MonoBehaviour:
   - Game_Beach
   - Game_Forest
   - Game_Iceberg
+  - Game_Volcano
 --- !u!1 &945688230
 GameObject:
   m_ObjectHideFlags: 0

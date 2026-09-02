@@ -6428,7 +6428,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   AbilitySlot: 1
-  _cooldownTime: 2
+  _cooldownTime: 1
   animator: {fileID: 2179466929208135898}
 --- !u!114 &2282577738996056911
 MonoBehaviour:
@@ -6450,10 +6450,14 @@ MonoBehaviour:
   despawnVfxPrefab: {fileID: 3499421978768982111, guid: 1ff8e1793b226d74fa57c201f581304c, type: 3}
   dodoLifetime: 7
   spawnHeight: 10
-  courtXOffset: 3.5
+  nearNetXOffset: 1.5
+  farCourtXOffset: 5.5
   firstDodoZ: -3
   secondDodoZ: 3
   minimumDodoSpacing: 6
+  courtMinimumZ: -3.5
+  courtMaximumZ: 3.5
+  laneGap: 1
 --- !u!1 &2207434857914322780
 GameObject:
   m_ObjectHideFlags: 0
