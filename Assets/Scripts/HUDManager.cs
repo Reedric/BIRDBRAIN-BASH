@@ -11,9 +11,9 @@ public class HUDManager : MonoBehaviour
     [System.Serializable]
     public class AbilityIconUI
     {
-        public RawImage baseIcon;           // The actual ability icon texture
-        public Image cooldownOverlay;       // Image set to Filled > Radial 360 > Top, dark color
-        public TMP_Text cooldownText;       // Timer number shown during cooldown
+        public RawImage baseIcon;
+        public Image cooldownOverlay;
+        public TMP_Text cooldownText;
 
         public void ResetImmediately()
         {
@@ -68,7 +68,7 @@ public class HUDManager : MonoBehaviour
         {
             if (cooldownOverlay != null)
             {
-            cooldownOverlay.fillAmount = onCooldown ? fillAmount : 0f;
+                cooldownOverlay.fillAmount = onCooldown ? fillAmount : 0f;
                 cooldownOverlay.gameObject.SetActive(onCooldown);
             }
             if (cooldownText != null)
@@ -89,7 +89,7 @@ public class HUDManager : MonoBehaviour
         public RawImage playerIcon;
         public AbilityIconUI offensiveAbility;
         public AbilityIconUI defensiveAbility;
-        public RawImage offensiveArmedIcon; // Shown only for birds whose offensive ability arms-then-fires on spike (Penguin, Phoenix)
+        public RawImage offensiveArmedIcon;
     }
 
     [Header("Player Cards (Player 1 → 4)")]
@@ -229,6 +229,9 @@ public class HUDManager : MonoBehaviour
     private Coroutine[] defensiveCooldowns = new Coroutine[4];
     private Coroutine[] armedFlourishCoroutines = new Coroutine[4];
 
+    // Prevents the armed indicator from being toggled again while its animation is playing.
+    private bool[] armedIndicatorAnimating = new bool[4];
+
     private class BirdHUDData
     {
         public string displayName;
@@ -309,10 +312,10 @@ public class HUDManager : MonoBehaviour
     {
         if (data == null) { Debug.LogWarning("[HUDManager] Missing bird HUD data."); return; }
 
-        if (card.playerNameText != null)                    card.playerNameText.text = data.displayName;
-        if (card.playerIcon != null)                        card.playerIcon.texture = data.playerIcon;
-        if (card.offensiveAbility?.baseIcon != null)        card.offensiveAbility.baseIcon.texture = data.offensiveIcon;
-        if (card.defensiveAbility?.baseIcon != null)        card.defensiveAbility.baseIcon.texture = data.defensiveIcon;
+        if (card.playerNameText != null) card.playerNameText.text = data.displayName;
+        if (card.playerIcon != null) card.playerIcon.texture = data.playerIcon;
+        if (card.offensiveAbility?.baseIcon != null) card.offensiveAbility.baseIcon.texture = data.offensiveIcon;
+        if (card.defensiveAbility?.baseIcon != null) card.defensiveAbility.baseIcon.texture = data.defensiveIcon;
 
         if (card.offensiveArmedIcon != null)
         {
@@ -451,6 +454,10 @@ public class HUDManager : MonoBehaviour
         RawImage indicator = cards[playerIndex].offensiveArmedIcon;
         if (indicator == null) return;
 
+        // Ignore additional arm/unarm requests until the current flourish finishes.
+        if (armedIndicatorAnimating[playerIndex])
+            return;
+
         indicator.color = armed ? offensiveArmedColor : offensiveUnarmedColor;
 
         if (!playFeedback) return;
@@ -463,10 +470,12 @@ public class HUDManager : MonoBehaviour
         if (armedFlourishCoroutines[playerIndex] != null)
             StopCoroutine(armedFlourishCoroutines[playerIndex]);
 
-        armedFlourishCoroutines[playerIndex] = StartCoroutine(PunchScale(indicator.rectTransform));
+        armedFlourishCoroutines[playerIndex] = StartCoroutine(
+            PunchScale(indicator.rectTransform, playerIndex)
+        );
     }
 
-    private IEnumerator PunchScale(RectTransform rectTransform)
+    private IEnumerator PunchScale(RectTransform rectTransform, int playerIndex)
     {
         if (rectTransform == null)
             yield break;
@@ -474,17 +483,24 @@ public class HUDManager : MonoBehaviour
         Vector3 originalScale = rectTransform.localScale;
         float elapsed = 0f;
 
+        armedIndicatorAnimating[playerIndex] = true;
+
         while (elapsed < armedFlourishDuration)
         {
             elapsed += Time.deltaTime;
             float t = elapsed / armedFlourishDuration;
             float bounce = Mathf.Sin(t * Mathf.PI);
             float scale = 1f + (armedFlourishScale - 1f) * bounce;
+
+            // Always scale from the original size, never the current animated size.
             rectTransform.localScale = originalScale * scale;
+
             yield return null;
         }
 
         rectTransform.localScale = originalScale;
+        armedIndicatorAnimating[playerIndex] = false;
+        armedFlourishCoroutines[playerIndex] = null;
     }
 
     // Helpers
@@ -542,7 +558,7 @@ public class HUDManager : MonoBehaviour
             BirdType.SEAGULL     => new BirdHUDData { displayName = seagullDisplayName,     playerIcon = seagullPlayerIcon,     offensiveIcon = seagullOffensiveIcon,     defensiveIcon = seagullDefensiveIcon },
             BirdType.OWL         => new BirdHUDData { displayName = owlDisplayName,         playerIcon = owlPlayerIcon,         offensiveIcon = owlOffensiveIcon,         defensiveIcon = owlDefensiveIcon },
             BirdType.PUKEKO      => new BirdHUDData { displayName = pukekoDisplayName,      playerIcon = pukekoPlayerIcon,      offensiveIcon = pukekoOffensiveIcon,      defensiveIcon = pukekoDefensiveIcon },
-            BirdType.TOUCAN      => new BirdHUDData { displayName = toucanDisplayName,      playerIcon = toucanPlayerIcon,      offensiveIcon = toucanOffensiveIcon,      defensiveIcon = toucanDefensiveIcon },
+            BirdType.TOUCAN      => new BirdHUDData { displayName = toucanDisplayName,      playerIcon = toucanPlayerIcon,      offensiveIcon = toucanOffensiveIcon,      defensiveIcon = toucanDefensiveIcon,     showOffensiveArmedIcon = true },
             BirdType.KIWI        => new BirdHUDData { displayName = kiwiDisplayName,        playerIcon = kiwiPlayerIcon,        offensiveIcon = kiwiOffensiveIcon,        defensiveIcon = kiwiDefensiveIcon },
             BirdType.CHICKEN     => new BirdHUDData { displayName = chickenDisplayName,     playerIcon = chickenPlayerIcon,     offensiveIcon = chickenOffensiveIcon,     defensiveIcon = chickenDefensiveIcon },
             BirdType.OSTRICH     => new BirdHUDData { displayName = ostrichDisplayName,     playerIcon = ostrichPlayerIcon,     offensiveIcon = ostrichOffensiveIcon,     defensiveIcon = ostrichDefensiveIcon },

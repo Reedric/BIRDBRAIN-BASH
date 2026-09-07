@@ -5335,13 +5335,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   AbilitySlot: 1
-  _cooldownTime: 40
+  _cooldownTime: 20
   mini31RDPrefab: {fileID: 3742114553603567174, guid: de4727e7f4360c245b2b88ef8cb97e0f, type: 3}
   spawnVFXPrefab: {fileID: 3499421978768982111, guid: 1ff8e1793b226d74fa57c201f581304c, type: 3}
   despawnVFXPrefab: {fileID: 3499421978768982111, guid: 1ff8e1793b226d74fa57c201f581304c, type: 3}
   miniScale: 0.2
-  duration: 10
-  cooldownAfterDuration: 40
+  duration: 15
+  cooldownAfterDuration: 20
   miniGroundSpeed: 4
   miniJumpForce: 4
   miniStrength: 4
@@ -5358,7 +5358,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   AbilitySlot: 0
-  _cooldownTime: 2
+  _cooldownTime: 30
   strikeRegionPrefab: {fileID: 3499421978768982111, guid: 2015e44a2977df245b970e6da843e38c, type: 3}
   hitmarkerVfxPrefab: {fileID: 3499421978768982111, guid: bf04170b1d8c70343857ba645b280f4a, type: 3}
   strikeDelay: 2

@@ -18,13 +18,13 @@ MonoBehaviour:
     m_Value: 0
   threshold:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0.52
   intensity:
     m_OverrideState: 1
-    m_Value: 0.83
+    m_Value: 0.7
   scatter:
     m_OverrideState: 1
-    m_Value: 0.1
+    m_Value: 0.148
   clamp:
     m_OverrideState: 0
     m_Value: 65472
@@ -59,10 +59,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06437c1ff663d574d9447842ba0a72e4, type: 3}
   m_Name: ScreenSpaceLensFlare
   m_EditorClassIdentifier: 
-  active: 1
+  active: 0
   intensity:
-    m_OverrideState: 1
-    m_Value: 0.15
+    m_OverrideState: 0
+    m_Value: 0.03
   tintColor:
     m_OverrideState: 1
     m_Value: {r: 1, g: 1, b: 1, a: 1}
@@ -97,17 +97,17 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 1.5
   streaksIntensity:
-    m_OverrideState: 1
-    m_Value: 0.39
+    m_OverrideState: 0
+    m_Value: 0.12
   streaksLength:
     m_OverrideState: 1
-    m_Value: 0.08
+    m_Value: 0.01
   streaksOrientation:
     m_OverrideState: 0
     m_Value: 0
   streaksThreshold:
     m_OverrideState: 1
-    m_Value: 0.82
+    m_Value: 0.006
   resolution:
     m_OverrideState: 0
     m_Value: 4

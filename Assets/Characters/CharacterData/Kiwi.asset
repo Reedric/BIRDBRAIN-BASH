@@ -14,20 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   birdName: Kiwi
   icon: {fileID: 2800000, guid: a0bb4a1bcda85ef47af3c32a0cc104a3, type: 3}
-  description: "During the day, Kiwi sells the freshest fruit to anyone who comes
-    by Kiwi\u2019s fruit stand. At night, Ninja Kiwi blends the meanest smoothies
-    around the block (this is totally not a reference to the game company Ninja Kiwi
-    or the game Fruit Ninja). Rumor has it no one has seen Kiwi and Ninja Kiwi in
-    the same room\u2026"
-  offensiveAbility: "Kiwi fires a laser beam from its eyes to hit the ball, which
-    automatically counts as the next action required for the ball in the rally. If
-    spiking or blocking, increases the ball\u2019s speed (15s cooldown)"
+  description: "During the day, Kiwi sells fruit to anyone who comes by its fruit
+    stand. At night, Ninja Kiwi blends the meanest smoothies around the block. Rumor
+    has it no one has seen Kiwi and Ninja Kiwi in the same room\u2026"
+  offensiveAbility: Kiwi fires a laser beam from its eyes to hit the ball, which
+    automatically counts as the next action required for the ball in the rally. (15s
+    cooldown)
   offensiveIcon: {fileID: 2800000, guid: 3ef13db8c4563484bba6c89bc82c1366, type: 3}
-  defensiveAbility: "Stealth Burrowing (name can be changed) - Kiwi burrows underground,
-    becoming faster (thinking probably 9 speed) while also ignoring field effects.
-    (Kiwi can\u2019t hit the ball while underground.) When the ability ends (button
-    press or time running out), Kiwi jumps out of the ground (12s cooldown after
-    coming out of the ground)"
+  defensiveAbility: Stealth Burrowing - Kiwi burrows underground, becoming faster
+    while also ignoring field effects. When the ability ends (button press or time
+    running out), Kiwi jumps out of the ground (12s cooldown after coming out of
+    the ground)
   defensiveIcon: {fileID: 2800000, guid: 73df00bf92bb9a744a057dd8d19b8a06, type: 3}
   groundSpeed: 6
   jumpForce: 7

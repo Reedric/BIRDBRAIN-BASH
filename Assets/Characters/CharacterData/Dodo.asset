@@ -20,9 +20,8 @@ MonoBehaviour:
     forth on the enemy court, pushing enemies if they are in the way. (Dodos last
     for 7s, 30s cooldown.)
   offensiveIcon: {fileID: 2800000, guid: 6c0789d8a65367f4481e4c980f3a0a93, type: 3}
-  defensiveAbility: 'Final Formation - Dodo stacks on top of its two pals to form
-    a 3-dodo-tall formation, granting height advantage on spiking and blocking (Form
-    lasts for 6s, 20s cooldown). '
+  defensiveAbility: 'Final Formation - Dodo stacks on top of its pals to form a 3-dodo-tall
+    formation, granting height advantage (Form lasts for 6s, 20s cooldown). '
   defensiveIcon: {fileID: 2800000, guid: eda248dc59541b546a773f829e3e3ec1, type: 3}
   groundSpeed: 2
   jumpForce: 2

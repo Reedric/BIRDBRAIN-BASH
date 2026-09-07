@@ -9,6 +9,11 @@ using UnityEngine;
 /// </summary>
 public class MacawDefensive : BirdAbility
 {
+    // Hard-coded until abilities carry their own "can't be mimicked" flag - Phoenix's revive is
+    // driven entirely by ScoreManager.InterceptPoint (see PhoenixDefensive), not the ability button,
+    // so stealing it would silently grant Macaw a revive subscription with no way to trigger it.
+    private static readonly HashSet<System.Type> unmimicableAbilities = new() { typeof(PhoenixDefensive) };
+
     [SerializeField] private float mimicDuration = 15f;
 
     private List<BirdAbility> playerAbilities = new();
@@ -45,7 +50,10 @@ public class MacawDefensive : BirdAbility
 
             foreach (BirdAbility ability in player.GetComponents<BirdAbility>())
             {
-                if (ability.AbilitySlot == AbilitySlot.Defensive)
+                // PassiveAbility-derived abilities (e.g. Chicken's slow fall, Ostrich's immunity window)
+                // never surface here since GetComponents<BirdAbility>() can't see them, but the explicit
+                // type check still guards any BirdAbility-derived ability that is passive in practice.
+                if (ability.AbilitySlot == AbilitySlot.Defensive && !unmimicableAbilities.Contains(ability.GetType()))
                     playerAbilities.Add(ability);
             }
         }

@@ -16,8 +16,7 @@ MonoBehaviour:
   icon: {fileID: 2800000, guid: e2ec55d6bf069aa4e9bc9ae063f3c3ac, type: 3}
   description: "Lovebird is a hopeless romantic searching for true love! In a dating
     scene full of twerking and deadbeat dads, Lovebird just wants to find someone
-    who\u2019ll build nests and seductively wiggle their feathers the good-ol\u2019-fashioned
-    way."
+    who\u2019ll seductively wiggle their feathers the good-ol\u2019-fashioned way."
   offensiveAbility: Lovebomb - Enamor enemies and make them walk slowly towards you
     for a brief duration, during which they cannot move freely. (10s cooldown, effect
     lasts 1s)

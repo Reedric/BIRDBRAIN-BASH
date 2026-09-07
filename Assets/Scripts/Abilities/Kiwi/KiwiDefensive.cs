@@ -11,7 +11,7 @@ public class KiwiDefensive : BirdAbility
     [Header("Burrowing Settings")]
     [SerializeField] private float burrowDuration = 2f;
     [SerializeField] private float speedBoost = 2f;
-    [SerializeField] private float jumpOutForce = 10f;
+    [SerializeField] private float jumpOutForce = 3f;
 
     [Header("Burrow VFX")]
     [SerializeField] private GameObject burrowMarkerPrefab;
@@ -50,6 +50,14 @@ public class KiwiDefensive : BirdAbility
 
     void Update()
     {
+        // If the point ends while the Kiwi is underground,
+        // safely bring it back without going through normal activation.
+        if (isBurrowed && !GameManager.PointInProgress())
+        {
+            JumpOut();
+            return;
+        }
+
         // While ability active, wait for either the full duration or a cancel request
         if (timeBurrowed < burrowDuration)
         {
@@ -60,7 +68,7 @@ public class KiwiDefensive : BirdAbility
             {
                 Vector3 markerPos = new Vector3(
                     transform.position.x,
-                    transform.position.y + 3f + markerOffset.y, // surface = kiwi Y + burrow depth
+                    transform.position.y + 3f + markerOffset.y,
                     transform.position.z
                 );
                 _activeBurrowMarker.transform.position = markerPos;
@@ -86,10 +94,15 @@ public class KiwiDefensive : BirdAbility
         isBurrowed = false;
         meshRenderer.enabled = true;
         rb.useGravity = true;
-        transform.Translate(Vector3.up * 5f);
+
+        // Move back to the surface instead of translating 5 units upward.
+        transform.position += Vector3.up * 3f;
+
         characterMovement.maxAirSpeed -= speedBoost;
 
-        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+        // Clear any existing physics velocity before applying the small hop.
+        rb.linearVelocity = Vector3.zero;
+
         rb.AddForce(Vector3.up * jumpOutForce, ForceMode.Impulse);
 
         int playerID = GetComponent<BallInteract>().playerID;
