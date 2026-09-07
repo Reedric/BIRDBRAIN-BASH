@@ -18,7 +18,7 @@ MonoBehaviour:
     cases. Her notably high intuition guides many of her decisions.
   offensiveAbility: Capture Clue - Owl sketches a line in the sand using her quill
     across the middle of the enemy court, preventing enemies from crossing it. (25s
-    cooldown after line disappears, line lasts up to 8s)
+    cooldown after line disappears, lasts up to 8s)
   offensiveIcon: {fileID: 2800000, guid: 82c7eb26361cdf34c80f7f873f0b0a79, type: 3}
   defensiveAbility: Investigation - Owl predicts the trajectory of the ball visualized
     by a line.  (15s cooldown after line disappears, 1 meter ahead, line lasts up

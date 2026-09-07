@@ -6,21 +6,27 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(BallInteract))]
 public class ToucanOffensive : BirdAbility
 {
-    override protected bool Activate()
-    {
-        // Offensive ability activation (Toucan): allow activation regardless of CanHit()
-        if (CanSpike())
-        {
-            TacoTocoToca();
-            return true;
-        }
+    // Toucan now uses the same armed functionality as Penguin/Phoenix.
+    public override bool RequiresSpikeToActivate => true;
 
-        return false;
+    protected override bool Activate()
+    {
+        // The normal spike has already happened.
+        // The armed ability now makes that spike unblockable.
+        AudioManager.PlayBirdSound(BirdType.TOUCAN, SoundType.OFFENSIVE, 1.0f);
+
+        BallManager.Instance.unblockableOwner = gameObject;
+
+        int playerID = GetComponent<BallInteract>().playerID;
+        HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
+
+        return true;
     }
+
     // Activate the ability: next spike becomes unblockable
     public void TacoTocoToca()
     {
-        // Play defensive sound
+        // Play offensive sound
         AudioManager.PlayBirdSound(BirdType.TOUCAN, SoundType.OFFENSIVE, 1.0f);
 
         // Set the unblockable owner of the ball to this player

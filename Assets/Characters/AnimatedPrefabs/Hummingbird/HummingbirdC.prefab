@@ -249,6 +249,9 @@ MonoBehaviour:
   grounded: 0
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
+  enforceNetBoundary: 1
+  netXPosition: 0
+  netBuffer: 0.05
 --- !u!54 &7014626434556214507
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -444,7 +447,7 @@ MonoBehaviour:
   _cooldownTime: 15
   nectarPrefab: {fileID: 176422398747366568, guid: 289e00a9738558b4a8e1a340969fa210, type: 3}
   birdNectarVfxPrefab: {fileID: 0}
-  nectarLifetime: 10
+  nectarLifetime: 6
   slowAmount: 3
   jumpReduction: 3
   lingerDuration: 1

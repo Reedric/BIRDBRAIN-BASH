@@ -8,11 +8,12 @@ public class CharacterMovement : NetworkBehaviour
     [Header("Character Attributes")]
     public float maxGroundSpeed = 1.0f; // Max speed that the character can move on the ground
     public float maxAirSpeed = 1.0f; // Max speed that the character can move in the air
-    public float jumpForce = 1.0f; // Force the character uses to jump 
+    public float jumpForce = 1.0f; // Force the character uses to jump
     public float rotationSpeed = 10.0f; // How fast the character rotates to face movement direction
+
     [Tooltip("Euler offset applied to facing rotation. Use this if the model's forward axis isn't aligned with world +Z.")]
-    public Vector3 rotationOffsetEuler = Vector3.zero; // local rotation adjustment for the prefab 
-    
+    public Vector3 rotationOffsetEuler = Vector3.zero; // local rotation adjustment for the prefab
+
     [Header("Animation")]
     public Animator animator; // optional animator for player character
     private bool isWalking = false; // computed each frame for animation
@@ -21,7 +22,7 @@ public class CharacterMovement : NetworkBehaviour
     private Coroutine buffCoroutine; // Reference to the currently active buff coroutine
     private float originalMaxGroundSpeed = 1.0f; // Original max ground speed before buff
     private float originalMaxAirSpeed = 1.0f; // Original max air speed before buff
-    // private float originalJumpForce = 1.0f; // Original jump force before buff
+
     private Rigidbody rb; // Rigid body of the character
     public bool grounded = false; // If the character is touching the ground
 
@@ -29,9 +30,23 @@ public class CharacterMovement : NetworkBehaviour
     private bool canMove = true; // christofort: defaulted to false, ability scripts must set this to true
     private ParticleSystem dustParticles; // Reference to particle system for ground dust
     private PlayerInput playerInput; // Input for the player
-    
+
     [HideInInspector] public bool overrideRotation = false; // Allow other scripts to override rotation
     [HideInInspector] public Quaternion targetRotation; // Target rotation when overridden
+
+    [Header("Net Boundary")]
+    [Tooltip("Prevents this character from crossing the center net.")]
+    [SerializeField] private bool enforceNetBoundary = false;
+
+    [Tooltip("X position of the center of the net.")]
+    [SerializeField] private float netXPosition = 0f;
+
+    [Tooltip("Extra space kept between the character collider and the net.")]
+    [SerializeField] private float netBuffer = 0.05f;
+
+    // Which side of the net this character started on.
+    // -1 = left side, +1 = right side.
+    private float netSide;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -45,13 +60,27 @@ public class CharacterMovement : NetworkBehaviour
         if (animator == null)
         {
             animator = GetComponent<Animator>();
+
             if (animator == null)
             {
                 animator = GetComponentInChildren<Animator>();
             }
+
             if (animator == null)
             {
                 animator = GetComponentInParent<Animator>();
+            }
+        }
+
+        // Determine which side of the net this character belongs to.
+        if (enforceNetBoundary)
+        {
+            netSide = Mathf.Sign(transform.position.x);
+
+            // Safety fallback if the character starts directly on the net.
+            if (Mathf.Approximately(netSide, 0f))
+            {
+                netSide = 1f;
             }
         }
     }
@@ -62,7 +91,6 @@ public class CharacterMovement : NetworkBehaviour
         // Check for player inputs for lateral movement
         Vector2 inputDirection = playerInput.actions.FindAction("Move").ReadValue<Vector2>();
 
-        
         // Update the current direction and speed of the character based on player input
         // christofort: added check for canMove to be true
         if (!inputDirection.Equals(Vector2.zero) && canMove)
@@ -90,16 +118,19 @@ public class CharacterMovement : NetworkBehaviour
             {
                 Vector3 movementDirection = new Vector3(inputDirection.x, 0, inputDirection.y);
                 Quaternion baseRotation = Quaternion.LookRotation(movementDirection);
+
                 if (rotationOffsetEuler != Vector3.zero)
                 {
                     baseRotation *= Quaternion.Euler(rotationOffsetEuler);
                 }
+
                 targetRotation = baseRotation;
             }
         }
-        
+
         // Apply rotation (either from movement or override)
-        if (!overrideRotation || Vector3.Distance(transform.eulerAngles, targetRotation.eulerAngles) > 0.1f)
+        if (!overrideRotation ||
+            Vector3.Distance(transform.eulerAngles, targetRotation.eulerAngles) > 0.1f)
         {
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
         }
@@ -126,6 +157,60 @@ public class CharacterMovement : NetworkBehaviour
             rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpAmount, rb.linearVelocity.z);
             grounded = false;
         }
+
+        // Make sure the character cannot cross the net.
+        // This runs even when normal movement is disabled,
+        // so abilities such as Hummingbird's dash are also contained.
+        EnforceNetBoundary();
+    }
+
+    /// <summary>
+    /// Prevents the character from crossing the center net.
+    /// Uses the character's collider bounds so the entire body stays
+    /// on its assigned side of the net.
+    /// </summary>
+    private void EnforceNetBoundary()
+    {
+        if (!enforceNetBoundary || rb == null)
+            return;
+
+        Vector3 position = rb.position;
+        Vector3 velocity = rb.linearVelocity;
+
+        Collider col = GetComponent<Collider>();
+
+        float halfWidth = 0f;
+
+        if (col != null)
+        {
+            halfWidth = col.bounds.extents.x;
+        }
+
+        // Keep the collider completely on its assigned side.
+        float boundary = netXPosition + netSide * (halfWidth + netBuffer);
+
+        bool crossedNet =
+            (netSide < 0f && position.x > boundary) ||
+            (netSide > 0f && position.x < boundary);
+
+        if (!crossedNet)
+            return;
+
+        // Place the character directly against its boundary.
+        position.x = boundary;
+
+        // Stop only velocity that is pushing the character through the net.
+        if (netSide < 0f && velocity.x > 0f)
+        {
+            velocity.x = 0f;
+        }
+        else if (netSide > 0f && velocity.x < 0f)
+        {
+            velocity.x = 0f;
+        }
+
+        rb.position = position;
+        rb.linearVelocity = velocity;
     }
 
     // Calls whenever the character collides with another collider or rigidbody
@@ -135,6 +220,7 @@ public class CharacterMovement : NetworkBehaviour
         if (other.gameObject.layer == 6)
         {
             grounded = true;
+
             // Resume particle emission when landing
             if (dustParticles != null)
             {
@@ -150,6 +236,7 @@ public class CharacterMovement : NetworkBehaviour
         if (other.gameObject.layer == 6)
         {
             grounded = false;
+
             // Stop particle emission when airborne
             if (dustParticles != null)
             {
@@ -157,11 +244,12 @@ public class CharacterMovement : NetworkBehaviour
             }
         }
     }
+
     // christofort: encapsulated variables to control player movement from other scripts
     public void controlMovement(bool movementEnabled, bool jumpEnabled)
     {
         canJump = jumpEnabled;
-        canMove = movementEnabled; 
+        canMove = movementEnabled;
     }
 
     public void BuffStats(int increase, int time)
@@ -176,9 +264,10 @@ public class CharacterMovement : NetworkBehaviour
             StopCoroutine(buffCoroutine);
             buffCoroutine = null;
         }
+
         maxGroundSpeed = originalMaxGroundSpeed;
         maxAirSpeed = originalMaxAirSpeed;
-        // jumpForce = originalJumpForce;
+        // originalJumpForce = jumpForce;
     }
 
     public IEnumerator BuffTimer(int increase, int time)
@@ -187,25 +276,25 @@ public class CharacterMovement : NetworkBehaviour
         Debug.Log("ORIGINAL = " + maxGroundSpeed);
 
         BuffsDebuffs.Instance.ApplyEffect(
-        BuffsDebuffs.EffectType.Buff,
-        gameObject,
-        5f,
-        true
+            BuffsDebuffs.EffectType.Buff,
+            gameObject,
+            5f,
+            true
         );
-        
+
         originalMaxGroundSpeed = maxGroundSpeed;
         originalMaxAirSpeed = maxAirSpeed;
         // originalJumpForce = jumpForce;
 
         maxGroundSpeed += increase;
         maxAirSpeed += increase;
-        
+
         // Clamp it so that the stat cannot go below 1
         maxGroundSpeed = Mathf.Max(maxGroundSpeed, 1f);
         maxAirSpeed = Mathf.Max(maxAirSpeed, 1f);
         // jumpForce += increase;
 
-        Debug.Log("NEW = "+ maxGroundSpeed);
+        Debug.Log("NEW = " + maxGroundSpeed);
 
         yield return new WaitForSeconds(time);
 

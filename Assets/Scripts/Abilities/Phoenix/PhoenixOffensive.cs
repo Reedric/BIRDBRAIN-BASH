@@ -30,6 +30,7 @@ public class PhoenixOffensive : BirdAbility
     {
         public GameObject original;
         public GameObject chicken;
+        public Vector3 originalPosition;
 
         public CharacterMovement characterMovement;
         public AIBehavior aiBehavior;
@@ -388,14 +389,10 @@ public class PhoenixOffensive : BirdAbility
             if (chickenTarget == null)
                 continue;
 
-            Vector3 restorePosition = chickenTarget.original != null
-                ? chickenTarget.original.transform.position
-                : Vector3.zero;
+            Vector3 restorePosition = chickenTarget.originalPosition;
 
             if (chickenTarget.chicken != null)
             {
-                restorePosition = chickenTarget.chicken.transform.position;
-
                 PlayEffect(
                     restoreEffectPrefab,
                     chickenTarget.chicken.transform.position
@@ -406,9 +403,22 @@ public class PhoenixOffensive : BirdAbility
 
             if (chickenTarget.original != null)
             {
+                Rigidbody originalRb = chickenTarget.original.GetComponent<Rigidbody>();
+
+                // Restore the original bird to its safe position and reset physics
+                // before giving control back to it.
                 chickenTarget.original.transform.position = restorePosition;
                 chickenTarget.original.transform.rotation =
                     chickenTarget.originalRotation;
+
+                if (originalRb != null)
+                {
+                    originalRb.linearVelocity = Vector3.zero;
+                    originalRb.angularVelocity = Vector3.zero;
+                    originalRb.Sleep();
+                }
+
+                Physics.SyncTransforms();
 
                 foreach (FollowObject follower in chickenTarget.followers)
                 {

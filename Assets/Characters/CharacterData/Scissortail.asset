@@ -19,10 +19,9 @@ MonoBehaviour:
   offensiveAbility: "Scissor Shot! - Flycatcher\u2019s next spike will randomly change
     direction mid-flight (8s cooldown, starts after spike changes direction)"
   offensiveIcon: {fileID: 2800000, guid: 216af781db28e114aa41fee157383186, type: 3}
-  defensiveAbility: Yuriful - creates a connecting red string of fate between Flycatcher
-    and her partner, which can bump up a ball that hits that line (12s cooldown,
-    cooldown starts after ball touches string OR after string disappears, string
-    lasts 5s)
+  defensiveAbility: Yuriful - creates red string of fate between Flycatcher and her
+    partner, which can bump up a ball that hits that line (12s cooldown, cooldown
+    starts after ball touches string OR after string disappears, string lasts 5s)
   defensiveIcon: {fileID: 2800000, guid: b8b3c8cec79c6ae4ba01b8dd9e7c9953, type: 3}
   groundSpeed: 7
   jumpForce: 6

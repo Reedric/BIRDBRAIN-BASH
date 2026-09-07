@@ -20,10 +20,9 @@ MonoBehaviour:
   offensiveAbility: Flip Flap - Squawk to make enemy controls flipped for a short
     period of time (flipped for 10s) (20s cooldown after control flip back)
   offensiveIcon: {fileID: 2800000, guid: 420efab2a6db09c419ed508f498837dc, type: 3}
-  defensiveAbility: Repeat After You - Will randomly mimic any ability from one of
-    the birds on the court; the defense ability icon will change to the icon of the
-    mimicked bird (ability will disappear after 15s if not used) (20s cooldown after
-    disappear/use)
+  defensiveAbility: Repeat After You - Will randomly mimic a defensive ability from
+    one of the birds on the court. (ability will disappear after 15s if not used)
+    (20s cooldown after disappear/use)
   defensiveIcon: {fileID: 2800000, guid: 4fb0efd8f34179b49bb5c2b7c204b4b8, type: 3}
   groundSpeed: 5
   jumpForce: 7

@@ -18,11 +18,11 @@ MonoBehaviour:
     no Involvement with the government at all!
   offensiveAbility: "\u201CPoops On You\u201D - Robopigeon summons a government drone
     strike. A large circular region will appear on the opponent court, and after
-    a 2s delay any bird in the region will be stunned for 5 seconds. (40s cooldown)\r\n"
+    a 2s delay any bird in the region will be stunned for 5 seconds. (30s cooldown)\r\n"
   offensiveIcon: {fileID: 2800000, guid: 8476a1e73670c4644b28df752a921be2, type: 3}
   defensiveAbility: Hardware Hacking - spawn a mini 31rd minion that can also hit
-    for the player, controlled by a hard cpu that will always hit. Lasts for 10s,
-    40s cooldown.
+    for the player, controlled by a hard cpu that will always hit. (Lasts for 15s,
+    20s cooldown.)
   defensiveIcon: {fileID: 2800000, guid: 96c482fcdf1d3e845a9398da96e73bfa, type: 3}
   groundSpeed: 7
   jumpForce: 7
