@@ -29,6 +29,9 @@ public class CharacterSelectManager : MonoBehaviour
     public Transform cursor4Prefab;
     public Button readyButton;
 
+    [Header("Match Settings")]
+    [SerializeField] private MatchSettingsMenu matchSettings;
+
     [Header("Player Icons")]
     public RawImage blue1Icon;
     public RawImage blue2Icon;
@@ -56,9 +59,6 @@ public class CharacterSelectManager : MonoBehaviour
     public RawImage hummingbirdTexture;
     public RawImage shimaenagaTexture;
     public RawImage randomTexture;
-
-    // [Header("Match Settings")]
-    // [SerializeField] private UnityEngine.UIElements.UIDocument matchSettings;
 
     [Header("Bird Database")]
     [SerializeField] private BirdDatabase database; // Holds all the bird data (used for bird stat overlay)
@@ -149,6 +149,7 @@ public class CharacterSelectManager : MonoBehaviour
 
     // One coroutine slot per player — stops any in-progress animation before starting a new one
     private readonly Coroutine[] cursorAnimCoroutines = new Coroutine[4];
+    private int previousControllingPlayer = -1;
 
     // name of the scene to load once selections are done (MAKE SURE THIS MATCHES MULTIPLAYER MANAGER AND CHANGES WHEN NEEDED)
     private const string mainSceneName = "HowToPlay";
@@ -185,6 +186,12 @@ public class CharacterSelectManager : MonoBehaviour
             return;
         }
         instance = this;
+
+        if (matchSettings == null && mainCanvas != null)
+            matchSettings = mainCanvas.GetComponentInChildren<MatchSettingsMenu>(true);
+
+        if (matchSettings == null)
+            Debug.LogWarning("[CharacterSelectManager] No MatchSettingsMenu found under mainCanvas. Assign it in the Inspector.");
 
         // Auto-find icons if not assigned
         if (blue1Icon == null) blue1Icon = System.Array.Find(FindObjectsByType<RawImage>(FindObjectsSortMode.None), img => img.gameObject.name == "Blue1Icon");
@@ -268,6 +275,12 @@ public class CharacterSelectManager : MonoBehaviour
         if (Keyboard.current != null &&
             (Keyboard.current.escapeKey.wasPressedThisFrame || Keyboard.current.backspaceKey.wasPressedThisFrame))
         {
+            if (matchSettings != null && matchSettings.IsMenuOpen)
+            {
+                matchSettings.CloseMenu();
+                return;
+            }
+
             NavigateBackToMainMenu();
             return;
         }
@@ -275,13 +288,63 @@ public class CharacterSelectManager : MonoBehaviour
         // Either all input states are enabled or disabled
         if (!playerInputStates[0].canSelect) return;
 
-        // Update cursor positions and handle input for each player
-        for (int i = 0; i < playerInputStates.Count; ++i)
+        bool settingsOpen = matchSettings != null && matchSettings.IsMenuOpen;
+        int controllingPlayer = settingsOpen ? matchSettings.ControllingPlayer : -1;
+
+        for (int i = 0; i < playerInputStates.Count; i++)
         {
+            // While the settings overlay is open, only the controlling player's cursor should move
+            if (settingsOpen && i != controllingPlayer)
+                continue;
+
             UpdatePlayerInput(i);
             UpdatePlayerCursor(i);
-            CheckOverlayToggle(i);
         }
+    }
+
+    private void SnapCursorToEventSystemSelection(int playerIndex)
+    {
+        if (EventSystem.current == null) return;
+
+        // Refresh target list before snapping
+        CollectUITargets();
+
+        GameObject selected = EventSystem.current.currentSelectedGameObject;
+        if (selected == null && uiSelectables.Count > 0)
+        {
+            selected = uiSelectables[0]?.gameObject;
+        }
+
+        if (selected == null) return;
+
+        int idx = FindTargetIndexForGameObject(selected);
+        if (idx < 0 && uiTargets.Count > 0) idx = 0;
+
+        if (idx >= 0)
+        {
+            currentTargetIndex[playerIndex] = idx;
+            currentSelectable[playerIndex] = (idx < uiSelectables.Count) ? uiSelectables[idx] : null;
+            desiredScreenPositions[playerIndex] = GetPreferredScreenPosition(uiTargets[idx]);
+            playerInputStates[playerIndex].cursorPosition = desiredScreenPositions[playerIndex];
+        }
+    }
+
+    // Finds the uiTargets index whose underlying Selectable matches the given
+    // GameObject. Matching by Selectable identity (rather than by uiTargets[i]
+    // itself) is necessary now that a Toggle's position rect can be a child
+    // (its checkbox visual) rather than the Toggle's own GameObject. Falls
+    // back to matching uiTargets directly for entries with no Selectable
+    // (e.g. BirdSelectButtons), where the target rect IS the identity.
+    private int FindTargetIndexForGameObject(GameObject go)
+    {
+        for (int i = 0; i < uiTargets.Count; i++)
+        {
+            Selectable s = (i < uiSelectables.Count) ? uiSelectables[i] : null;
+            GameObject identity = s != null ? s.gameObject : (uiTargets[i] != null ? uiTargets[i].gameObject : null);
+            if (identity == go)
+                return i;
+        }
+        return -1;
     }
 
     // Handles controller disconnect and reconnect events during character select
@@ -632,37 +695,39 @@ public class CharacterSelectManager : MonoBehaviour
     }
 
     // Collect BirdSelectButton rects and other Buttons under the main canvas as snap targets
-    private void CollectUITargets()
+    public void CollectUITargets()
     {
-        uiTargets.Clear();
-
         uiTargets.Clear();
         uiSelectables.Clear();
 
-        // Prefer Selectable-based navigation (Buttons, Toggle, etc.) under the main canvas
-        if (mainCanvas != null)
-        {
-            Selectable[] selectables = mainCanvas.GetComponentsInChildren<Selectable>(true);
-            foreach (var s in selectables)
-            {
-                RectTransform rt = s.GetComponent<RectTransform>();
-                if (rt != null && !uiTargets.Contains(rt))
-                {
-                    uiTargets.Add(rt);
-                    uiSelectables.Add(s);
-                }
-            }
-        }
+        // If the overlay is open, restrict snap targets strictly to the settings overlay panel
+        Transform searchRoot = (matchSettings != null && matchSettings.IsMenuOpen && matchSettings.transform != null) 
+            ? matchSettings.transform 
+            : mainCanvas.transform;
 
-        // Fallback: include BirdSelectButton instances as rect targets if not already present
-        BirdSelectButton[] birdButtons = FindObjectsOfType<BirdSelectButton>(true);
-        foreach (var b in birdButtons)
+        Selectable[] selectables = searchRoot.GetComponentsInChildren<Selectable>(false);
+        foreach (var s in selectables)
         {
-            RectTransform rt = b.GetComponent<RectTransform>();
+            RectTransform rt = GetCursorTargetRect(s);
             if (rt != null && !uiTargets.Contains(rt))
             {
                 uiTargets.Add(rt);
-                uiSelectables.Add(null);
+                uiSelectables.Add(s);
+            }
+        }
+
+        // Include BirdSelectButtons if not on overlay
+        if (matchSettings == null || !matchSettings.IsMenuOpen)
+        {
+            BirdSelectButton[] birdButtons = FindObjectsByType<BirdSelectButton>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            foreach (var b in birdButtons)
+            {
+                RectTransform rt = b.GetComponent<RectTransform>();
+                if (rt != null && !uiTargets.Contains(rt))
+                {
+                    uiTargets.Add(rt);
+                    uiSelectables.Add(null);
+                }
             }
         }
     }
@@ -917,8 +982,19 @@ public class CharacterSelectManager : MonoBehaviour
         // Use EventSystem submit as a final fallback for interactable Selectables.
         if (EventSystem.current != null && selectable.IsInteractable())
         {
+            bool beforeToggle = (selectable is Toggle preToggle) && preToggle.isOn;
+
             BaseEventData eventData = new BaseEventData(EventSystem.current);
             ExecuteEvents.Execute(selectable.gameObject, eventData, ExecuteEvents.submitHandler);
+
+            if (selectable is Toggle postToggle)
+            {
+                Debug.Log(
+                    $"[MatchSettings Diag] Toggle '{postToggle.gameObject.name}' isOn: " +
+                    $"{beforeToggle} -> {postToggle.isOn}"
+                );
+            }
+
             return true;
         }
 
@@ -1217,8 +1293,22 @@ public class CharacterSelectManager : MonoBehaviour
 
     private void CheckOverlayToggle(int playerIndex)
     {
-        // If player pressed button to toggle overlay, toggle overlay
-        bool action = ((Gamepad) playerInputStates[playerIndex].device).yButton.wasPressedThisFrame;
+        if (playerIndex < 0 || playerIndex >= playerInputStates.Count)
+            return;
+
+        Gamepad gamepad = playerInputStates[playerIndex].device as Gamepad;
+        if (gamepad == null)
+            return;
+
+        // Y opens and closes the match settings overlay for this player.
+        if (gamepad.yButton.wasPressedThisFrame && matchSettings != null)
+        {
+            matchSettings.ToggleForPlayer(playerIndex);
+            return;
+        }
+
+        // If player pressed the overlay button, toggle the bird details panel.
+        bool action = gamepad.xButton.wasPressedThisFrame;
 
         if (action)
         {
@@ -1273,6 +1363,53 @@ public class CharacterSelectManager : MonoBehaviour
     public void NavigateBackToMainMenu()
     {
         SceneManager.LoadScene(mainMenuSceneName);
+    }
+
+    public void ToggleMatchSettings(int playerIndex)
+    {
+        if (matchSettings == null) return;
+
+        if (!matchSettings.IsMenuOpen)
+        {
+            // Pass the dynamically generated playerCursors list straight to MatchSettingsMenu
+            matchSettings.OpenForPlayer(playerIndex, playerCursors);
+            
+            // Immediately snap the opening player's cursor to the first settings control
+            SnapCursorToEventSystemSelection(playerIndex);
+        }
+        else if (matchSettings.ControllingPlayer == playerIndex)
+        {
+            matchSettings.CloseMenu();
+        }
+    }
+
+    // Returns the RectTransform the cursor should visually target for a given
+    // Selectable. For Toggles this resolves to the checkbox visual (a child
+    // named something like "Background" or "Checkmark") instead of the
+    // Toggle's own root RectTransform, which spans the whole row — checkbox
+    // AND label — and was landing the cursor in the middle of that row,
+    // over empty space or the label text rather than the actual tickbox.
+    private RectTransform GetCursorTargetRect(Selectable selectable)
+    {
+        RectTransform ownRect = selectable.GetComponent<RectTransform>();
+
+        if (selectable is Toggle toggle)
+        {
+            RectTransform[] children = toggle.GetComponentsInChildren<RectTransform>(true);
+            foreach (RectTransform child in children)
+            {
+                if (child == ownRect) continue;
+
+                string n = child.gameObject.name;
+                if (n.IndexOf("Background", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("Check", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return child;
+                }
+            }
+        }
+
+        return ownRect;
     }
 
     // public void ShowMatchSettings()

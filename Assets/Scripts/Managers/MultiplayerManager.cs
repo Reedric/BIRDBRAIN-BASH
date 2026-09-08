@@ -381,121 +381,386 @@ public class MultiplayerManager : MonoBehaviour
         }
     }
 
-    void MakePlayer(GameObject player, int playerCount)
+    void MakePlayer(GameObject player, int playerIndex)
     {
-        // Set side of court for player
-        BallInteract ballInteract = player.GetComponent<BallInteract>();
-        ballInteract.onLeft = playerCount < 2 ? true : false;
-        ballInteract.playerID = playerCount;
-        
-        // Assign the transform of the player
-        player.transform.position = playerSpawnpoints[playerCount].position;
-        player.transform.rotation = playerSpawnpoints[playerCount].rotation;
-        player.transform.name = $"Player {playerCount + 1}";
-
-        // Find the follow object for this player and set their role in game manager
-        FollowObject fo;
         GameManager gameManager = GameManager.Instance;
-        if (playerCount == 0)
+
+        // --------------------------------------------------------
+        // DETERMINE PHYSICAL SPAWN SLOT
+        // --------------------------------------------------------
+
+        int spawnSlot = GetSpawnSlot(playerIndex);
+
+        bool onLeft = spawnSlot < 2;
+
+        // --------------------------------------------------------
+        // BALL INTERACTION
+        // --------------------------------------------------------
+
+        BallInteract ballInteract = player.GetComponent<BallInteract>();
+
+        if (ballInteract != null)
         {
-            fo = GameObject.Find("PlayerOneFollow").GetComponent<FollowObject>();
-            gameManager.leftPlayer1 = player.gameObject;
+            // Player ID remains their actual player number.
+            ballInteract.playerID = playerIndex;
+
+            // Court side is based on the TEAM ARRANGEMENT,
+            // not simply whether playerIndex < 2.
+            ballInteract.onLeft = onLeft;
         }
-        else if (playerCount == 1)
+
+        // --------------------------------------------------------
+        // SPAWN
+        // --------------------------------------------------------
+
+        if (spawnSlot < 0 || spawnSlot >= playerSpawnpoints.Length)
         {
-            fo = GameObject.Find("PlayerTwoFollow").GetComponent<FollowObject>();
-            gameManager.leftPlayer2 = player.gameObject;
+            Debug.LogError(
+                $"MultiplayerManager: Invalid spawn slot {spawnSlot} " +
+                $"for Player {playerIndex + 1}."
+            );
+
+            return;
         }
-        else if (playerCount == 2)
+
+        player.transform.position =
+            playerSpawnpoints[spawnSlot].position;
+
+        player.transform.rotation =
+            playerSpawnpoints[spawnSlot].rotation;
+
+        player.transform.name =
+            $"Player {playerIndex + 1}";
+
+        // --------------------------------------------------------
+        // FOLLOW OBJECT
+        // --------------------------------------------------------
+
+        // Followers are keyed to the player's own number (color-coded per
+        // player), not to the physical spawn slot, so they stay correct
+        // no matter how the team arrangement reshuffles spawn slots.
+        FollowObject fo = GetFollowObjectForPlayerIndex(playerIndex);
+
+        if (fo == null)
         {
-            fo = GameObject.Find("PlayerThreeFollow").GetComponent<FollowObject>();
-            gameManager.rightPlayer1 = player.gameObject;
+            Debug.LogError(
+                $"MultiplayerManager: Could not find FollowObject " +
+                $"for player {playerIndex + 1}."
+            );
+
+            return;
+        }
+
+        fo.target = player.transform;
+
+        // --------------------------------------------------------
+        // GAME MANAGER TEAM ASSIGNMENT
+        // --------------------------------------------------------
+
+        if (onLeft)
+        {
+            // First physical left spawn is leftPlayer1.
+            // Second physical left spawn is leftPlayer2.
+
+            if (spawnSlot == 0)
+                gameManager.leftPlayer1 = player.gameObject;
+            else
+                gameManager.leftPlayer2 = player.gameObject;
         }
         else
         {
-            fo = GameObject.Find("PlayerFourFollow").GetComponent<FollowObject>();
-            gameManager.rightPlayer2 = player.gameObject;
+            // First physical right spawn is rightPlayer1.
+            // Second physical right spawn is rightPlayer2.
+
+            if (spawnSlot == 2)
+                gameManager.rightPlayer1 = player.gameObject;
+            else
+                gameManager.rightPlayer2 = player.gameObject;
         }
 
-        // Set the follow object to this player
-        fo.target = player.transform;
+        // --------------------------------------------------------
+        // READY INDICATOR
+        // --------------------------------------------------------
 
-        // Set the ready up icon for this bird
-        player.GetComponent<EndScreen>().readyIndicator = playerIndicators[playerCount];
+        EndScreen endScreen = player.GetComponent<EndScreen>();
+
+        if (endScreen != null &&
+            playerIndex >= 0 &&
+            playerIndex < playerIndicators.Length)
+        {
+            endScreen.readyIndicator =
+                playerIndicators[playerIndex];
+        }
     }
 
-    void MakeAI(int playerCount)
+    void MakeAI(int playerIndex)
     {
-        // Random bird for the AI
-        BirdType birdType = (BirdType) (int) (UnityEngine.Random.value * 11);
+        // --------------------------------------------------------
+        // RANDOM BIRD
+        // --------------------------------------------------------
 
-        // Get the model for the ai
-        GameObject aiModel = GetBirdModel(birdType, false, false);
+        BirdType birdType =
+            (BirdType)(int)(UnityEngine.Random.value * 11);
 
-        // DELETE THIS LATER
-        // Currently, there are some birds with controller prefabs that don't have
-        // AI prefabs, so as a back up just default to the penguin one
-        if (aiModel == null) aiModel = cManager.PenguinAI;
+        GameObject aiModel =
+            GetBirdModel(birdType, false, false);
 
-        // Initialize the prefab keyboard and mouse prefab
+        // Fallback if AI model does not exist.
+        if (aiModel == null)
+            aiModel = cManager.PenguinAI;
+
+        // --------------------------------------------------------
+        // CREATE AI
+        // --------------------------------------------------------
+
         GameObject ai = Instantiate(aiModel);
 
-        // If it is not enabled, enable it
-        if (!ai.activeInHierarchy) ai.SetActive(true);
+        if (!ai.activeInHierarchy)
+            ai.SetActive(true);
 
-        // Get the ai component and assign the fields
-        AIBehavior aIBehavior = ai.GetComponent<AIBehavior>();
-        aIBehavior.onLeft = playerCount < 2 ? true : false;
-        aIBehavior.playerID = playerCount;
+        AIBehavior aiBehavior =
+            ai.GetComponent<AIBehavior>();
 
-        // Determine AI difficulty based on player count and slot:
-        // - Demo mode (0 humans)  -> all 4 AIs are Hard (screensaver spectacle)
-        // - 1 gamepad player      -> slot 1 is their left-team ally  -> Hard; all others -> Medium
-        // - 3 gamepad players     -> slot 3 is player 2's right-team ally -> Hard; no other AIs exist
-        // - 2 gamepad players     -> all AIs are opponents (slots 2 & 3) -> Medium
-        int humanCount = isKBMInput.Count(kbm => !kbm);
-        bool isAllyAI = (humanCount == 1 && playerCount == 1) ||
-                        (humanCount == 3 && playerCount == 3);
-        aIBehavior.SetAIDifficulty((isDemoMode || isAllyAI) ? AIBehavior.AIDifficulty.Hard : AIBehavior.AIDifficulty.Medium);
+        if (aiBehavior == null)
+        {
+            Debug.LogError(
+                $"MultiplayerManager: AI prefab for slot " +
+                $"{playerIndex + 1} has no AIBehavior."
+            );
 
-        // Set ai transform
-        ai.transform.position = playerSpawnpoints[playerCount].position;
-        ai.transform.rotation = playerSpawnpoints[playerCount].rotation;
-        ai.transform.name = $"AI {playerCount - isKBMInput.Count + 1}";
+            return;
+        }
 
-        // Assign the ai to its respective spot for the game manager
-        FollowObject fo;
-        GameManager gameManager = GameManager.Instance;
-        if (playerCount == 0)
-        {
-            // Slot 0 is only ever an AI in demo mode (0 human players) — assign leftPlayer1 explicitly
-            // so GameManager.Start() doesn't throw an UnassignedReferenceException.
-            gameManager.leftPlayer1 = ai;
-            fo = GameObject.Find("PlayerOneFollow").GetComponent<FollowObject>();
-        }
-        else if (playerCount == 1)
-        {
-            gameManager.leftPlayer2 = ai;
-            fo = GameObject.Find("PlayerTwoFollow").GetComponent<FollowObject>();
-        }
-        else if (playerCount == 2)
-        {
-            gameManager.rightPlayer1 = ai;
-            fo = GameObject.Find("PlayerThreeFollow").GetComponent<FollowObject>();
-        }
-        else if (playerCount == 3)
-        {
-            gameManager.rightPlayer2 = ai;
-            fo = GameObject.Find("PlayerFourFollow").GetComponent<FollowObject>();
-        }
-        else // This should never happen as there should always be one human player, but better to be safe than sorry
-        {
-            fo = GameObject.Find("PlayerOneFollow").GetComponent<FollowObject>();
-        }
-        fo.target = ai.transform;
+        // --------------------------------------------------------
+        // DETERMINE PHYSICAL SPAWN SLOT
+        // --------------------------------------------------------
 
-        // Store for deferred registration — HUDManager.Instance is null here during Awake(),
-        // so we queue this and flush it in Start() instead of calling RegisterAICard directly.
-        pendingAIRegistrations.Add((playerCount, birdType));
+        int spawnSlot = GetSpawnSlot(playerIndex);
+
+        bool onLeft = spawnSlot < 2;
+
+        aiBehavior.onLeft = onLeft;
+        aiBehavior.playerID = playerIndex;
+
+    // --------------------------------------------------------
+    // DIFFICULTY
+    // --------------------------------------------------------
+
+    int humanCount =
+        isKBMInput.Count(kbm => !kbm);
+
+    bool isAllyAI =
+        (humanCount == 1 && playerIndex == 1) ||
+        (humanCount == 3 && playerIndex == 3);
+
+    AIBehavior.AIDifficulty difficulty;
+
+    if (isDemoMode || isAllyAI)
+    {
+        // Demo showcases and AI teammates always play Hard, regardless
+        // of the Bot Difficulty chosen in Match Settings.
+        difficulty = AIBehavior.AIDifficulty.Hard;
+    }
+    else
+    {
+        // Opponent AI follows whatever Bot Difficulty was picked in the
+        // Match Settings menu (GameSettings.CurrentBotDifficulty), set by
+        // MatchSettingsMenu.
+        GameSettings gs = GameSettings.EnsureInstance();
+        difficulty = (AIBehavior.AIDifficulty)(int)gs.CurrentBotDifficulty;
+    }
+
+    aiBehavior.SetAIDifficulty(difficulty);
+
+        // --------------------------------------------------------
+        // SPAWN
+        // --------------------------------------------------------
+
+        if (spawnSlot < 0 ||
+            spawnSlot >= playerSpawnpoints.Length)
+        {
+            Debug.LogError(
+                $"MultiplayerManager: Invalid AI spawn slot " +
+                $"{spawnSlot} for Player {playerIndex + 1}."
+            );
+
+            Destroy(ai);
+            return;
+        }
+
+        ai.transform.position =
+            playerSpawnpoints[spawnSlot].position;
+
+        ai.transform.rotation =
+            playerSpawnpoints[spawnSlot].rotation;
+
+        ai.transform.name =
+            $"AI {playerIndex + 1}";
+
+        // --------------------------------------------------------
+        // FOLLOW OBJECT
+        // --------------------------------------------------------
+
+        // Followers are keyed to the player's own number (color-coded per
+        // player), not to the physical spawn slot, so they stay correct
+        // no matter how the team arrangement reshuffles spawn slots.
+        FollowObject fo =
+            GetFollowObjectForPlayerIndex(playerIndex);
+
+        if (fo != null)
+            fo.target = ai.transform;
+
+        // --------------------------------------------------------
+        // GAME MANAGER TEAM ASSIGNMENT
+        // --------------------------------------------------------
+
+        GameManager gameManager =
+            GameManager.Instance;
+
+        if (onLeft)
+        {
+            if (spawnSlot == 0)
+                gameManager.leftPlayer1 = ai;
+            else
+                gameManager.leftPlayer2 = ai;
+        }
+        else
+        {
+            if (spawnSlot == 2)
+                gameManager.rightPlayer1 = ai;
+            else
+                gameManager.rightPlayer2 = ai;
+        }
+
+        // --------------------------------------------------------
+        // HUD REGISTRATION
+        // --------------------------------------------------------
+
+        pendingAIRegistrations.Add(
+            (playerIndex, birdType)
+        );
+    }
+
+    // ============================================================
+    // TEAM ARRANGEMENT / SPAWN MAPPING
+    // ============================================================
+
+    /// <summary>
+    /// Returns the physical spawnpoint that a player should use
+    /// based on the selected team arrangement.
+    ///
+    /// Player index:
+    /// 0 = Player 1
+    /// 1 = Player 2
+    /// 2 = Player 3
+    /// 3 = Player 4
+    ///
+    /// Spawn slots:
+    /// 0 = Left team, position 1
+    /// 1 = Left team, position 2
+    /// 2 = Right team, position 1
+    /// 3 = Right team, position 2
+    /// </summary>
+    private int GetSpawnSlot(int playerIndex)
+    {
+        GameSettings settings = GameSettings.EnsureInstance();
+
+        switch (settings.CurrentTeamArrangement)
+        {
+            // ----------------------------------------------------
+            // P1 P2 vs P3 P4
+            // ----------------------------------------------------
+            case GameSettings.TeamArrangement.P1P2_vs_P3P4:
+
+                switch (playerIndex)
+                {
+                    case 0: return 0; // P1 -> Left 1
+                    case 1: return 1; // P2 -> Left 2
+                    case 2: return 2; // P3 -> Right 1
+                    case 3: return 3; // P4 -> Right 2
+                }
+
+                break;
+
+            // ----------------------------------------------------
+            // P1 P3 vs P2 P4
+            // ----------------------------------------------------
+            case GameSettings.TeamArrangement.P1P3_vs_P2P4:
+
+                switch (playerIndex)
+                {
+                    case 0: return 0; // P1 -> Left 1
+                    case 1: return 2; // P2 -> Right 1
+                    case 2: return 1; // P3 -> Left 2
+                    case 3: return 3; // P4 -> Right 2
+                }
+
+                break;
+
+            // ----------------------------------------------------
+            // P1 P4 vs P2 P3
+            // ----------------------------------------------------
+            case GameSettings.TeamArrangement.P1P4_vs_P2P3:
+
+                switch (playerIndex)
+                {
+                    case 0: return 0; // P1 -> Left 1
+                    case 1: return 2; // P2 -> Right 1
+                    case 2: return 3; // P3 -> Right 2
+                    case 3: return 1; // P4 -> Left 2
+                }
+
+                break;
+        }
+
+        // Safety fallback
+        return Mathf.Clamp(playerIndex, 0, 3);
+    }
+
+
+    /// <summary>
+    /// Returns whether a player belongs on the left side of the court.
+    /// </summary>
+    private bool IsPlayerOnLeft(int playerIndex)
+    {
+        int spawnSlot = GetSpawnSlot(playerIndex);
+
+        return spawnSlot < 2;
+    }
+
+
+    /// <summary>
+    /// Returns the color-coded FollowObject that belongs to a given player
+    /// number (0 = Player 1/blue, 1 = Player 2/green, 2 = Player 3/pink,
+    /// 3 = Player 4/yellow). Kept independent of spawn slot so the follower
+    /// always tracks the same player regardless of team arrangement.
+    /// </summary>
+    private FollowObject GetFollowObjectForPlayerIndex(int playerIndex)
+    {
+        switch (playerIndex)
+        {
+            case 0:
+                return GameObject.Find("PlayerOneFollow")
+                    .GetComponent<FollowObject>();
+
+            case 1:
+                return GameObject.Find("PlayerTwoFollow")
+                    .GetComponent<FollowObject>();
+
+            case 2:
+                return GameObject.Find("PlayerThreeFollow")
+                    .GetComponent<FollowObject>();
+
+            case 3:
+                return GameObject.Find("PlayerFourFollow")
+                    .GetComponent<FollowObject>();
+
+            default:
+                Debug.LogError(
+                    $"MultiplayerManager: Invalid player index {playerIndex}."
+                );
+
+                return null;
+        }
     }
 }

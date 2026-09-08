@@ -197,7 +197,10 @@ public class GameManager : MonoBehaviour
         }
 
         // Clear any active buffs/debuffs/stuns before resetting positions
-        BuffsDebuffs.Instance.ClearAllEffects();
+        if (BuffsDebuffs.Instance != null)
+        {
+            BuffsDebuffs.Instance.ClearAllEffects();
+        }
 
         // Brute-force reset all player movement/ragdoll state
         foreach (GameObject player in new[] {

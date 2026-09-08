@@ -3252,8 +3252,8 @@ MonoBehaviour:
   m_Navigation:
     m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 1183188988}
-    m_SelectOnDown: {fileID: 0}
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 1183188988}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
@@ -4597,7 +4597,7 @@ MonoBehaviour:
   m_text: How many players?
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f51c00cfc017ae948bac8106ce1640a7, type: 2}
-  m_sharedMaterial: {fileID: -1081790109219817819, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
+  m_sharedMaterial: {fileID: -1081790109219817819, guid: f51c00cfc017ae948bac8106ce1640a7, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
