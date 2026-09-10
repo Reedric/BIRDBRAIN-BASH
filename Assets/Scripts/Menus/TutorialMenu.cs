@@ -14,9 +14,18 @@ public class TutorialMenu : MonoBehaviour
     public VideoPlayer videoPlayer; // Video player for the tutorial stuff
     public VideoClip[] videoClips; // Video clips to play for the tutorial
 
-    [Header("Game Scenes")]
-    [Tooltip("Scenes to choose from when the tutorial is finished. Each scene must be included in Build Settings.")]
-    [SerializeField] private List<string> gameSceneNames = new() { "Game_Beach", "Game_Forest", "Game_Iceberg" };
+    [Header("Map Scenes")]
+    [Tooltip("Scene to load for the Beach map. Tied to GameSettings.BeachEnabled.")]
+    [SerializeField] private string beachSceneName = "Game_Beach";
+
+    [Tooltip("Scene to load for the Park map. Tied to GameSettings.ParkEnabled.")]
+    [SerializeField] private string parkSceneName = "Game_Forest";
+
+    [Tooltip("Scene to load for the Iceberg map. Tied to GameSettings.IcebergEnabled.")]
+    [SerializeField] private string icebergSceneName = "Game_Iceberg";
+
+    [Tooltip("Scene to load for the Volcano map. Tied to GameSettings.VolcanoEnabled.")]
+    [SerializeField] private string volcanoSceneName = "Game_Volcano";
 
     private const string fallbackGameSceneName = "Game_Beach";
 
@@ -181,17 +190,15 @@ public class TutorialMenu : MonoBehaviour
     void StartGame()
     {
         // LET'S BASH SOME BIRDBRAINS!!!!
-        List<string> playableScenes = new();
-        foreach (string sceneName in gameSceneNames)
-        {
-            if (string.IsNullOrWhiteSpace(sceneName)) continue;
 
-            string trimmedSceneName = sceneName.Trim();
-            if (Application.CanStreamedLevelBeLoaded(trimmedSceneName))
-                playableScenes.Add(trimmedSceneName);
-            else
-                Debug.LogWarning($"Game scene '{trimmedSceneName}' is not included in Build Settings and will be skipped.");
-        }
+        // Only maps currently enabled in the Match Settings menu are eligible.
+        GameSettings gs = GameSettings.EnsureInstance();
+
+        List<string> playableScenes = new();
+        AddSceneIfEnabled(playableScenes, gs.BeachEnabled, beachSceneName);
+        AddSceneIfEnabled(playableScenes, gs.ParkEnabled, parkSceneName);
+        AddSceneIfEnabled(playableScenes, gs.IcebergEnabled, icebergSceneName);
+        AddSceneIfEnabled(playableScenes, gs.VolcanoEnabled, volcanoSceneName);
 
         if (playableScenes.Count == 0 && Application.CanStreamedLevelBeLoaded(fallbackGameSceneName))
             playableScenes.Add(fallbackGameSceneName);
@@ -203,5 +210,19 @@ public class TutorialMenu : MonoBehaviour
         }
 
         SceneManager.LoadScene(playableScenes[Random.Range(0, playableScenes.Count)]);
+    }
+
+    // Adds sceneName to the pool only if its map is enabled in GameSettings
+    // AND the scene is actually included in Build Settings.
+    private void AddSceneIfEnabled(List<string> playableScenes, bool mapEnabled, string sceneName)
+    {
+        if (!mapEnabled) return;
+        if (string.IsNullOrWhiteSpace(sceneName)) return;
+
+        string trimmedSceneName = sceneName.Trim();
+        if (Application.CanStreamedLevelBeLoaded(trimmedSceneName))
+            playableScenes.Add(trimmedSceneName);
+        else
+            Debug.LogWarning($"Game scene '{trimmedSceneName}' is not included in Build Settings and will be skipped.");
     }
 }

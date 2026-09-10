@@ -87,6 +87,10 @@ public class HUDManager : MonoBehaviour
         public GameObject cardRoot;
         public TMP_Text playerNameText;
         public RawImage playerIcon;
+
+        [Header("Team Background")]
+        public RawImage teamBackground;
+
         public AbilityIconUI offensiveAbility;
         public AbilityIconUI defensiveAbility;
         public RawImage offensiveArmedIcon;
@@ -97,6 +101,10 @@ public class HUDManager : MonoBehaviour
     public PlayerCardUI player2Card;
     public PlayerCardUI player3Card;
     public PlayerCardUI player4Card;
+
+    [Header("Team Card Sprites")]
+    [SerializeField] private Texture blueTeamCardTexture;
+    [SerializeField] private Texture pinkTeamCardTexture;
 
     // Bird Inspector Fields
 
@@ -252,6 +260,7 @@ public class HUDManager : MonoBehaviour
     {
         ResetAllCooldownIcons();
         PopulatePlayerCards();
+        UpdateTeamCardBackgrounds();
     }
 
     private void ResetAllCooldownIcons()
@@ -321,6 +330,35 @@ public class HUDManager : MonoBehaviour
         {
             card.offensiveArmedIcon.gameObject.SetActive(data.showOffensiveArmedIcon);
             card.offensiveArmedIcon.color = offensiveUnarmedColor;
+        }
+    }
+
+    private void UpdateTeamCardBackgrounds()
+    {
+        MultiplayerManager multiplayerManager =
+            FindFirstObjectByType<MultiplayerManager>();
+
+        if (multiplayerManager == null)
+        {
+            Debug.LogWarning(
+                "[HUDManager] Could not find MultiplayerManager when updating team card backgrounds."
+            );
+            return;
+        }
+
+        PlayerCardUI[] cards = GetOrderedCards();
+
+        for (int i = 0; i < cards.Length; i++)
+        {
+            if (cards[i] == null || cards[i].teamBackground == null)
+                continue;
+
+            bool onLeft = multiplayerManager.IsPlayerOnLeft(i);
+
+            cards[i].teamBackground.texture =
+                onLeft
+                    ? blueTeamCardTexture
+                    : pinkTeamCardTexture;
         }
     }
 

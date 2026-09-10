@@ -128,9 +128,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 850810505}
-  - component: {fileID: 850810504}
   - component: {fileID: 850810506}
-  - component: {fileID: 850810507}
   m_Layer: 5
   m_Name: SettingsScreen
   m_TagString: Untagged
@@ -138,25 +136,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &850810504
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 850810503}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_PanelSettings: {fileID: 11400000, guid: 7a893e8dd8cbb2741a364a37acc963f8, type: 2}
-  m_ParentUI: {fileID: 0}
-  sourceAsset: {fileID: 9197481963319205126, guid: 89f1eae45287a9e4d87d0e55e17c825b, type: 3}
-  m_SortingOrder: 0
-  m_WorldSpaceSizeMode: 1
-  m_WorldSpaceWidth: 1920
-  m_WorldSpaceHeight: 1080
 --- !u!4 &850810505
 Transform:
   m_ObjectHideFlags: 0
@@ -190,18 +169,6 @@ MonoBehaviour:
   MaxBestOfSets: 7
   FinalSetPoints: 1
   MaxFinalSetPoints: 25
---- !u!114 &850810507
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 850810503}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 20a4018ab203bc641870362aadeabe39, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1243774471
 GameObject:
   m_ObjectHideFlags: 0
