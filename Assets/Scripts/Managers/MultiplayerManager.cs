@@ -721,7 +721,7 @@ public class MultiplayerManager : MonoBehaviour
     /// <summary>
     /// Returns whether a player belongs on the left side of the court.
     /// </summary>
-    private bool IsPlayerOnLeft(int playerIndex)
+    public bool IsPlayerOnLeft(int playerIndex)
     {
         int spawnSlot = GetSpawnSlot(playerIndex);
 

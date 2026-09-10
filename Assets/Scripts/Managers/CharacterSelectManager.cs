@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
+using UnityEngine.InputSystem.UI;
 
 // This script is used to manage the character select screen.
 // It will handle the character selection and transition to the next scene when the players are ready.
@@ -157,6 +158,9 @@ public class CharacterSelectManager : MonoBehaviour
     // Name of the main menu scene (update as needed)
     private const string mainMenuSceneName = "MainMenu";
 
+    // Unity's built-in UI input module — disabled below, see Awake().
+    private InputSystemUIInputModule uiInputModule;
+
     // Tracks important input info for each player
     private class PlayerInputState
     {
@@ -186,6 +190,10 @@ public class CharacterSelectManager : MonoBehaviour
             return;
         }
         instance = this;
+
+        uiInputModule = FindObjectOfType<InputSystemUIInputModule>();
+        if (uiInputModule != null)
+            uiInputModule.enabled = false;
 
         if (matchSettings == null && mainCanvas != null)
             matchSettings = mainCanvas.GetComponentInChildren<MatchSettingsMenu>(true);
@@ -267,6 +275,9 @@ public class CharacterSelectManager : MonoBehaviour
     {
         // Always unsubscribe to avoid stale callbacks after scene unload
         InputSystem.onDeviceChange -= OnDeviceChange;
+
+        if (uiInputModule != null)
+            uiInputModule.enabled = true;
     }
 
     private void Update()
@@ -716,6 +727,20 @@ public class CharacterSelectManager : MonoBehaviour
             }
         }
 
+        // The toggle button that opens/closes the overlay usually lives outside the
+        // overlay's own subtree, so add it back in as a snap target while open.
+        if (matchSettings != null && matchSettings.IsMenuOpen &&
+            matchSettings.MatchSettingsButtonRef != null)
+        {
+            Button toggleButton = matchSettings.MatchSettingsButtonRef;
+            RectTransform toggleRect = GetCursorTargetRect(toggleButton);
+            if (toggleRect != null && !uiTargets.Contains(toggleRect))
+            {
+                uiTargets.Add(toggleRect);
+                uiSelectables.Add(toggleButton);
+            }
+        }
+
         // Include BirdSelectButtons if not on overlay
         if (matchSettings == null || !matchSettings.IsMenuOpen)
         {
@@ -982,19 +1007,8 @@ public class CharacterSelectManager : MonoBehaviour
         // Use EventSystem submit as a final fallback for interactable Selectables.
         if (EventSystem.current != null && selectable.IsInteractable())
         {
-            bool beforeToggle = (selectable is Toggle preToggle) && preToggle.isOn;
-
             BaseEventData eventData = new BaseEventData(EventSystem.current);
             ExecuteEvents.Execute(selectable.gameObject, eventData, ExecuteEvents.submitHandler);
-
-            if (selectable is Toggle postToggle)
-            {
-                Debug.Log(
-                    $"[MatchSettings Diag] Toggle '{postToggle.gameObject.name}' isOn: " +
-                    $"{beforeToggle} -> {postToggle.isOn}"
-                );
-            }
-
             return true;
         }
 

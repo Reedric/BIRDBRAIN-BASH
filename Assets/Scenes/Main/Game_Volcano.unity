@@ -10136,6 +10136,7 @@ MonoBehaviour:
     cardRoot: {fileID: 1129186869}
     playerNameText: {fileID: 888413964}
     playerIcon: {fileID: 2105560393}
+    teamBackground: {fileID: 1129186871}
     offensiveAbility:
       baseIcon: {fileID: 1612805624}
       cooldownOverlay: {fileID: 1492582396}
@@ -10149,6 +10150,7 @@ MonoBehaviour:
     cardRoot: {fileID: 794182568}
     playerNameText: {fileID: 1384649925}
     playerIcon: {fileID: 1425110326}
+    teamBackground: {fileID: 794182570}
     offensiveAbility:
       baseIcon: {fileID: 1152508826}
       cooldownOverlay: {fileID: 233408027}
@@ -10162,6 +10164,7 @@ MonoBehaviour:
     cardRoot: {fileID: 176478166}
     playerNameText: {fileID: 2021777494}
     playerIcon: {fileID: 482765875}
+    teamBackground: {fileID: 176478168}
     offensiveAbility:
       baseIcon: {fileID: 1486549515}
       cooldownOverlay: {fileID: 2015201823}
@@ -10175,6 +10178,7 @@ MonoBehaviour:
     cardRoot: {fileID: 803275716}
     playerNameText: {fileID: 1696361583}
     playerIcon: {fileID: 1069204683}
+    teamBackground: {fileID: 803275718}
     offensiveAbility:
       baseIcon: {fileID: 924741817}
       cooldownOverlay: {fileID: 550033436}
@@ -10184,6 +10188,8 @@ MonoBehaviour:
       cooldownOverlay: {fileID: 329118592}
       cooldownText: {fileID: 951904660}
     offensiveArmedIcon: {fileID: 177275802}
+  blueTeamCardTexture: {fileID: 2800000, guid: 2948ce8b999b1524fa24a1ce253837c0, type: 3}
+  pinkTeamCardTexture: {fileID: 2800000, guid: a6369dd601da6a94c94bdb69b90711ff, type: 3}
   penguinDisplayName: Penguin
   penguinPlayerIcon: {fileID: 2800000, guid: 2610f189495dcff4fac6358f7a888ebd, type: 3}
   penguinOffensiveIcon: {fileID: 2800000, guid: 3665feb3291b43b4cbd1c976dba0cd7c, type: 3}

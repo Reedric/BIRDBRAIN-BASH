@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 
 /// <summary>
 /// Match Settings overlay for the Character Select screen.
@@ -142,6 +143,8 @@ public class MatchSettingsMenu : MonoBehaviour
 
     private bool menuOpen = false;
 
+    private InputSystemUIInputModule uiInputModule;
+
     // ============================================================
     // BOT DIFFICULTY
     // ============================================================
@@ -183,6 +186,9 @@ public class MatchSettingsMenu : MonoBehaviour
     public bool IsMenuOpen =>
         menuOpen;
 
+    public Button MatchSettingsButtonRef =>
+        matchSettingsButton;
+
     // ============================================================
     // UNITY
     // ============================================================
@@ -191,6 +197,10 @@ public class MatchSettingsMenu : MonoBehaviour
     {
         // Make sure a persistent GameSettings object exists before we read from it.
         gameSettings = GameSettings.EnsureInstance();
+
+        uiInputModule = FindObjectOfType<InputSystemUIInputModule>();
+        if (uiInputModule != null)
+            uiInputModule.enabled = false;
 
         EnsureRuntimeUI();
         InitializeDefaults();
@@ -394,11 +404,6 @@ public class MatchSettingsMenu : MonoBehaviour
         {
             beachToggle.onValueChanged.AddListener(
                 value => ValidateMapSelection(beachToggle, value)
-            );
-
-            // TEMP DIAGNOSTIC — remove once this is resolved.
-            beachToggle.onValueChanged.AddListener(
-                value => Debug.Log($"[MatchSettings Diag] onValueChanged BeachToggle -> {value} @ frame {Time.frameCount}")
             );
         }
 

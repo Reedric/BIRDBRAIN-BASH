@@ -13,6 +13,16 @@ public class TeamArrangementToggle : MonoBehaviour
     [SerializeField] private Texture p1p3VsP2p4Texture;
     [SerializeField] private Texture p1p4VsP2p3Texture;
 
+    [Header("Player Backgrounds")]
+    [SerializeField] private RawImage player1Background;
+    [SerializeField] private RawImage player2Background;
+    [SerializeField] private RawImage player3Background;
+    [SerializeField] private RawImage player4Background;
+
+    [Header("Team Background Textures")]
+    [SerializeField] private Texture blueTeamTexture;
+    [SerializeField] private Texture pinkTeamTexture;
+
     private GameSettings gameSettings;
 
     private void Awake()
@@ -88,20 +98,46 @@ public class TeamArrangementToggle : MonoBehaviour
         // CYCLE ARRANGEMENT
         // --------------------------------------------------------
 
-        int currentState =
-            (int)gameSettings.CurrentTeamArrangement;
+        // Do NOT rely on the enum's integer order.
+        // Explicitly cycle through the three desired arrangements.
 
-        currentState = (currentState + 1) % 3;
+        switch (gameSettings.CurrentTeamArrangement)
+        {
+            case GameSettings.TeamArrangement.P1P2_vs_P3P4:
 
-        gameSettings.CurrentTeamArrangement =
-            (GameSettings.TeamArrangement)currentState;
+                gameSettings.CurrentTeamArrangement =
+                    GameSettings.TeamArrangement.P1P3_vs_P2P4;
+
+                break;
+
+            case GameSettings.TeamArrangement.P1P3_vs_P2P4:
+
+                gameSettings.CurrentTeamArrangement =
+                    GameSettings.TeamArrangement.P1P4_vs_P2P3;
+
+                break;
+
+            case GameSettings.TeamArrangement.P1P4_vs_P2P3:
+
+                gameSettings.CurrentTeamArrangement =
+                    GameSettings.TeamArrangement.P1P2_vs_P3P4;
+
+                break;
+
+            default:
+
+                gameSettings.CurrentTeamArrangement =
+                    GameSettings.TeamArrangement.P1P2_vs_P3P4;
+
+                break;
+        }
 
         Debug.Log(
             "Team arrangement changed to: " +
             gameSettings.CurrentTeamArrangement
         );
 
-        // Update the button image immediately.
+        // Update all UI immediately.
         UpdateUI();
     }
 
@@ -114,33 +150,125 @@ public class TeamArrangementToggle : MonoBehaviour
         if (gameSettings == null)
             return;
 
-        if (buttonImage == null)
-            return;
+        // --------------------------------------------------------
+        // UPDATE ARRANGEMENT PREVIEW
+        // --------------------------------------------------------
+
+        if (buttonImage != null)
+        {
+            switch (gameSettings.CurrentTeamArrangement)
+            {
+                case GameSettings.TeamArrangement.P1P2_vs_P3P4:
+
+                    buttonImage.texture = p1p2VsP3p4Texture;
+
+                    break;
+
+                case GameSettings.TeamArrangement.P1P3_vs_P2P4:
+
+                    buttonImage.texture = p1p3VsP2p4Texture;
+
+                    break;
+
+                case GameSettings.TeamArrangement.P1P4_vs_P2P3:
+
+                    buttonImage.texture = p1p4VsP2p3Texture;
+
+                    break;
+
+                default:
+
+                    Debug.LogWarning(
+                        "TeamArrangementToggle: Unknown team arrangement."
+                    );
+
+                    break;
+            }
+        }
+
+        // --------------------------------------------------------
+        // UPDATE PLAYER TEAM BACKGROUNDS
+        // --------------------------------------------------------
 
         switch (gameSettings.CurrentTeamArrangement)
         {
             case GameSettings.TeamArrangement.P1P2_vs_P3P4:
 
-                buttonImage.texture = p1p2VsP3p4Texture;
+                // Blue: P1, P2
+                // Pink: P3, P4
+
+                SetPlayerBackground(
+                    player1Background,
+                    blueTeamTexture
+                );
+
+                SetPlayerBackground(
+                    player2Background,
+                    blueTeamTexture
+                );
+
+                SetPlayerBackground(
+                    player3Background,
+                    pinkTeamTexture
+                );
+
+                SetPlayerBackground(
+                    player4Background,
+                    pinkTeamTexture
+                );
 
                 break;
 
             case GameSettings.TeamArrangement.P1P3_vs_P2P4:
 
-                buttonImage.texture = p1p3VsP2p4Texture;
+                // Blue: P1, P3
+                // Pink: P2, P4
+
+                SetPlayerBackground(
+                    player1Background,
+                    blueTeamTexture
+                );
+
+                SetPlayerBackground(
+                    player2Background,
+                    pinkTeamTexture
+                );
+
+                SetPlayerBackground(
+                    player3Background,
+                    blueTeamTexture
+                );
+
+                SetPlayerBackground(
+                    player4Background,
+                    pinkTeamTexture
+                );
 
                 break;
 
             case GameSettings.TeamArrangement.P1P4_vs_P2P3:
 
-                buttonImage.texture = p1p4VsP2p3Texture;
+                // Blue: P1, P4
+                // Pink: P2, P3
 
-                break;
+                SetPlayerBackground(
+                    player1Background,
+                    blueTeamTexture
+                );
 
-            default:
+                SetPlayerBackground(
+                    player2Background,
+                    pinkTeamTexture
+                );
 
-                Debug.LogWarning(
-                    "TeamArrangementToggle: Unknown team arrangement."
+                SetPlayerBackground(
+                    player3Background,
+                    pinkTeamTexture
+                );
+
+                SetPlayerBackground(
+                    player4Background,
+                    blueTeamTexture
                 );
 
                 break;
@@ -148,11 +276,26 @@ public class TeamArrangementToggle : MonoBehaviour
     }
 
     // ============================================================
+    // PLAYER BACKGROUND
+    // ============================================================
+
+    private void SetPlayerBackground(
+        RawImage background,
+        Texture texture
+    )
+    {
+        if (background == null)
+            return;
+
+        background.texture = texture;
+    }
+
+    // ============================================================
     // REFRESH
     // ============================================================
 
     /// <summary>
-    /// Refreshes the displayed texture from the current
+    /// Refreshes the displayed textures from the current
     /// GameSettings value.
     ///
     /// Useful if the Match Settings menu is opened again after
