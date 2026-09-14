@@ -244,6 +244,9 @@ MonoBehaviour:
   grounded: 0
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
+  enforceNetBoundary: 0
+  netXPosition: 0
+  netBuffer: 0.05
 --- !u!54 &8058120099648961749
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -291,9 +294,9 @@ CapsuleCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.77
-  m_Height: 2.06
+  m_Height: 2.33
   m_Direction: 1
-  m_Center: {x: 0, y: 1.16, z: 0.24}
+  m_Center: {x: 0, y: 1.04, z: 0.24}
 --- !u!95 &9141691455182430379
 Animator:
   serializedVersion: 7

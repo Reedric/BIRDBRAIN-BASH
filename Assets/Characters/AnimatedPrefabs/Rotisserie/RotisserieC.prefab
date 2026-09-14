@@ -249,6 +249,9 @@ MonoBehaviour:
   grounded: 0
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
+  enforceNetBoundary: 0
+  netXPosition: 0
+  netBuffer: 0.05
 --- !u!136 &2896450199911570451
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -269,9 +272,9 @@ CapsuleCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 1.18
-  m_Height: 3.14
+  m_Height: 3.65
   m_Direction: 1
-  m_Center: {x: 0, y: 1.7, z: 0.09}
+  m_Center: {x: 0, y: 1.64, z: 0.09}
 --- !u!54 &2275933449730924861
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -288,10 +288,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 6.1
-  m_Height: 4.52
+  m_Radius: 5.48
+  m_Height: 17.94
   m_Direction: 2
-  m_Center: {x: -0, y: 7.58, z: -1.06}
+  m_Center: {x: -0, y: 5.02, z: -0.45}
 --- !u!114 &5871928959037382136
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -339,7 +339,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 2823322300
+  GlobalObjectIdHash: 3275063742
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -375,6 +375,9 @@ MonoBehaviour:
   grounded: 0
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
+  enforceNetBoundary: 0
+  netXPosition: 0
+  netBuffer: 0.05
 --- !u!114 &2961231514982056500
 MonoBehaviour:
   m_ObjectHideFlags: 0
