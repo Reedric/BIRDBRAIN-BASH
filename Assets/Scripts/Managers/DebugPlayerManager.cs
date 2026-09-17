@@ -11,8 +11,8 @@ public class DebugPlayerManager : MonoBehaviour
     [Tooltip("Assign up to 4 characters in the Inspector. Each must already have a PlayerInput component.")]
     public Transform[] characters = new Transform[4];
 
-    // Controller deviceId -> character index
-    private Dictionary<int, int> controllerAssignments = new Dictionary<int, int>();
+    // Controller deviceId -> character indices
+    private Dictionary<int, List<int>> controllerAssignments = new Dictionary<int, List<int>>();
 
     private void OnEnable()
     {
@@ -26,9 +26,11 @@ public class DebugPlayerManager : MonoBehaviour
 
     private void Start()
     {
-        foreach (Gamepad controller in Gamepad.all)
+        int connectedControllerCount = Gamepad.all.Count;
+
+        for (int controllerIndex = 0; controllerIndex < connectedControllerCount; controllerIndex++)
         {
-            AssignController(controller);
+            AssignController(Gamepad.all[controllerIndex], controllerIndex, connectedControllerCount);
         }
     }
 
@@ -37,23 +39,53 @@ public class DebugPlayerManager : MonoBehaviour
         if (controller == null || controllerAssignments.ContainsKey(controller.deviceId))
             return;
 
-        // Find the first unused character slot
-        for (int i = 0; i < characters.Length && i < 4; i++)
+        int controllerIndex = -1;
+        for (int i = 0; i < Gamepad.all.Count; i++)
         {
-            if (controllerAssignments.Values.Contains(i))
+            if (Gamepad.all[i] == controller)
+            {
+                controllerIndex = i;
+                break;
+            }
+        }
+
+        AssignController(controller, controllerIndex, Gamepad.all.Count);
+    }
+
+    private void AssignController(Gamepad controller, int controllerIndex, int connectedControllerCount)
+    {
+        if (controller == null || controllerAssignments.ContainsKey(controller.deviceId))
+            return;
+
+        List<int> targetCharacterIndices = new List<int>();
+
+        if (connectedControllerCount == 2)
+        {
+            int firstCharacterIndex = controllerIndex * 2;
+            targetCharacterIndices.Add(firstCharacterIndex);
+            targetCharacterIndices.Add(firstCharacterIndex + 1);
+        }
+        else if (controllerIndex >= 0 && controllerIndex < 4)
+        {
+            targetCharacterIndices.Add(controllerIndex);
+        }
+
+        foreach (int characterIndex in targetCharacterIndices)
+        {
+            if (characterIndex >= characters.Length || characterIndex >= 4)
                 continue;
 
-            if (characters[i] == null)
+            if (characters[characterIndex] == null)
             {
-                Debug.LogWarning($"DebugPlayerManager: Character {i + 1} is not assigned.");
+                Debug.LogWarning($"DebugPlayerManager: Character {characterIndex + 1} is not assigned.");
                 continue;
             }
 
-            PlayerInput playerInput = characters[i].GetComponent<PlayerInput>();
+            PlayerInput playerInput = characters[characterIndex].GetComponent<PlayerInput>();
 
             if (playerInput == null)
             {
-                Debug.LogWarning($"DebugPlayerManager: Character {i + 1} has no PlayerInput component.");
+                Debug.LogWarning($"DebugPlayerManager: Character {characterIndex + 1} has no PlayerInput component.");
                 continue;
             }
 
@@ -67,17 +99,21 @@ public class DebugPlayerManager : MonoBehaviour
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"DebugPlayerManager: Failed to pair {controller.displayName} to Character {i + 1}: {e}");
+                Debug.LogError($"DebugPlayerManager: Failed to pair {controller.displayName} to Character {characterIndex + 1}: {e}");
                 continue;
             }
 
-            controllerAssignments.Add(controller.deviceId, i);
-
-            Debug.Log($"DebugPlayerManager: {controller.displayName} assigned to Character {i + 1}.");
-            return;
+            Debug.Log($"DebugPlayerManager: {controller.displayName} assigned to Character {characterIndex + 1}.");
         }
 
-        Debug.LogWarning($"DebugPlayerManager: No available character slot for {controller.displayName}.");
+        if (targetCharacterIndices.Count > 0)
+        {
+            controllerAssignments.Add(controller.deviceId, targetCharacterIndices);
+        }
+        else
+        {
+            Debug.LogWarning($"DebugPlayerManager: No available character slot for {controller.displayName}.");
+        }
     }
 
     private void OnDeviceChange(InputDevice device, InputDeviceChange change)
@@ -94,9 +130,10 @@ public class DebugPlayerManager : MonoBehaviour
                 break;
 
             case InputDeviceChange.Disconnected:
-                if (controllerAssignments.TryGetValue(controller.deviceId, out int characterIndex))
+                if (controllerAssignments.TryGetValue(controller.deviceId, out List<int> characterIndices))
                 {
-                    Debug.Log($"DebugPlayerManager: Controller disconnected: {controller.displayName} (Character {characterIndex + 1})");
+                    string assignedCharacters = string.Join(", ", characterIndices.Select(index => (index + 1).ToString()));
+                    Debug.Log($"DebugPlayerManager: Controller disconnected: {controller.displayName} (Characters {assignedCharacters})");
                     controllerAssignments.Remove(controller.deviceId);
                 }
                 break;
