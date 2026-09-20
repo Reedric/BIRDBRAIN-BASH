@@ -11,8 +11,8 @@ public class MainMenu : MonoBehaviour
     [Tooltip("The GameObject that holds the main menu buttons (Play, Quit, Credits, etc.)")]
     [SerializeField] private GameObject mainMenuPanel;
 
-    [Tooltip("The GameObject that holds the NumPlayers screen.")]
-    [SerializeField] private GameObject numPlayersPanel;
+    [Tooltip("The GameObject that holds the online or local buttons.")]
+    [SerializeField] private GameObject localOrOnlinePanel;
 
     [Header("Credits")]
     [SerializeField] private GameObject creditsCanvas;
@@ -35,10 +35,10 @@ public class MainMenu : MonoBehaviour
     public void PlayButton()
     {
         if (mainMenuPanel  != null) mainMenuPanel.SetActive(false);
-        if (numPlayersPanel != null)
+        if (localOrOnlinePanel != null)
         {
-            numPlayersPanel.SetActive(true);
-            StartCoroutine(SelectFirstButtonNextFrame(numPlayersPanel)); // prevent bleed-through
+            localOrOnlinePanel.SetActive(true);
+            StartCoroutine(SelectFirstButtonNextFrame(localOrOnlinePanel)); // prevent bleed-through
         }
     }
 

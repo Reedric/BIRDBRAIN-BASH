@@ -34,8 +34,12 @@ public class MainMenuCursor : MonoBehaviour
     [Header("Panels")]
     [Tooltip("Assign the main menu panel here so the cursor only targets main menu buttons.")]
     [SerializeField] private GameObject mainMenuPanel;
+    [Tooltip("Assign the LocalorOnline panel here so the cursor only targets local online buttons.")]
+    [SerializeField] private GameObject localOnlinePanel;
     [Tooltip("Assign the NumPlayers panel here so the cursor knows when to use B to proceed.")]
     [SerializeField] private GameObject numPlayersPanel;
+    [Tooltip("Assign the Online panel here so the cursor only targets host join buttons.")]
+    [SerializeField] private GameObject hostJoinPanel;
 
     private Transform playerCursor;
     private Coroutine cursorAnimCoroutine;
@@ -46,7 +50,7 @@ public class MainMenuCursor : MonoBehaviour
     private List<RectTransform> uiTargets = new();
     private List<Selectable> uiSelectables = new();
     private int currentTargetIndex = -1;
-    private bool lastNumPlayersActive;
+    private MenuType lastMenuActive;
     private float lastMoveTime;
     private float panelSwitchedTime;
 
@@ -61,6 +65,14 @@ public class MainMenuCursor : MonoBehaviour
 
     private const string playSceneName = "CharSelect";
 
+    private enum MenuType
+    {
+        Main,
+        LocalOnline,
+        NumPlayers,
+        HostJoin
+    }
+
     private void Start()
     {
         // 1. HIDE THE SYSTEM MOUSE
@@ -74,9 +86,9 @@ public class MainMenuCursor : MonoBehaviour
         cursorPosition = new Vector2(Screen.width / 2f, Screen.height / 2f);
         desiredCursorPosition = cursorPosition;
 
-        bool numPlayersActive = numPlayersPanel != null && numPlayersPanel.activeInHierarchy;
-        CollectUITargets(numPlayersActive);
-        lastNumPlayersActive = numPlayersActive;
+        MenuType activeMenu = GetActiveMenuType();
+        CollectUITargets(activeMenu);
+        lastMenuActive = MenuType.Main;
         currentTargetIndex = FindClosestSelectableIndex(desiredCursorPosition);
         if (currentTargetIndex >= 0)
             desiredCursorPosition = GetPreferredScreenPosition(uiTargets[currentTargetIndex]);
@@ -94,23 +106,23 @@ public class MainMenuCursor : MonoBehaviour
         if (Gamepad.all.Count == 0) return;
         Gamepad pad = Gamepad.all[0];
 
-        bool numPlayersActive = numPlayersPanel != null && numPlayersPanel.activeInHierarchy;
+        MenuType activeMenu = GetActiveMenuType();
 
         // Refresh UI targets immediately when the active panel changes.
-        bool panelChanged = numPlayersActive != lastNumPlayersActive;
-        if (ShouldRefreshUITargets(numPlayersActive))
+        bool panelChanged = activeMenu != lastMenuActive;
+        if (ShouldRefreshUITargets(activeMenu))
         {
-            CollectUITargets(numPlayersActive);
+            CollectUITargets(activeMenu);
             currentTargetIndex = FindClosestSelectableIndex(cursorPosition);
             if (currentTargetIndex >= 0)
                 desiredCursorPosition = GetPreferredScreenPosition(uiTargets[currentTargetIndex]);
-            lastNumPlayersActive = numPlayersActive;
+            lastMenuActive = activeMenu;
             if (panelChanged)
                 panelSwitchedTime = Time.time;
         }
 
         // On the NumPlayers panel, B confirms and proceeds to CharSelect.
-        if (numPlayersActive && pad.bButton.wasPressedThisFrame)
+        if (lastMenuActive == MenuType.NumPlayers && pad.bButton.wasPressedThisFrame)
         {
             AudioManager.PlayButtonSelectSound();
             NavigateToPlay();
@@ -309,12 +321,12 @@ public class MainMenuCursor : MonoBehaviour
         SceneManager.LoadScene(playSceneName);
     }
 
-    private bool ShouldRefreshUITargets(bool numPlayersActive)
+    private bool ShouldRefreshUITargets(MenuType activeMenu)
     {
-        if (numPlayersActive != lastNumPlayersActive)
+        if (activeMenu != lastMenuActive)
             return true;
 
-        List<Selectable> selectables = GetActivePanelSelectables(numPlayersActive);
+        List<Selectable> selectables = GetActivePanelSelectables(activeMenu);
         if (selectables == null)
             return false;
 
@@ -330,12 +342,12 @@ public class MainMenuCursor : MonoBehaviour
         return false;
     }
 
-    private void CollectUITargets(bool numPlayersActive)
+    private void CollectUITargets(MenuType activeMenu)
     {
         uiTargets.Clear();
         uiSelectables.Clear();
 
-        List<Selectable> selectables = GetActivePanelSelectables(numPlayersActive);
+        List<Selectable> selectables = GetActivePanelSelectables(activeMenu);
         if (selectables == null) return;
 
         foreach (var selectable in selectables)
@@ -347,17 +359,27 @@ public class MainMenuCursor : MonoBehaviour
         }
     }
 
-    private List<Selectable> GetActivePanelSelectables(bool numPlayersActive)
+    private List<Selectable> GetActivePanelSelectables(MenuType activeMenu)
     {
-        if (numPlayersActive)
+        if (activeMenu == MenuType.NumPlayers)
         {
             if (numPlayersPanel == null) return null;
             return new List<Selectable>(numPlayersPanel.GetComponentsInChildren<Selectable>(true));
         }
 
-        if (mainMenuPanel != null)
+        if (activeMenu == MenuType.Main && mainMenuPanel != null)
         {
             return new List<Selectable>(mainMenuPanel.GetComponentsInChildren<Selectable>(true));
+        }
+
+        if (activeMenu == MenuType.LocalOnline && localOnlinePanel != null)
+        {
+            return new List<Selectable>(localOnlinePanel.GetComponentsInChildren<Selectable>(true));
+        }
+
+        if (activeMenu == MenuType.HostJoin && hostJoinPanel != null)
+        {
+            return new List<Selectable>(hostJoinPanel.GetComponentsInChildren<Selectable>(true));
         }
 
         Canvas canvas = GetComponentInParent<Canvas>();
@@ -454,5 +476,18 @@ public class MainMenuCursor : MonoBehaviour
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Asserts which menu in the hierarcy is active.
+    /// </summary>
+    /// <returns>The type of menu that is active in the hierarchy.</returns>
+    private MenuType GetActiveMenuType()
+    {
+        if (mainMenuPanel != null && mainMenuPanel.activeInHierarchy) return MenuType.Main;
+        if (localOnlinePanel != null && localOnlinePanel.activeInHierarchy) return MenuType.LocalOnline;
+        if (numPlayersPanel != null && numPlayersPanel.activeInHierarchy) return MenuType.NumPlayers;
+        if (hostJoinPanel != null && hostJoinPanel.activeInHierarchy) return MenuType.HostJoin;
+        return MenuType.Main; // Hopefully this never hits as I cannot null this out, but we will see lol
     }
 }
