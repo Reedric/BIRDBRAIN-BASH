@@ -23,13 +23,14 @@ public class CharacterMovement : NetworkBehaviour
     private float originalMaxGroundSpeed = 1.0f; // Original max ground speed before buff
     private float originalMaxAirSpeed = 1.0f; // Original max air speed before buff
 
+    private PlayerInput playerInput; // Input of the player for local multiplayer functionality
     private Rigidbody rb; // Rigid body of the character
     public bool grounded = false; // If the character is touching the ground
 
     private bool canJump = true; // christofort: defaulted to false, ability scripts must set this to true
     private bool canMove = true; // christofort: defaulted to false, ability scripts must set this to true
     private ParticleSystem dustParticles; // Reference to particle system for ground dust
-    private PlayerInput playerInput; // Input for the player
+    private Vector2 movementInput; // Input from networked object
 
     [HideInInspector] public bool overrideRotation = false; // Allow other scripts to override rotation
     [HideInInspector] public Quaternion targetRotation; // Target rotation when overridden
@@ -52,9 +53,15 @@ public class CharacterMovement : NetworkBehaviour
     void Start()
     {
         // Get the Rigidbody of the character
-        playerInput = GetComponent<PlayerInput>();
         rb = GetComponent<Rigidbody>();
         dustParticles = GetComponent<ParticleSystem>();
+        if (GameManager.Instance.isLocal) playerInput = GetComponent<PlayerInput>();
+
+        // Error handling
+        if (GameManager.Instance.isLocal && playerInput == null)
+        {
+            Debug.LogError("Could not find player input on a local multiplayer instance for " + transform.name);
+        } 
 
         // grab animator if not assigned in inspector (mirrors AIBehavior logic)
         if (animator == null)
@@ -88,80 +95,11 @@ public class CharacterMovement : NetworkBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        // Check for player inputs for lateral movement
-        Vector2 inputDirection = playerInput.actions.FindAction("Move").ReadValue<Vector2>();
+        Move();
 
-        // Update the current direction and speed of the character based on player input
-        // christofort: added check for canMove to be true
-        if (!inputDirection.Equals(Vector2.zero) && canMove)
-        {
-            // Calculate new velocity, ensure it doesn't exceed max ground or air speed, then assign the velocity
-            Vector2 newVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.z) + inputDirection * Time.fixedDeltaTime * directionChangeWeight;
-
-            // If on the ground and new velocity exceeds max ground speed, cap the speed
-            if (grounded && newVelocity.magnitude > maxGroundSpeed)
-            {
-                newVelocity.Normalize();
-                newVelocity *= maxGroundSpeed;
-            }
-            // Else if in the air and new velocity exceeds max air speed, cap the speed
-            else if (!grounded && newVelocity.magnitude > maxAirSpeed)
-            {
-                newVelocity.Normalize();
-                newVelocity *= maxAirSpeed;
-            }
-
-            rb.linearVelocity = new Vector3(newVelocity.x, rb.linearVelocity.y, newVelocity.y);
-            
-            // Rotate to face movement direction (unless overridden by another script)
-            if (!overrideRotation && inputDirection.magnitude > 0.1f)
-            {
-                Vector3 movementDirection = new Vector3(inputDirection.x, 0, inputDirection.y);
-                Quaternion baseRotation = Quaternion.LookRotation(movementDirection);
-
-                if (rotationOffsetEuler != Vector3.zero)
-                {
-                    baseRotation *= Quaternion.Euler(rotationOffsetEuler);
-                }
-
-                targetRotation = baseRotation;
-            }
-        }
-
-        // Apply rotation (either from movement or override)
-        if (!overrideRotation ||
-            Vector3.Distance(transform.eulerAngles, targetRotation.eulerAngles) > 0.1f)
-        {
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
-        }
-
-        // update walking flag for animator
-        Rigidbody localRb = rb; // alias for clarity
-        isWalking = new Vector2(localRb.linearVelocity.x, localRb.linearVelocity.z).magnitude > 0.1f;
-        if (animator != null)
-        {
-            animator.SetBool("isWalking", isWalking);
-        }
-
-        // Check for player input for vertical movement
-        InputAction jump = playerInput.actions.FindAction("Jump");
-
-        // If character touching ground AND player presses jump button, character jumps
-        // christofort: addded a check for canJump to prevent jumping if ability script hasn't allowed for it
-        if (canJump && grounded && jump.IsPressed())
-        {
-            float jumpAmount = 5 + 0.3f * jumpForce;
-            // Assign Y velocity directly rather than += - prevents leftover fall velocity
-            // (which isn't always fully zeroed by the physics solver on landing) from
-            // stacking with the jump impulse and producing inconsistent jump heights
-            rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpAmount, rb.linearVelocity.z);
-            grounded = false;
-        }
-
-        // Make sure the character cannot cross the net.
-        // This runs even when normal movement is disabled,
-        // so abilities such as Hummingbird's dash are also contained.
-        EnforceNetBoundary();
+        // Check if local session and jump pressed this frame
+        if (GameManager.Instance.isLocal && playerInput.actions["Jump"].IsPressed())
+            Jump();
     }
 
     /// <summary>
@@ -301,5 +239,104 @@ public class CharacterMovement : NetworkBehaviour
         maxGroundSpeed = originalMaxGroundSpeed;
         maxAirSpeed = originalMaxAirSpeed;
         // jumpForce = originalJumpForce;
+    }
+
+    /// <summary>
+    /// Moves the player depending on the input from the networked object.
+    /// </summary>
+    public void Move()
+    {
+        if (!GameManager.Instance.isLocal && !IsServer)
+        {
+            Debug.Log($"[CLIENT] Move() called on Object {NetworkObjectId} - should NOT happen.");
+            return;
+        }
+
+        // Get the input for local if necessary
+        if (GameManager.Instance.isLocal) movementInput = playerInput.actions["Move"].ReadValue<Vector2>();
+
+        // Update the current direction and speed of the character based on player input
+        // christofort: added check for canMove to be true
+        if (!movementInput.Equals(Vector2.zero) && canMove)
+        {
+            // Calculate new velocity, ensure it doesn't exceed max ground or air speed, then assign the velocity
+            Vector2 newVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.z) + movementInput * Time.fixedDeltaTime * directionChangeWeight;
+
+            // If on the ground and new velocity exceeds max ground speed, cap the speed
+            if (grounded && newVelocity.magnitude > maxGroundSpeed)
+            {
+                newVelocity.Normalize();
+                newVelocity *= maxGroundSpeed;
+            }
+            // Else if in the air and new velocity exceeds max air speed, cap the speed
+            else if (!grounded && newVelocity.magnitude > maxAirSpeed)
+            {
+                newVelocity.Normalize();
+                newVelocity *= maxAirSpeed;
+            }
+
+            rb.linearVelocity = new Vector3(newVelocity.x, rb.linearVelocity.y, newVelocity.y);
+            
+            // Rotate to face movement direction (unless overridden by another script)
+            if (!overrideRotation && movementInput.magnitude > 0.1f)
+            {
+                Vector3 movementDirection = new Vector3(movementInput.x, 0, movementInput.y);
+                Quaternion baseRotation = Quaternion.LookRotation(movementDirection);
+
+                if (rotationOffsetEuler != Vector3.zero)
+                {
+                    baseRotation *= Quaternion.Euler(rotationOffsetEuler);
+                }
+
+                targetRotation = baseRotation;
+            }
+        }
+
+        // Apply rotation (either from movement or override)
+        if (!overrideRotation ||
+            Vector3.Distance(transform.eulerAngles, targetRotation.eulerAngles) > 0.1f)
+        {
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
+        }
+
+        // update walking flag for animator
+        Rigidbody localRb = rb; // alias for clarity
+        isWalking = new Vector2(localRb.linearVelocity.x, localRb.linearVelocity.z).magnitude > 0.1f;
+        if (animator != null)
+        {
+            animator.SetBool("isWalking", isWalking);
+        }
+
+        // Make sure the character cannot cross the net.
+        // This runs even when normal movement is disabled,
+        // so abilities such as Hummingbird's dash are also contained.
+        EnforceNetBoundary();
+
+        // Debug.Log($"[SERVER] Movement applied on Object {NetworkObjectId}: {transform.position}");
+    }
+
+    public void Jump()
+    {
+        // If character touching ground and not disabled from jumping, character jumps
+        // The actual check for pressing jump button is not handled in PlayerNetworkController
+        if (canJump && grounded)
+        {
+            float jumpAmount = 5 + 0.3f * jumpForce;
+            // Assign Y velocity directly rather than += - prevents leftover fall velocity
+            // (which isn't always fully zeroed by the physics solver on landing) from
+            // stacking with the jump impulse and producing inconsistent jump heights
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpAmount, rb.linearVelocity.z);
+            grounded = false;
+        }
+    }
+
+    /// <summary>
+    /// Setter for the input from the PlayerNetworkController component.
+    /// </summary>
+    /// <param name="input">2D input movement vector.</param>
+    public void SetInput(Vector2 input)
+    {
+        movementInput = input;
+        // Debug.Log($"Updated input for Player{NetworkObjectId}: {networkedInput}");
     }
 }

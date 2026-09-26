@@ -6,6 +6,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using UnityEngine.InputSystem.Users;
+using Unity.Netcode.Components;
+using Unity.Netcode;
 
 public class MultiplayerManager : MonoBehaviour
 {
@@ -384,6 +386,16 @@ public class MultiplayerManager : MonoBehaviour
     void MakePlayer(GameObject player, int playerIndex)
     {
         GameManager gameManager = GameManager.Instance;
+
+        // --------------------------------------------------------
+        // LOCAL OR ONLINE MULTIPLAYER COMPONENTS
+        // --------------------------------------------------------
+        if (GameManager.Instance.isLocal)
+        {
+            player.GetComponent<NetworkTransform>().enabled = false;
+            player.GetComponent<NetworkObject>().DontDestroyWithOwner = true;
+            player.GetComponent<PlayerNetworkController>().enabled = false;
+        }
 
         // --------------------------------------------------------
         // DETERMINE PHYSICAL SPAWN SLOT

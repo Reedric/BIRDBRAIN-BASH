@@ -1,11 +1,9 @@
 using System;
-using Unity.VisualScripting;
+using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.UI;
 
-public class BallInteract : MonoBehaviour
+public class BallInteract : NetworkBehaviour
 {
     [Header("Game Manager")]
     public bool onLeft; // Whether the player is on the left court
@@ -40,12 +38,15 @@ public class BallInteract : MonoBehaviour
     private float baseHeight = 0f; // How high off the ground the player is for bumping check
     private PlayerInput playerInput; // Input for this specific player
     private bool blockTouch = false; // If the player block touched the ball already
+    private bool defActionPressed = false; // Variable set from ServerRPC if the player pressed the defensive action button
+    private bool offActionPressed = false; // Variable set from ServerRPC if the player pressed the offensive action button
+    private bool blockPressed = false; // Variable set from ServerRPC if the player pressed the block button
+    private Vector2 interactionDirection = Vector2.zero; // Variable set from ServerRPC for the direction to set, spike, serve, or block the ball
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         serverMovement = GetComponent<CharacterMovement>(); // christofort: gets the character movement script
-        playerInput = GetComponent<PlayerInput>();
         baseSpikeSpeed = 10.0f;
         
         ballRb = BallManager.Instance?.gameObject?.GetComponent<Rigidbody>();
@@ -54,10 +55,13 @@ public class BallInteract : MonoBehaviour
             Debug.LogError("Rigidbody for the ball was not found in BallInteract!");
         }
 
-        if (playerInput == null)
+        if (GameManager.Instance.isLocal) playerInput = GetComponent<PlayerInput>();
+
+        // Error handling
+        if (GameManager.Instance.isLocal && playerInput == null)
         {
-            Debug.LogWarningFormat("BallInteract on {0} has no PlayerInput; skipping player input handling.", gameObject.name);
-        }
+            Debug.LogError("Could not find player input on a local multiplayer instance for " + transform.name);
+        } 
 
         // locate contact point child safely
         var cpTransform = transform.Find("ContactPoint");
@@ -120,12 +124,6 @@ public class BallInteract : MonoBehaviour
             ballRb.useGravity = false;
         }
 
-        if (playerInput == null)
-        {
-            // This BallInteract instance is not a player-controlled character; AIBehavior should handle the minion.
-            return;
-        }
-
         CheckState();
     }
 
@@ -135,53 +133,93 @@ public class BallInteract : MonoBehaviour
         // If the player can hit the ball
         if (CanHit())
         {
+            // Get the inputs based on local or online multiplayer
+            bool defPressed = GameManager.Instance.isLocal ? playerInput.actions["Defensive Action"].WasPressedThisFrame() : defActionPressed;
+            bool offPressed = GameManager.Instance.isLocal ? playerInput.actions["Offensive Action"].WasPressedThisFrame() : offActionPressed;
+            bool bloPressed = GameManager.Instance.isLocal ? playerInput.actions["Block"].WasPressedThisFrame() : blockPressed;
+
             // Check the game state
             switch (GameManager.Instance.gameState)
             {
                 // Ball has just been spiked or blocked
                 case GameManager.GameState.Spiked: case GameManager.GameState.Blocked:
                     // EJ: Since ball can't be blocked on the serve this check can't be related to "Served"
-                    // EJ: Moved "Served" to a check by itself and check to bump twice                
-                    if (!blockTouch && IsPlayerNearBall() && IsPlayerNearNet() && playerInput.actions.FindAction("Block").WasPressedThisFrame())
+                    // EJ: Moved "Served" to a check by itself and check to bump twice
+                    if (bloPressed)
                     {
-                        BlockBall();
-                    }
+                        // Consume input from server rpc
+                        if (!GameManager.Instance.isLocal) blockPressed = false;
+                        if (!blockTouch && IsPlayerNearBall() && IsPlayerNearNet())
+                        {
+                            BlockBall();
+                        }
+                    }                
                     
                     // If the player is close enough to the ball and is pressing the bump button, bump the ball
-                    else if (IsPlayerNearBall() && playerInput.actions.FindAction("Defensive Action").WasPressedThisFrame())
+                    else if (defPressed)
                     {
-                        BumpBall();
+                        // Consume input from server rpc
+                        if (!GameManager.Instance.isLocal) defActionPressed = false;
+
+                        if (IsPlayerNearBall())
+                        {
+                            BumpBall();
+                        }
                     }
                     break;
 
                 case GameManager.GameState.Served:
                     // If the player is close enough to the ball and is pressing the bump button, bump the ball
-                    if (IsPlayerNearBall() && playerInput.actions.FindAction("Defensive Action").WasPressedThisFrame())
+                    if (defPressed)
                     {
-                        BumpBall();
+                        // Consume input from server rpc
+                        if (!GameManager.Instance.isLocal) defActionPressed = false;
+
+                        if (IsPlayerNearBall())
+                        {
+                            BumpBall();
+                        }
                     }
                     break;
 
                 // Ball has just been bumped
                 case GameManager.GameState.Bumped:
                     // If the player is close enough to the ball and is pressing the set button, set the ball
-                    if (IsPlayerNearBall() && playerInput.actions.FindAction("Defensive Action").WasPressedThisFrame())
+                    if (defPressed)
                     {
-                        SetBall();
+                        // Consume input from server rpc
+                        if (!GameManager.Instance.isLocal) defActionPressed = false;
+
+                        if (IsPlayerNearBall())
+                        {
+                            SetBall();
+                        }
                     }
                     // Allow spiking directly after a bump (2-hit sequence: bump -> spike)
-                    else if (IsPlayerNearBall() && playerInput.actions.FindAction("Offensive Action").WasPressedThisFrame())
+                    else if (offPressed)
                     {
-                        SpikeBall();
+                        // Consume input from server rpc
+                        if (!GameManager.Instance.isLocal) offActionPressed = false;
+
+                        if (IsPlayerNearBall())
+                        {
+                            SpikeBall();
+                        }
                     }
                     break;
 
                 // Ball has just been set
                 case GameManager.GameState.Set:
                     // If the player is close enough to the ball and is pressing the spike button, spike the ball
-                    if (IsPlayerNearBall() && playerInput.actions.FindAction("Offensive Action").WasPressedThisFrame())
+                    if (offPressed)
                     {
-                        SpikeBall();
+                        // Consume input from server rpc
+                        if (!GameManager.Instance.isLocal) offActionPressed = false;
+
+                        if (IsPlayerNearBall())
+                        {
+                            SpikeBall();
+                        }
                     }
                     break;
 
@@ -210,9 +248,12 @@ public class BallInteract : MonoBehaviour
                     }
                     // If this player is the one serving and they press the serve button, serve the ball
                     // Only allow serve if countdown has finished showing "GO"
-                    if (GameManager.Instance.server == gameObject && playerInput.actions.FindAction("Offensive Action").WasPressedThisFrame())
+                    if (offPressed)
                     {
-                        if (GameManager.IsCountdownComplete())
+                        // Consume input from server rpc
+                        if (!GameManager.Instance.isLocal) offActionPressed = false;
+
+                        if (GameManager.Instance.server == gameObject && GameManager.IsCountdownComplete())
                         {
                             ServeBall();
                         }
@@ -222,16 +263,19 @@ public class BallInteract : MonoBehaviour
         }
 
         // Check if the player is trying to pause or resume the game
-        if (!PauseMenu.Instance.GameIsPaused && playerInput.actions.FindAction("Pause").WasPressedThisFrame())
+        if (GameManager.Instance.isLocal)
         {
-            PauseMenu.Instance.pausedPlayerID = playerID;
-            PauseMenu.Instance.inputModule.actionsAsset = playerInput.actions;
-            PauseMenu.Instance.Pause();
-        }
-        else if (PauseMenu.Instance.GameIsPaused && PauseMenu.Instance.pausedPlayerID == playerID
-            && playerInput.actions.FindAction("Pause").WasPressedThisFrame())
-        {
-            PauseMenu.Instance.Resume();
+            if (!PauseMenu.Instance.GameIsPaused && playerInput.actions.FindAction("Pause").WasPressedThisFrame())
+            {
+                PauseMenu.Instance.pausedPlayerID = playerID;
+                PauseMenu.Instance.inputModule.actionsAsset = playerInput.actions;
+                PauseMenu.Instance.Pause();
+            }
+            else if (PauseMenu.Instance.GameIsPaused && PauseMenu.Instance.pausedPlayerID == playerID
+                && playerInput.actions.FindAction("Pause").WasPressedThisFrame())
+            {
+                PauseMenu.Instance.Resume();
+            }
         }
     }
 
@@ -329,9 +373,8 @@ public class BallInteract : MonoBehaviour
         }
         blockTouch = false;
 
-        // Get the direction value
-        Vector2 dir = playerInput.actions.FindAction("Direction").ReadValue<Vector2>();
-        // Debug.LogFormat("ServeToLocation before checking direction: {0}", setToLocation);
+        // Get the direction vector
+        Vector2 dir = GameManager.Instance.isLocal ? playerInput.actions["Direction"].ReadValue<Vector2>() : interactionDirection;
 
         // If player wants to set towards top or bottom, update set to location
         if (dir.y < -0.64f)
@@ -391,8 +434,8 @@ public class BallInteract : MonoBehaviour
         }
         blockTouch = false;
 
-        // Get the direction value
-        Vector2 dir = playerInput.actions.FindAction("Direction").ReadValue<Vector2>();
+        // Get the direction vector
+        Vector2 dir = GameManager.Instance.isLocal ? playerInput.actions["Direction"].ReadValue<Vector2>() : interactionDirection;
 
         // If player wants to spike towards top or bottom, update set to location
         if (dir.y < -0.64f)
@@ -442,8 +485,8 @@ public class BallInteract : MonoBehaviour
         }
         blockTouch = false;
 
-        // Get the direction value
-        Vector2 dir = playerInput.actions.FindAction("Direction").ReadValue<Vector2>();
+        // Get the direction vector
+        Vector2 dir = GameManager.Instance.isLocal ? playerInput.actions["Direction"].ReadValue<Vector2>() : interactionDirection;
 
         // If player wants to set towards top or bottom, update set to location
         if (dir.y < -0.64f)
@@ -540,8 +583,8 @@ public class BallInteract : MonoBehaviour
 
             if (onLeft) blockToLocation *= -1;
 
-            // directional control
-            Vector2 dir = playerInput.actions.FindAction("Direction").ReadValue<Vector2>();
+            // Get the direction vector
+            Vector2 dir = GameManager.Instance.isLocal ? playerInput.actions["Direction"].ReadValue<Vector2>() : interactionDirection;
 
             if (dir.y < -0.64f) blockToLocation.z -= 3f;
             else if (dir.y > 0.64f) blockToLocation.z += 3f;
@@ -618,5 +661,38 @@ public class BallInteract : MonoBehaviour
             // Set the ball's initial velocity
             ballRb.linearVelocity = initVel;
         }
+    }
+
+    /// <summary>
+    /// Setter for defensive action, called by server rpc in PlayerNetworkController.
+    /// </summary>
+    public void DefActionPressed()
+    {
+        defActionPressed = true;
+    }
+
+    /// <summary>
+    /// Setter for offensive action, called by server rpc in PlayerNetworkController.
+    /// </summary>
+    public void OffActionPressed()
+    {
+        offActionPressed = true;
+    }
+
+    /// <summary>
+    /// Setter for block, called by server rpc in PlayerNetworkController.
+    /// </summary>
+    public void BlockPressed()
+    {
+        blockPressed = true;
+    }
+
+    /// <summary>
+    /// Direction for volleyball interactions, called by server rpci in PlayerNetworkController.
+    /// </summary>
+    /// <param name="dir"></param>
+    public void SetDirection(Vector2 dir)
+    {
+        interactionDirection = dir;
     }
 }

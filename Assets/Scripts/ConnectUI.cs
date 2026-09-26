@@ -22,11 +22,13 @@ public class ConnectUI : MonoBehaviour
 
     private void HostButtonOnClick()
     {
+        if (hostJoinPanel != null) hostJoinPanel.SetActive(false); // REMOVE, THIS IS HERE FOR Network SCENE
         NetworkManager.Singleton.StartHost();
     }
 
     private void ClientButtonOnClick()
     {
+        if (hostJoinPanel != null) hostJoinPanel.SetActive(false); // REMOVE, THIS IS HERE FOR Network SCENE
         NetworkManager.Singleton.StartClient();
     }
 

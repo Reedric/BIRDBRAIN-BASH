@@ -30,6 +30,7 @@ public class LocalOrOnlineMenu : MonoBehaviour
     {
         if (localOnlinePanel != null) localOnlinePanel.SetActive(false);
         if (numPlayersPanel != null) numPlayersPanel.SetActive(true);
+        DataTransferManager.isLocal = true;
     }
 
     /// <summary>
@@ -40,5 +41,6 @@ public class LocalOrOnlineMenu : MonoBehaviour
     {
         if (localOnlinePanel != null) localOnlinePanel.SetActive(false);
         if (hostJoinPanel != null) hostJoinPanel.SetActive(true);
+        DataTransferManager.isLocal = false;
     }
 }

@@ -20,4 +20,7 @@ public static class DataTransferManager
 
     // The difficulty of the bots there are (if any)
     public static AIBehavior.AIDifficulty aiDifficulty;
+
+    // Whether the game is local or online
+    public static bool isLocal;
 }

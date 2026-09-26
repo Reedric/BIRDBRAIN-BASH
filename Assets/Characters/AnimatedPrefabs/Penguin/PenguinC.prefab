@@ -2666,7 +2666,8 @@ GameObject:
   - component: {fileID: 1752529230400778768}
   - component: {fileID: 7523867240033479323}
   - component: {fileID: 6458781572301610545}
-  - component: {fileID: -3515139496453082499}
+  - component: {fileID: 3425290017571382831}
+  - component: {fileID: 7551055482780489987}
   m_Layer: 0
   m_Name: PenguinC
   m_TagString: Player
@@ -7694,11 +7695,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   GlobalObjectIdHash: 1756626148
   InScenePlacedSourceGlobalObjectIdHash: 1756626148
+  m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
-  Ownership: 1
+  Ownership: 0
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
-  <InScenePlaced>k__BackingField: 0
+  m_InScenePlaced: 0
   ActiveSceneSynchronization: 0
   SceneMigrationSynchronization: 0
   SpawnWithObservers: 1
@@ -7728,6 +7730,9 @@ MonoBehaviour:
   grounded: 0
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
+  enforceNetBoundary: 0
+  netXPosition: 0
+  netBuffer: 0.05
 --- !u!114 &5875539000078385458
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7827,7 +7832,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   readyIndicator: {fileID: 0}
---- !u!114 &-3515139496453082499
+--- !u!114 &3425290017571382831
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -7836,7 +7841,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 8379060495865577183}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 621ede71c57334e40afe2c7e12ccc28d, type: 3}
+  m_Script: {fileID: 11500000, guid: f096630c34e51a44290c1de6c61d2461, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &7551055482780489987
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8379060495865577183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e96cb6065543e43c4a752faaa1468eb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
@@ -7864,7 +7882,7 @@ MonoBehaviour:
   SyncScaleY: 0
   SyncScaleZ: 0
   PositionThreshold: 0.001
-  RotAngleThreshold: 0.01
+  RotAngleThreshold: 0.5
   ScaleThreshold: 0.01
   UseQuaternionSynchronization: 0
   UseQuaternionCompression: 0

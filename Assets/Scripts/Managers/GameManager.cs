@@ -16,6 +16,7 @@ public class GameManager : MonoBehaviour
     public GameObject lastHit; // Player that had the last hit
     public GameObject server; // Player who serves this point
     public bool leftAttack; // If left is attacking
+    public bool isLocal; // If the game is local or online
     
     [Header("Countdown Reference")]
     [SerializeField] private countdown countdownScript; // Reference to the countdown script
@@ -63,6 +64,9 @@ public class GameManager : MonoBehaviour
         {
             countdownScript = FindObjectOfType<countdown>();
         }
+
+        // Set the local or online variable
+        isLocal = DataTransferManager.isLocal;
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created

@@ -500,7 +500,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   numPlayersPanel: {fileID: 222238560}
-  mainMenuPanel: {fileID: 1157903268}
+  localOrOnlinePanel: {fileID: 0}
   characterSelectSceneName: CharSelect
 --- !u!114 &222238564
 MonoBehaviour:
@@ -627,7 +627,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &263744189
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -879,8 +879,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Join Server
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
-  m_sharedMaterial: {fileID: -1081790109219817819, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1336,9 +1336,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
+    m_SelectOnUp: {fileID: 1003144867}
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
@@ -1498,7 +1498,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   numPlayersPanel: {fileID: 363993055}
-  mainMenuPanel: {fileID: 1157903268}
+  localOrOnlinePanel: {fileID: 1349801949}
   characterSelectSceneName: CharSelect
 --- !u!1 &375750426
 GameObject:
@@ -1551,10 +1551,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
+    m_SelectOnDown: {fileID: 1035989207}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
@@ -1582,9 +1582,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1349801951}
-        m_TargetAssemblyTypeName: NumPlayersMenu, Assembly-CSharp
-        m_MethodName: GoBack
+      - m_Target: {fileID: 1349801954}
+        m_TargetAssemblyTypeName: LocalOrOnlineMenu, Assembly-CSharp
+        m_MethodName: BackToMainMenu
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1792,8 +1792,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Create Server
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
-  m_sharedMaterial: {fileID: -1081790109219817819, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2415,7 +2415,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   numPlayersPanel: {fileID: 621766762}
-  mainMenuPanel: {fileID: 1157903268}
+  localOrOnlinePanel: {fileID: 0}
   characterSelectSceneName: CharSelect
 --- !u!114 &621766766
 MonoBehaviour:
@@ -2535,7 +2535,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   numPlayersPanel: {fileID: 696571238}
-  mainMenuPanel: {fileID: 1157903268}
+  localOrOnlinePanel: {fileID: 0}
   characterSelectSceneName: CharSelect
 --- !u!114 &696571242
 MonoBehaviour:
@@ -2816,11 +2816,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
+    m_SelectOnUp: {fileID: 375750428}
     m_SelectOnDown: {fileID: 0}
-    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnLeft: {fileID: 1035989207}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
@@ -2847,9 +2847,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1349801951}
-        m_TargetAssemblyTypeName: NumPlayersMenu, Assembly-CSharp
-        m_MethodName: SelectTwoPlayers
+      - m_Target: {fileID: 1349801954}
+        m_TargetAssemblyTypeName: LocalOrOnlineMenu, Assembly-CSharp
+        m_MethodName: OnlineButton
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2946,10 +2946,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
+    m_SelectOnUp: {fileID: 1189337422}
+    m_SelectOnDown: {fileID: 351339479}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
@@ -3121,12 +3121,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
+    m_SelectOnUp: {fileID: 375750428}
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
-    m_SelectOnRight: {fileID: 0}
+    m_SelectOnRight: {fileID: 876193288}
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
@@ -3152,9 +3152,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1349801951}
-        m_TargetAssemblyTypeName: NumPlayersMenu, Assembly-CSharp
-        m_MethodName: SelectOnePlayers
+      - m_Target: {fileID: 1349801954}
+        m_TargetAssemblyTypeName: LocalOrOnlineMenu, Assembly-CSharp
+        m_MethodName: LocalButton
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -4105,10 +4105,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
+    m_SelectOnDown: {fileID: 1003144867}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
@@ -4136,7 +4136,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1621964714}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: NumPlayersMenu, Assembly-CSharp
         m_MethodName: GoBack
         m_Mode: 1
@@ -4716,7 +4716,7 @@ GameObject:
   - component: {fileID: 1349801950}
   - component: {fileID: 1349801953}
   - component: {fileID: 1349801952}
-  - component: {fileID: 1349801951}
+  - component: {fileID: 1349801954}
   m_Layer: 5
   m_Name: LocalorOnline
   m_TagString: Untagged
@@ -4748,21 +4748,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 1920, y: 1080}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1349801951
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1349801949}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5bc8bfcdf4652d1489546818e42eeac5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  numPlayersPanel: {fileID: 1349801949}
-  mainMenuPanel: {fileID: 1157903268}
-  characterSelectSceneName: CharSelect
 --- !u!114 &1349801952
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4798,6 +4783,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1349801949}
   m_CullTransparentMesh: 1
+--- !u!114 &1349801954
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1349801949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41271208d6a5d4a45bd4e20cc8179d8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  localOnlinePanel: {fileID: 1349801949}
+  mainMenuPanel: {fileID: 1157903268}
+  numPlayersPanel: {fileID: 363993055}
+  hostJoinPanel: {fileID: 1621964712}
 --- !u!1 &1381969067
 GameObject:
   m_ObjectHideFlags: 0
@@ -5010,8 +5011,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Create or Join!
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
-  m_sharedMaterial: {fileID: -1081790109219817819, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -5168,7 +5169,7 @@ GameObject:
   - component: {fileID: 1621964713}
   - component: {fileID: 1621964716}
   - component: {fileID: 1621964715}
-  - component: {fileID: 1621964714}
+  - component: {fileID: 1621964717}
   m_Layer: 5
   m_Name: OnlineScreen
   m_TagString: Untagged
@@ -5200,21 +5201,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 1920, y: 1080}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1621964714
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1621964712}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5bc8bfcdf4652d1489546818e42eeac5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  numPlayersPanel: {fileID: 1621964712}
-  mainMenuPanel: {fileID: 1157903268}
-  characterSelectSceneName: CharSelect
 --- !u!114 &1621964715
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5250,6 +5236,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1621964712}
   m_CullTransparentMesh: 1
+--- !u!114 &1621964717
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1621964712}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24a80647d2ba12a4ca238acf4c6da636, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hostButton: {fileID: 1003144867}
+  clientButton: {fileID: 351339479}
+  backButton: {fileID: 1189337422}
+  hostJoinPanel: {fileID: 1621964712}
+  localOnlinePanel: {fileID: 1349801949}
 --- !u!1 &1878044379
 GameObject:
   m_ObjectHideFlags: 0
@@ -5393,7 +5396,6 @@ GameObject:
   - component: {fileID: 1933689298}
   - component: {fileID: 1933689302}
   - component: {fileID: 1933689303}
-  - component: {fileID: 1933689304}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -5477,8 +5479,8 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1157903269}
-  - {fileID: 363993056}
   - {fileID: 1349801950}
+  - {fileID: 363993056}
   - {fileID: 1621964713}
   - {fileID: 248016588}
   m_Father: {fileID: 0}
@@ -5501,7 +5503,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mainMenuPanel: {fileID: 1157903268}
-  numPlayersPanel: {fileID: 363993055}
+  localOrOnlinePanel: {fileID: 1349801949}
   creditsCanvas: {fileID: 248016587}
   creditsAnimator: {fileID: 298716578}
   creditsDuration: 30
@@ -5529,24 +5531,12 @@ MonoBehaviour:
   hoverBobAmplitude: 3
   hoverBobFrequency: 1
   mainMenuPanel: {fileID: 1157903268}
+  localOnlinePanel: {fileID: 1349801949}
   numPlayersPanel: {fileID: 363993055}
+  hostJoinPanel: {fileID: 1621964712}
   inputDeadzone: 0.5
   inputRepeatDelay: 0.12
   panelSwitchInputBlockDuration: 0.18
---- !u!114 &1933689304
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1933689297}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 24a80647d2ba12a4ca238acf4c6da636, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  hostButton: {fileID: 0}
-  clientButton: {fileID: 0}
 --- !u!1 &1962441903
 GameObject:
   m_ObjectHideFlags: 0
@@ -5846,8 +5836,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Multiplayer?
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
-  m_sharedMaterial: {fileID: -1081790109219817819, guid: d32f1a47922bacf46acf6b51be9de656, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
