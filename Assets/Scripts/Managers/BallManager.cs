@@ -1,10 +1,49 @@
+using Unity.Netcode;
 using UnityEngine;
 
-public class BallManager : MonoBehaviour
+public class BallManager : NetworkBehaviour
 {
-    public Vector3 goingTo; // Where the ball is going to
-    public GameObject unblockableOwner; // If set, this player's spike cannot be blocked
-    public bool offCourse; // Boolean for whether the ball is off course of where it is supposed to go
+    private Vector3 goingToLocal; // Where the ball is going to (local multiplayer)
+    private NetworkVariable<Vector3> goingToNet; // Where the ball is going to (online multplayer)
+    public Vector3 goingTo // Where the ball is going to (API version)
+    {
+        get => GameManager.Instance.isLocal ? goingToLocal : goingToNet.Value;
+        set
+        {
+            if (GameManager.Instance.isLocal) goingToLocal = value;
+            else goingToNet.Value = value;
+        }
+    }
+
+    private GameObject unblockableOwnerLocal; // If set, this player's spike cannot be blocked (local multiplayer)
+    private NetworkVariable<ulong> unblockableOwnerNet; // If set, this player's spike cannot be blocked (online multiplayer)
+    public GameObject unblockableOwner // If set, this player's spike cannot be blocked (API version)
+    {
+        get
+        {
+            if (GameManager.Instance.isLocal) return unblockableOwnerLocal;
+            else if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(unblockableOwnerNet.Value, out var netObj)) return netObj.gameObject;
+            return null;
+        }
+        set
+        {
+            if (GameManager.Instance.isLocal) unblockableOwnerLocal = value;
+            else unblockableOwnerNet.Value = value.GetComponent<NetworkObject>().NetworkObjectId;;
+        }
+    }
+
+    private bool offCourseLocal; // Boolean for whether the ball is off course of where it is supposed to go (local multiplayer)
+    private NetworkVariable<bool> offCourseNet; // Boolean for whether the ball is off course of where it is supposed to go (online multplayer)
+    public bool offCourse // Boolean for whether the ball is off course of where it is supposed to go (API version)
+    {
+        get => GameManager.Instance.isLocal ? offCourseLocal : offCourseNet.Value;
+        set
+        {
+            if (GameManager.Instance.isLocal) offCourseLocal = value;
+            else offCourseNet.Value = value;
+        }
+    }
+
     private Rigidbody rb; // Rigidbody of the ball
     public System.Action<Collision> onBallCollision; // Christofort: Event for when the ball collides with something
     private float addedSpikeSpeed; // ducky: Additional spike speed to speed up the ball
@@ -13,22 +52,26 @@ public class BallManager : MonoBehaviour
     private float zSign; // ducky: Sign of z-component of ball velocity (no y b/c y should always be negative)
 
     private static BallManager instance; // Private instance of the GameManager that other classes cannot reference
-    public static BallManager Instance // Public instance of GameManager that other classes can reference
-    {
-        get
-        {
-            if (instance == null)
-            {
-                instance = new BallManager();
-            }
-            return instance;
-        }
-    }
+    public static BallManager Instance => instance; // Public instance of GameManager that other classes can reference
+
 
     void Awake()
     {
         // Initialize singleton to this script
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
         instance = this;
+
+        // Initialize all network variables if it is a online multiplayer match
+        if (!GameManager.Instance.isLocal)
+        {
+            goingToNet = new NetworkVariable<Vector3>();
+            unblockableOwnerNet = new NetworkVariable<ulong>();
+            offCourseNet = new NetworkVariable<bool>();
+        }
     }
 
 

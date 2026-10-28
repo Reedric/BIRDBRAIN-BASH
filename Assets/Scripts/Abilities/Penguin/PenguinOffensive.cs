@@ -34,12 +34,12 @@ public class PenguinOffensive : BirdAbility
     private GameObject snowballTrackInstance;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    IEnumerator Start()
     {
         ballInteraction = GetComponent<BallInteract>();
 
-        // Subscribe to ball collision event if ballManager is available
-        // BallManager.Instance.onBallCollision += checkNetCollision;
+        // Wait for the BallManager to be instantiated (you cannot slide before the game starts anyway, so should be enough time before first call)
+        while (BallManager.Instance == null) yield return null;
 
         // Christofort: grab all renderers on the dodgeball object and its children
         dodgeBallRenderers = BallManager.Instance.gameObject.GetComponentsInChildren<Renderer>();

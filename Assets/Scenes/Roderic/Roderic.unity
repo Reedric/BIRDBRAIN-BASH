@@ -270,18 +270,39 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f11cc3991f6ca44f9b27cacc7935c2a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  side1Score: 0
-  side2Score: 0
-  side1SetsWon: 0
-  side2SetsWon: 0
-  gameManager: {fileID: 614297107}
+  ShowTopMostFoldoutHeaderGroup: 1
   side1ScoreUI: {fileID: 0}
   side1SetUI: {fileID: 0}
   side2ScoreUI: {fileID: 0}
   side2SetUI: {fileID: 0}
   side1ServeIndicator: {fileID: 0}
   side2ServeIndicator: {fileID: 0}
-  rightBirdType1: 0
+  mainCamera: {fileID: 0}
+  endCamera: {fileID: 0}
+  scoreboard: {fileID: 0}
+  birdBars: {fileID: 0}
+  fadeScreen: {fileID: 0}
+  blueWin: {fileID: 0}
+  pinkWin: {fileID: 0}
+  blueTrophy: {fileID: 0}
+  pinkTrophy: {fileID: 0}
+  blueWinScore: {fileID: 0}
+  pinkWinScore: {fileID: 0}
+  blueContinue: {fileID: 0}
+  pinkContinue: {fileID: 0}
+  invisWall: {fileID: 0}
+  endLocations: []
+  readiedUp: 
+  blueConfettiPrefab: {fileID: 0}
+  pinkConfettiPrefab: {fileID: 0}
+  confettiSpawnPoint: {fileID: 0}
+  confettiSpawnInterval: 0.5
+  confettiLifetime: 4
+  scoreUpdateFlourishPrefab: {fileID: 0}
+  scoreEffectCanvas: {fileID: 0}
+  scoreBounceDuration: 0.35
+  scoreBounceScale: 1.25
+  scoreFlourishLifetime: 1
 --- !u!114 &18352594
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -294,10 +315,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64c459b0a51f36c44b71f4edf9391b30, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  goingTo: {x: 0, y: 0, z: 0}
-  gameManager: {fileID: 614297107}
-  unblockableOwner: {fileID: 0}
-  offCourse: 0
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1001 &115471591
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -402,9 +420,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6dca93e819a6fc47a03b72b82e10caf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManager: {fileID: 614297107}
+  birdType: 0
   onLeft: 1
-  ballManager: {fileID: 18352594}
+  playerID: -1
   interactionRadius: 2
   animator: {fileID: 0}
   maxGroundSpeed: 4
@@ -413,6 +431,17 @@ MonoBehaviour:
   rotationSpeed: 10
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
+  rotationOffsetEuler: {x: 0, y: 0, z: 0}
+  aiDifficulty: 1
+  easyBumpChance: 0.5
+  easySetChance: 0.5
+  easySpikeChance: 0.5
+  mediumBumpChance: 0.75
+  mediumSetChance: 0.75
+  mediumSpikeChance: 0.75
+  hardBumpChance: 0.9
+  hardSetChance: 0.9
+  hardSpikeChance: 0.9
 --- !u!114 &178121270
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1116,6 +1145,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 614297108}
+  - component: {fileID: 614297110}
   - component: {fileID: 614297107}
   - component: {fileID: 614297109}
   m_Layer: 0
@@ -1137,16 +1167,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a3066e64bb95d2f44a45302b5baca139, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  leftPlayer1: {fileID: 178121268}
-  leftPlayer2: {fileID: 1319189939}
-  rightPlayer1: {fileID: 7895200595781189983}
-  rightPlayer2: {fileID: 1667581929}
-  scoreManager: {fileID: 18352593}
-  gameState: 0
-  lastHit: {fileID: 0}
-  server: {fileID: 0}
-  leftAttack: 0
-  ball: {fileID: 18352587}
+  ShowTopMostFoldoutHeaderGroup: 1
+  isLocal: 0
+  countdownScript: {fileID: 0}
 --- !u!4 &614297108
 Transform:
   m_ObjectHideFlags: 0
@@ -1192,6 +1215,33 @@ MonoBehaviour:
   m_DefaultActionMap: 
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
+--- !u!114 &614297110
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 614297106}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 2995444341
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  m_InScenePlacedDisabledByDefault: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  m_InScenePlaced: 0
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -1481,53 +1531,207 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d065839964517b2409df10ae8693a29c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  muteBackgroundMusic: 0
   penguinSounds:
-  - {fileID: 8300000, guid: 8af3d13ded60b634e8b576b1f92a2a56, type: 3}
-  - {fileID: 8300000, guid: 4209d1a8e38a3334cb586e8ac04a80e1, type: 3}
-  - {fileID: 8300000, guid: de646397ced512b4488c799523f9cf00, type: 3}
-  - {fileID: 8300000, guid: 62ab6da83c603ee46a2b6d1b80ffecc8, type: 3}
-  - {fileID: 8300000, guid: 3a4cce6906f42f34f80b08491a84544d, type: 3}
-  - {fileID: 0}
-  - {fileID: 8300000, guid: ac5a0ff18126b13419c13d9dbd6720a7, type: 3}
-  - {fileID: 0}
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
   crowSounds:
-  - {fileID: 8300000, guid: 57292661603c0f04b9f9ecaf8761b58b, type: 3}
-  - {fileID: 8300000, guid: c914495ec8699664bbefef22cd9234da, type: 3}
-  - {fileID: 8300000, guid: 0e344c3677f3c6449940c9978fc2dd0c, type: 3}
-  - {fileID: 8300000, guid: 90206d16817eea3428b2961068e130dd, type: 3}
-  - {fileID: 8300000, guid: 9db36db339303c449beffa804ad38b1b, type: 3}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
   scissortailSounds:
-  - {fileID: 8300000, guid: 001d2edea88aff24e9a0daf7e187d76f, type: 3}
-  - {fileID: 8300000, guid: 874d0e4a212049e42af75050a79da7e7, type: 3}
-  - {fileID: 8300000, guid: bfcd36449fa8e954bb1c9e15f300dd9c, type: 3}
-  - {fileID: 8300000, guid: b3faf003d6a652648b14ac82348c726b, type: 3}
-  - {fileID: 8300000, guid: 49d96296e3e29e742a2632e5aa16c13d, type: 3}
-  - {fileID: 0}
-  - {fileID: 8300000, guid: 81912487c56a3e942b03b9cc6a3c9784, type: 3}
-  - {fileID: 8300000, guid: 8ce969f916eeae545bc560008a10d940, type: 3}
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
   lovebirdSounds:
-  - {fileID: 8300000, guid: 93981666575f3e844aeec5432c1bde04, type: 3}
-  - {fileID: 8300000, guid: 3b025b89ed4cdc44988d1abc018c6c19, type: 3}
-  - {fileID: 8300000, guid: 29d4ab88c5fd0c74b84d18eb1ae87a74, type: 3}
-  - {fileID: 8300000, guid: 81ac9f7cfd2394243bde2459c83b096e, type: 3}
-  - {fileID: 8300000, guid: fa41255b7e6cfbe47a4b2b04e7c3f7bf, type: 3}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 8300000, guid: 11c62da8e049ea545a35e2da331f8bbf, type: 3}
-  dodoSounds: []
-  seagullSounds: []
-  pelicanSounds: []
-  toucanSounds: []
-  pukekoSounds: []
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  dodoSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  seagullSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  pelicanSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  toucanSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  pukekoSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  chickenSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  ostrichSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  eagleSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  kiwiSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  macawSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  owlSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  phoenixSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  robopigeonSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  hummingbirdSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
+  shimaenagaSounds:
+    happy: []
+    sad: []
+    bump: []
+    set: []
+    spike: []
+    block: []
+    defensive: []
+    offensive: []
   scoringSounds: []
   ballPlayerInteractionSounds: []
   ballNetHitSounds: []
   ballGroundHitSounds: []
+  team1DefensiveReadySound: {fileID: 0}
+  team1OffensiveReadySound: {fileID: 0}
+  team2DefensiveReadySound: {fileID: 0}
+  team2OffensiveReadySound: {fileID: 0}
+  buffStartSound: {fileID: 0}
+  buffEndSound: {fileID: 0}
+  debuffStartSound: {fileID: 0}
+  debuffEndSound: {fileID: 0}
+  abilityArmedSound: {fileID: 0}
+  abilityUnarmedSound: {fileID: 0}
+  buttonHoverSound: {fileID: 0}
+  buttonSelectSound: {fileID: 0}
+  stunLoopSound: {fileID: 0}
+  stunLoopVolume: 1
   backgroundTracks:
   - {fileID: 8300000, guid: 28365f4d9e9c6cb41b7177163b0ec5af, type: 3}
+  gameMusicTracks: []
+  countdownSfx:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  playBackgroundOnAwake: 1
+  isGameScene: 0
+  pauseTrack: {fileID: 0}
 --- !u!82 &1247072348
 AudioSource:
   m_ObjectHideFlags: 0
@@ -1875,9 +2079,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6dca93e819a6fc47a03b72b82e10caf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManager: {fileID: 614297107}
+  birdType: 0
   onLeft: 1
-  ballManager: {fileID: 18352594}
+  playerID: -1
   interactionRadius: 2
   animator: {fileID: 0}
   maxGroundSpeed: 4
@@ -1886,6 +2090,17 @@ MonoBehaviour:
   rotationSpeed: 10
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
+  rotationOffsetEuler: {x: 0, y: 0, z: 0}
+  aiDifficulty: 1
+  easyBumpChance: 0.5
+  easySetChance: 0.5
+  easySpikeChance: 0.5
+  mediumBumpChance: 0.75
+  mediumSetChance: 0.75
+  mediumSpikeChance: 0.75
+  hardBumpChance: 0.9
+  hardSetChance: 0.9
+  hardSpikeChance: 0.9
 --- !u!114 &1319189941
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1937,9 +2152,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6dca93e819a6fc47a03b72b82e10caf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManager: {fileID: 614297107}
+  birdType: 0
   onLeft: 0
-  ballManager: {fileID: 18352594}
+  playerID: -1
   interactionRadius: 2
   animator: {fileID: 0}
   maxGroundSpeed: 4
@@ -1948,6 +2163,17 @@ MonoBehaviour:
   rotationSpeed: 10
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
+  rotationOffsetEuler: {x: 0, y: 0, z: 0}
+  aiDifficulty: 1
+  easyBumpChance: 0.5
+  easySetChance: 0.5
+  easySpikeChance: 0.5
+  mediumBumpChance: 0.75
+  mediumSetChance: 0.75
+  mediumSpikeChance: 0.75
+  hardBumpChance: 0.9
+  hardSetChance: 0.9
+  hardSpikeChance: 0.9
 --- !u!1001 &2066573284
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2303,11 +2529,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88f319f3ed34f57429307b53d0f467d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cooldown: 0
+  AbilitySlot: 0
+  _cooldownTime: 0
   holdLength: 3
   ballInteract: {fileID: 0}
-  ball: {fileID: 0}
-  gameManager: {fileID: 614297107}
 --- !u!114 &7895200595781190004
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2320,7 +2545,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e58d1fda243bd24a98cb7db7ac6a026, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cooldown: 5
+  AbilitySlot: 0
+  _cooldownTime: 0
+  mouthForwardOffset: 1
+  mouthUpOffset: 1.5
   slipFishSpeed: 5
   fishLifetime: 5
   fishPrefab: {fileID: 224960317418849905, guid: 64371aa2b1c88cc4a91f37951578e322, type: 3}

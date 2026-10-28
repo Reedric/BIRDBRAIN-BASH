@@ -9,7 +9,7 @@ using UnityEngine.InputSystem.Users;
 using Unity.Netcode.Components;
 using Unity.Netcode;
 
-public class MultiplayerManager : MonoBehaviour
+public class MultiplayerManager : NetworkBehaviour
 {
     [Header("Player Transforms")]
     public Transform[] playerSpawnpoints; // Spawnpoints that the players and AI will use
@@ -51,21 +51,53 @@ public class MultiplayerManager : MonoBehaviour
             // DontDestroyOnLoad(gameObject);
         }
 
+        // Debug.Log("Getting character manager...");
         cManager = GetComponent<CharacterManager>();
-        instance.isKBMInput = DataTransferManager.isKBMInput;
-        instance.selectedBirds = DataTransferManager.selectedBirds;
-
-        // An empty isKBMInput list means the demo button was pressed — no human players
-        isDemoMode = (isKBMInput == null || isKBMInput.Count == 0);
 
         // Subscribe to device changes to handle disconnects and reconnects
         InputSystem.onDeviceChange += OnDeviceChange;
+    }
 
-        InitializePlayers();
+    public override void OnNetworkSpawn()
+    {
+        Debug.Log(
+            $"OnNetworkSpawn: {gameObject.name}, " +
+            $"IsServer={IsServer}, " +
+            $"IsClient={IsClient}, " +
+            $"IsSpawned={IsSpawned}, " +
+            $"Id={NetworkObjectId}"
+        );
     }
 
     void Start()
     {
+        // TEMP: Try to get the information from the test scene to add players
+        if (GameObject.Find("StartLobbyIf2Players"))
+        {
+            Debug.Log("Found game object");
+            GameManager.Instance.isLocal = false;
+
+            int numPlayers = GameObject.Find("StartLobbyIf2Players").GetComponent<StartNetworkedLobbyForNumPlayers>().Instance.numHumanPlayers;
+            instance.isKBMInput = new List<bool>(numPlayers);
+            instance.selectedBirds = new List<BirdType>(numPlayers);
+            for (int i = 0; i < numPlayers; ++i)
+            {
+                instance.isKBMInput.Add(false);
+                instance.selectedBirds.Add(BirdType.PENGUIN);
+            }
+        }
+        else
+        {
+            instance.isKBMInput = DataTransferManager.isKBMInput;
+            instance.selectedBirds = DataTransferManager.selectedBirds;
+        }
+
+        // An empty isKBMInput list means the demo button was pressed — no human players
+        isDemoMode = (isKBMInput == null || isKBMInput.Count == 0);
+
+        // Initialize the players
+        InitializePlayers();
+
         // Hide player ready indicators
         foreach (RawImage indicator in playerIndicators)
         {
@@ -198,7 +230,7 @@ public class MultiplayerManager : MonoBehaviour
             // Increment player count
             playerCount++;
 
-            // Debug.Log("Made player");
+            Debug.Log("Made player");
         }
 
         // Instantiate readied up for score manager
@@ -234,7 +266,7 @@ public class MultiplayerManager : MonoBehaviour
     PlayerInput InitializeControllerPlayer(GameObject prefab, int playerCount)
     {
         // Get an available gamepad if possible
-        Gamepad controller = AvailableGamepad();
+        Gamepad controller = GameManager.Instance.isLocal ?  AvailableGamepad() : AvailableNetworkedGamepad(playerCount);
 
         // If there is no available gamepad, start a wait coroutine instead of hard erroring
         if (controller == null)
@@ -259,7 +291,7 @@ public class MultiplayerManager : MonoBehaviour
 
         while (elapsed < controllerWaitTimeout)
         {
-            Gamepad controller = AvailableGamepad();
+            Gamepad controller = GameManager.Instance.isLocal ?  AvailableGamepad() : AvailableNetworkedGamepad(playerCount);
             if (controller != null)
             {
                 Debug.Log($"[MultiplayerManager] Controller found for Player {playerCount + 1} after {elapsed:F1}s wait.");
@@ -313,6 +345,13 @@ public class MultiplayerManager : MonoBehaviour
         }
 
         return null;
+    }
+
+    Gamepad AvailableNetworkedGamepad(int playerIndex)
+    {
+        // Network logic: for now, it just chooses the gamepad related to the player ID, but in future it should just
+        // grab the first gamepad as people playing on different devices would have different first gamepads.
+        return Gamepad.all[playerIndex];
     }
 
     GameObject GetBirdModel(BirdType type, bool isPlayer, bool isKBM)

@@ -15,6 +15,8 @@ public class PlayerNetworkController : NetworkBehaviour
         public bool defActionPressed;
         public bool offActionPressed;
         public bool blockPressed;
+        public bool defAbilityPressed;
+        public bool offAbilityPressed;
         public Vector2 interactionDirection;
         public bool pausePressed;
 
@@ -25,6 +27,8 @@ public class PlayerNetworkController : NetworkBehaviour
             serializer.SerializeValue(ref defActionPressed);
             serializer.SerializeValue(ref offActionPressed);
             serializer.SerializeValue(ref blockPressed);
+            serializer.SerializeValue(ref defAbilityPressed);
+            serializer.SerializeValue(ref offAbilityPressed);
             serializer.SerializeValue(ref interactionDirection);
             serializer.SerializeValue(ref pausePressed);
         }
@@ -33,12 +37,14 @@ public class PlayerNetworkController : NetworkBehaviour
     private CharacterMovement characterMovement;
     private PlayerInput input;
     private BallInteract ballInteract;
+    private BirdAbilityInput birdAbilityInput;
 
     public override void OnNetworkSpawn()
     {        
         characterMovement = GetComponent<CharacterMovement>();
         input = GetComponent<PlayerInput>();
         ballInteract = GetComponent<BallInteract>();
+        birdAbilityInput = GetComponent<BirdAbilityInput>();
 
         // REMOVE THIS ONCE CONTROLLER ASSIGNMENT HAS BEEN NETWORKED
         if (Gamepad.all.Count > 0)
@@ -74,6 +80,10 @@ public class PlayerNetworkController : NetworkBehaviour
         if (inputData.blockPressed) ballInteract.BlockPressed();
         ballInteract.SetDirection(inputData.interactionDirection);
 
+        // Ability interaction
+        if (inputData.defAbilityPressed) birdAbilityInput.OnDefensiveAbility();
+        if (inputData.offAbilityPressed) birdAbilityInput.OnOffensiveAbility();
+
         // UI interaction
         if (inputData.pausePressed && !PauseMenu.Instance.GameIsPaused)
         {
@@ -99,6 +109,8 @@ public class PlayerNetworkController : NetworkBehaviour
             defActionPressed = input.actions["Defensive Action"].WasPressedThisFrame(),
             offActionPressed = input.actions["Offensive Action"].WasPressedThisFrame(),
             blockPressed = input.actions["Block"].WasPressedThisFrame(),
+            defAbilityPressed = input.actions["Defensive Ability"].WasPressedThisFrame(),
+            offAbilityPressed = input.actions["Offensive Ability"].WasPressedThisFrame(),
             interactionDirection = input.actions["Direction"].ReadValue<Vector2>(),
             pausePressed = input.actions["Pause"].WasPressedThisFrame()
         };

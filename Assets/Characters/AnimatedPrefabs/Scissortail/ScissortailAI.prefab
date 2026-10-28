@@ -1453,6 +1453,7 @@ GameObject:
   - component: {fileID: 798987239138600209}
   - component: {fileID: 3225600371914689073}
   - component: {fileID: 9001441287323253769}
+  - component: {fileID: 2523479236191932217}
   m_Layer: 0
   m_Name: ScissortailAI
   m_TagString: Player
@@ -6463,6 +6464,33 @@ MonoBehaviour:
   hardBumpChance: 0.7
   hardSetChance: 0.9
   hardSpikeChance: 0.9
+--- !u!114 &2523479236191932217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6291724136544104244}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 536082018
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  m_InScenePlacedDisabledByDefault: 0
+  DeferredDespawnTick: 0
+  Ownership: 0
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  m_InScenePlaced: 0
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
 --- !u!1 &6318195711876663726
 GameObject:
   m_ObjectHideFlags: 0

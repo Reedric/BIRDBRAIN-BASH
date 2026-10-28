@@ -172,6 +172,9 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0e9bf770267a3d54b87563251a1ce39c, type: 3}
       insertIndex: -1
+      addedObject: {fileID: 1643014433538267280}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0e9bf770267a3d54b87563251a1ce39c, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 7473943270300716958}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0e9bf770267a3d54b87563251a1ce39c, type: 3}
       insertIndex: -1
@@ -185,9 +188,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0e9bf770267a3d54b87563251a1ce39c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5286602613222629986}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0e9bf770267a3d54b87563251a1ce39c, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1643014433538267280}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0e9bf770267a3d54b87563251a1ce39c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3481579641400832038}
@@ -224,6 +224,33 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 0e9bf770267a3d54b87563251a1ce39c, type: 3}
   m_PrefabInstance: {fileID: 1909951241668470187}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1643014433538267280
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1603540235197225210}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 3275063742
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  m_InScenePlacedDisabledByDefault: 0
+  DeferredDespawnTick: 0
+  Ownership: 0
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  m_InScenePlaced: 0
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
 --- !u!114 &7473943270300716958
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -236,6 +263,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62a52fa449ea78c439b417bf12bbb9f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   onLeft: 0
   interactionRadius: 2.5
   animator: {fileID: 0}
@@ -327,32 +355,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &1643014433538267280
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1603540235197225210}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 2823322300
-  InScenePlacedSourceGlobalObjectIdHash: 0
-  DeferredDespawnTick: 0
-  Ownership: 1
-  AlwaysReplicateAsRoot: 0
-  SynchronizeTransform: 1
-  <InScenePlaced>k__BackingField: 0
-  ActiveSceneSynchronization: 0
-  SceneMigrationSynchronization: 0
-  SpawnWithObservers: 1
-  DontDestroyWithOwner: 0
-  AutoObjectParentSync: 1
-  SyncOwnerTransformWhenParented: 1
-  AllowOwnerToParent: 0
 --- !u!114 &3481579641400832038
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -375,6 +377,9 @@ MonoBehaviour:
   grounded: 0
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
+  enforceNetBoundary: 0
+  netXPosition: 0
+  netBuffer: 0.05
 --- !u!114 &2961231514982056500
 MonoBehaviour:
   m_ObjectHideFlags: 0

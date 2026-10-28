@@ -5,13 +5,57 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System;
+using Unity.Netcode;
 
-public class ScoreManager : MonoBehaviour
+public class ScoreManager : NetworkBehaviour
 {
-    public int side1Score = 0;
-    public int side2Score = 0;
-    public int side1SetsWon = 0;
-    public int side2SetsWon = 0;
+    private int side1ScoreLocal;
+    private NetworkVariable<int> side1ScoreNet;
+    public int side1Score
+    {
+        get => GameManager.Instance.isLocal ? side1ScoreLocal : side1ScoreNet.Value;
+        set
+        {
+            if (GameManager.Instance.isLocal) side1ScoreLocal = value;
+            else side1ScoreNet.Value = value;
+        }
+    }
+
+    private int side2ScoreLocal;
+    private NetworkVariable<int> side2ScoreNet;
+    public int side2Score
+    {
+        get => GameManager.Instance.isLocal ? side2ScoreLocal : side2ScoreNet.Value;
+        set
+        {
+            if (GameManager.Instance.isLocal) side2ScoreLocal = value;
+            else side2ScoreNet.Value = value;
+        }
+    }
+
+    private int side1SetsWonLocal;
+    private NetworkVariable<int> side1SetsWonNet;
+    public int side1SetsWon
+    {
+        get => GameManager.Instance.isLocal ? side1SetsWonLocal : side1SetsWonNet.Value;
+        set
+        {
+            if (GameManager.Instance.isLocal) side1SetsWonLocal = value;
+            else side1SetsWonNet.Value = value;
+        }
+    }
+
+    private int side2SetsWonLocal;
+    private NetworkVariable<int> side2SetsWonNet;
+    public int side2SetsWon
+    {
+        get => GameManager.Instance.isLocal ? side2SetsWonLocal : side2SetsWonNet.Value;
+        set
+        {
+            if (GameManager.Instance.isLocal) side2SetsWonLocal = value;
+            else side2SetsWonNet.Value = value;
+        }
+    }
 
     [Header("Score UI")]
     public TextMeshProUGUI side1ScoreUI;
@@ -69,7 +113,22 @@ public class ScoreManager : MonoBehaviour
     private bool outCheckPending; // guard against multiple outCheck coroutines
     private bool pointIntercepted;
 
-    public GameObject lastPhysicalTouch;
+    private GameObject lastPhysicalTouchLocal;
+    private NetworkVariable<ulong> lastPhysicalTouchNet;
+    public GameObject lastPhysicalTouch
+    {
+        get
+        {
+            if (GameManager.Instance.isLocal) return lastPhysicalTouchLocal;
+            else if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(lastPhysicalTouchNet.Value, out var netObj)) return netObj.gameObject;
+            return null;
+        }
+        set
+        {
+            if (GameManager.Instance.isLocal) lastPhysicalTouchLocal = value;
+            else lastPhysicalTouchNet.Value = value.GetComponent<NetworkObject>().NetworkObjectId;;
+        }
+    }
 
     UnityEvent LeftScored;
     UnityEvent RightScored;
@@ -81,28 +140,38 @@ public class ScoreManager : MonoBehaviour
 
     private static ScoreManager instance; // Private instance of the GameManager that other classes cannot reference
 
-    public static ScoreManager Instance // Public instance of GameManager that other classes can reference
-    {
-        get
-        {
-            if (instance == null)
-            {
-                instance = new ScoreManager();
-            }
-
-            return instance;
-        }
-    }
+    public static ScoreManager Instance => instance; // Public instance of GameManager that other classes can reference
 
     void Awake()
     {
+        // Check for duplicates to ensure singleton
+        if (instance != null && instance != this)
+        {
+            Debug.Log("Getting rid of duplicate ScoreManager.");
+            Destroy(this);
+            return;
+        }
+
         // Initialize singleton to this script
         instance = this;
+
+        // Instantiate the networked variables if necessary
+        if (GameObject.Find("StartLobbyIf2Players"))
+        {
+            instance.side1ScoreNet = new NetworkVariable<int>();
+            instance.side2ScoreNet = new NetworkVariable<int>();
+            instance.side1SetsWonNet = new NetworkVariable<int>();
+            instance.side2SetsWonNet = new NetworkVariable<int>();
+            instance.lastPhysicalTouchNet = new NetworkVariable<ulong>();
+        }
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        // If not the server, don't do anything
+        // if (!IsServer) return;
+
         // Make sure the invisible wall is in the right spot and the end screens aren't showing
         invisWall.transform.position = new Vector3(16, -0.2f, -0.08f);
         fadeScreen.color = new Color(0, 0, 0, 0);
@@ -124,6 +193,16 @@ public class ScoreManager : MonoBehaviour
         // Make sure main UI stuff is enabled
         scoreboard.SetActive(true);
         birdBars.SetActive(true);
+
+        // Initialize all network variables if it is a online multiplayer match
+        if (!GameManager.Instance.isLocal)
+        {
+            side1ScoreNet = new NetworkVariable<int>();
+            side2ScoreNet = new NetworkVariable<int>();
+            side1SetsWonNet = new NetworkVariable<int>();
+            side2SetsWonNet = new NetworkVariable<int>();
+            lastPhysicalTouchNet = new NetworkVariable<ulong>();
+        }
 
         // Set the scores to 0, right to serve, and the ball is in play
         side1Score = 0;
@@ -153,6 +232,9 @@ public class ScoreManager : MonoBehaviour
     // Checking to see if the ball hits the court on either side
     void OnCollisionEnter(Collision collision)
     {
+        // If not the server, don't do anything
+        // if (!IsServer) return;
+
         // if it touches side 1, then side 2 scores
         if (collision.gameObject.CompareTag("Side1") && inPlay)
         {
@@ -751,5 +833,17 @@ public class ScoreManager : MonoBehaviour
 
         // Everyone is ready, go back to main menu
         SceneManager.LoadScene("MainMenu");
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        Debug.Log(
+            $"[SM] OnNetworkSpawn | " +
+            $"IsServer={IsServer} | " +
+            $"IsClient={IsClient} | " +
+            $"IsSpawned={IsSpawned} | " +
+            $"NetworkObjectId={NetworkObjectId}",
+            this
+        );
     }
 }

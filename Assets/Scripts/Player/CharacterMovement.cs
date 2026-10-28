@@ -50,11 +50,13 @@ public class CharacterMovement : NetworkBehaviour
     private float netSide;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    IEnumerator Start()
     {
         // Get the Rigidbody of the character
         rb = GetComponent<Rigidbody>();
         dustParticles = GetComponent<ParticleSystem>();
+
+        yield return new WaitUntil(() => GameManager.Instance != null);
         if (GameManager.Instance.isLocal) playerInput = GetComponent<PlayerInput>();
 
         // Error handling
@@ -95,6 +97,9 @@ public class CharacterMovement : NetworkBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+        // Network: wait until the start stuff has happened
+        if (GameManager.Instance == null) return;
+
         Move();
 
         // Check if local session and jump pressed this frame

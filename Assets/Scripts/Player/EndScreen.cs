@@ -16,6 +16,9 @@ public class EndScreen : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // Network: wait until the start stuff has happened
+        if (GameManager.Instance == null) return;
+
         // If game has ended, indicator is not enabled, and player just pressed trigger
         if (GameManager.Instance.gameState == GameManager.GameState.GameOver && !readyIndicator.enabled
             && playerInput.actions.FindAction("Offensive Action").WasPressedThisFrame())

@@ -155,10 +155,10 @@ PrefabInstance:
       addedObject: {fileID: 721020561464351418}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ec88d96789b82934d8df1ab9e6e88fe3, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6652289537862721644}
+      addedObject: {fileID: 6448808846880785637}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ec88d96789b82934d8df1ab9e6e88fe3, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6448808846880785637}
+      addedObject: {fileID: 6652289537862721644}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ec88d96789b82934d8df1ab9e6e88fe3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5749381738469533743}
@@ -318,24 +318,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &6652289537862721644
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6060949736581650276}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62a52fa449ea78c439b417bf12bbb9f1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  onLeft: 0
-  interactionRadius: 2.5
-  animator: {fileID: 0}
-  spikeStat: 5
-  birdType: 1
-  playerID: 0
 --- !u!114 &6448808846880785637
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -348,13 +330,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 542609770
+  GlobalObjectIdHash: 1196387642
   InScenePlacedSourceGlobalObjectIdHash: 0
+  m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
-  Ownership: 1
+  Ownership: 0
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
-  <InScenePlaced>k__BackingField: 0
+  m_InScenePlaced: 0
   ActiveSceneSynchronization: 0
   SceneMigrationSynchronization: 0
   SpawnWithObservers: 1
@@ -362,6 +345,25 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
+--- !u!114 &6652289537862721644
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6060949736581650276}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62a52fa449ea78c439b417bf12bbb9f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  onLeft: 0
+  interactionRadius: 2.5
+  animator: {fileID: 0}
+  spikeStat: 5
+  birdType: 1
+  playerID: 0
 --- !u!114 &5749381738469533743
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -384,6 +386,9 @@ MonoBehaviour:
   grounded: 0
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
+  enforceNetBoundary: 0
+  netXPosition: 0
+  netBuffer: 0.05
 --- !u!114 &7521698242714406838
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -215,11 +215,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   GlobalObjectIdHash: 4280975672
   InScenePlacedSourceGlobalObjectIdHash: 0
+  m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
-  Ownership: 1
+  Ownership: 0
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
-  <InScenePlaced>k__BackingField: 0
+  m_InScenePlaced: 0
   ActiveSceneSynchronization: 0
   SceneMigrationSynchronization: 0
   SpawnWithObservers: 1
@@ -404,6 +405,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62a52fa449ea78c439b417bf12bbb9f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   onLeft: 0
   interactionRadius: 3
   animator: {fileID: 2795019128993556928}

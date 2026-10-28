@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -44,11 +45,12 @@ public class BallInteract : NetworkBehaviour
     private Vector2 interactionDirection = Vector2.zero; // Variable set from ServerRPC for the direction to set, spike, serve, or block the ball
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    IEnumerator Start()
     {
         serverMovement = GetComponent<CharacterMovement>(); // christofort: gets the character movement script
         baseSpikeSpeed = 10.0f;
-        
+
+        while (BallManager.Instance == null) yield return null;
         ballRb = BallManager.Instance?.gameObject?.GetComponent<Rigidbody>();
         if (ballRb == null)
         {
@@ -111,6 +113,9 @@ public class BallInteract : NetworkBehaviour
     // Update is called once per frame
     void Update()
     {
+        // Network: wait until the start stuff has happened
+        if (GameManager.Instance == null) return;
+
         // Get the height of bird whilst standing on the ground
         if (baseHeight == 0f && serverMovement != null && serverMovement.grounded)
         {
@@ -282,6 +287,9 @@ public class BallInteract : NetworkBehaviour
     // Check if the player can hit the ball
     public bool CanHit()
     {
+        // If either of the two managers used in this method are not instantiated, return false
+        if (GameManager.Instance == null || BallManager.Instance == null) return false;
+        
         // During a serve, the server and ball are intentionally on the same side.
         if (GameManager.Instance.gameState == GameManager.GameState.PointStart
             && GameManager.Instance.server == gameObject)
@@ -688,11 +696,21 @@ public class BallInteract : NetworkBehaviour
     }
 
     /// <summary>
-    /// Direction for volleyball interactions, called by server rpci in PlayerNetworkController.
+    /// Direction for volleyball interactions, called by server rpc in PlayerNetworkController.
     /// </summary>
     /// <param name="dir"></param>
     public void SetDirection(Vector2 dir)
     {
         interactionDirection = dir;
+    }
+
+    /// <summary>
+    /// Coroutine that just waits for the ball manager to be instantiated
+    /// </summary>
+    /// <returns></returns>
+    IEnumerator WaitForBallManager()
+    {
+        while (BallManager.Instance == null) yield return null;
+        Debug.Log(BallManager.Instance.gameObject.GetComponent<Rigidbody>());
     }
 }
