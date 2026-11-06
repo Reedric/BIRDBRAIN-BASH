@@ -18,7 +18,8 @@ public class ScissortailDefensive : BirdAbility
 
     void Start()
     {
-        lr = gameObject.AddComponent<LineRenderer>();
+        // Macaw can copy this ability more than once, and a bird can only have one LineRenderer
+        if (!TryGetComponent(out lr)) lr = gameObject.AddComponent<LineRenderer>();
         lr.enabled = false;
 
         // Initializes the line
@@ -27,6 +28,8 @@ public class ScissortailDefensive : BirdAbility
         lr.endWidth = lineWidth;
         lr.generateLightingData = true;
         lr.material = lineMaterial;
+
+        NetworkFx.MirrorLine(gameObject);
     }
 
     private void OnDisable()
@@ -111,7 +114,7 @@ public class ScissortailDefensive : BirdAbility
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
         {
-            myBallInteract.animator.SetTrigger("DefensiveAbility");
+            myBallInteract.animator.SetTriggerSynced("DefensiveAbility");
         }
 
         Debug.Log("Creating line....");

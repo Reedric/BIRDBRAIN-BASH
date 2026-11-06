@@ -70,7 +70,10 @@ public class MainMenuCursor : MonoBehaviour
         Main,
         LocalOnline,
         NumPlayers,
-        HostJoin
+        HostJoin,
+        OnlineLobby,
+        Credits,
+        Options
     }
 
     private void Start()
@@ -114,11 +117,20 @@ public class MainMenuCursor : MonoBehaviour
         {
             CollectUITargets(activeMenu);
             currentTargetIndex = FindClosestSelectableIndex(cursorPosition);
+
+            // Options starts on its first row, so a stray press of A can't change a setting from the middle of the list
+            if (activeMenu == MenuType.Options) currentTargetIndex = 0;
+
             if (currentTargetIndex >= 0)
                 desiredCursorPosition = GetPreferredScreenPosition(uiTargets[currentTargetIndex]);
             lastMenuActive = activeMenu;
             if (panelChanged)
+            {
                 panelSwitchedTime = Time.time;
+
+                // Panels made in code (like the online lobby) would otherwise be drawn over the cursor
+                if (playerCursor != null) playerCursor.SetAsLastSibling();
+            }
         }
 
         // On the NumPlayers panel, B confirms and proceeds to CharSelect.
@@ -129,8 +141,20 @@ public class MainMenuCursor : MonoBehaviour
             return;
         }
 
+        KeepEventSystemOnTarget();
         UpdateControllerInput(pad);
         UpdateCursorPosition();
+    }
+
+    // The EventSystem also clicks its selected button when A is pressed, so it needs to be on the same
+    // button as the cursor. Otherwise one press can click two different buttons.
+    private void KeepEventSystemOnTarget()
+    {
+        if (EventSystem.current == null || currentTargetIndex < 0 || currentTargetIndex >= uiSelectables.Count) return;
+
+        Selectable target = uiSelectables[currentTargetIndex];
+        if (target != null && EventSystem.current.currentSelectedGameObject != target.gameObject)
+            EventSystem.current.SetSelectedGameObject(target.gameObject);
     }
 
     private void CreatePlayerCursor()
@@ -189,7 +213,7 @@ public class MainMenuCursor : MonoBehaviour
                     AudioManager.PlayButtonHoverSound();
                     lastMoveTime = Time.time;
                 }
-                else if (next == null)
+                else if (next == null && lastMenuActive != MenuType.Options) // Left and right change a setting there
                 {
                     int fallback = FindClosestTargetIndex(cursorPosition, input);
                     if (fallback >= 0 && fallback != currentTargetIndex)
@@ -225,6 +249,10 @@ public class MainMenuCursor : MonoBehaviour
     private void UpdateCursorPosition()
     {
         if (playerCursor == null) return;
+
+        // Follows the target every frame, since a new panel's buttons can still be moving as its layout gets built
+        if (currentTargetIndex >= 0 && currentTargetIndex < uiTargets.Count)
+            desiredCursorPosition = GetPreferredScreenPosition(uiTargets[currentTargetIndex]);
 
         float t = Mathf.Clamp01(Time.deltaTime / Mathf.Max(0.0001f, cursorMoveSmoothTime));
         cursorPosition = Vector2.Lerp(cursorPosition, desiredCursorPosition, t);
@@ -361,6 +389,22 @@ public class MainMenuCursor : MonoBehaviour
 
     private List<Selectable> GetActivePanelSelectables(MenuType activeMenu)
     {
+        if (activeMenu == MenuType.OnlineLobby)
+        {
+            // Leaves out hidden buttons, since only hosts have a join code to copy
+            return new List<Selectable>(OnlineLobbyUI.ActivePanel.GetComponentsInChildren<Selectable>(false));
+        }
+
+        if (activeMenu == MenuType.Credits)
+        {
+            return new List<Selectable>(MainMenu.ActiveCreditsPanel.GetComponentsInChildren<Selectable>(false));
+        }
+
+        if (activeMenu == MenuType.Options)
+        {
+            return new List<Selectable>(OptionsMenuUI.ActivePanel.GetComponentsInChildren<Selectable>(false));
+        }
+
         if (activeMenu == MenuType.NumPlayers)
         {
             if (numPlayersPanel == null) return null;
@@ -379,7 +423,8 @@ public class MainMenuCursor : MonoBehaviour
 
         if (activeMenu == MenuType.HostJoin && hostJoinPanel != null)
         {
-            return new List<Selectable>(hostJoinPanel.GetComponentsInChildren<Selectable>(true));
+            // Leaves out hidden buttons, since the list of public matches changes in size
+            return new List<Selectable>(hostJoinPanel.GetComponentsInChildren<Selectable>(false));
         }
 
         Canvas canvas = GetComponentInParent<Canvas>();
@@ -484,6 +529,9 @@ public class MainMenuCursor : MonoBehaviour
     /// <returns>The type of menu that is active in the hierarchy.</returns>
     private MenuType GetActiveMenuType()
     {
+        if (OnlineLobbyUI.ActivePanel != null) return MenuType.OnlineLobby;
+        if (MainMenu.ActiveCreditsPanel != null) return MenuType.Credits;
+        if (OptionsMenuUI.ActivePanel != null) return MenuType.Options;
         if (mainMenuPanel != null && mainMenuPanel.activeInHierarchy) return MenuType.Main;
         if (localOnlinePanel != null && localOnlinePanel.activeInHierarchy) return MenuType.LocalOnline;
         if (numPlayersPanel != null && numPlayersPanel.activeInHierarchy) return MenuType.NumPlayers;

@@ -1,3 +1,6 @@
+using System.Collections;
+using TMPro;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
@@ -22,11 +25,21 @@ public class PauseMenu : MonoBehaviour
 
     public static PauseMenu Instance; // Private instance of the GameManager that other classes cannot reference
 
+    private OptionsMenuUI optionsMenu;
+    private Gamepad optionsGamepad;
+    private GameObject optionsReturnSelection;
+    private PauseMenuCursor cursor;
+    private InputActionAsset onlineMenuActions;
+
     void Awake()
     {
         Instance = this;
+        AddButtonSounds(gameObject);
+    }
 
-        foreach (Button button in GetComponentsInChildren<Button>(true))
+    private void AddButtonSounds(GameObject root)
+    {
+        foreach (Button button in root.GetComponentsInChildren<Button>(true))
         {
             button.onClick.AddListener(() => AudioManager.PlayButtonSelectSound());
             if (button.GetComponent<PauseMenuButtonAudio>() == null)
@@ -40,13 +53,97 @@ public class PauseMenu : MonoBehaviour
         
     }
     
+    // Opens or closes the pause menu for an online player. The match can't be frozen for everyone else,
+    // so it keeps going while this player's bird stands still (see PlayerNetworkController).
+    public void ToggleOnlinePause()
+    {
+        if (CloseOptions()) return;
+
+        GameIsPaused = !GameIsPaused;
+        pauseMenuUI.SetActive(GameIsPaused);
+        SetOnlineMenuInput(GameIsPaused);
+
+        if (GameIsPaused)
+        {
+            AudioManager.PlayPauseTrack();
+            ShowCursor(GetOnlinePlayerIndex());
+        }
+        else
+        {
+            AudioManager.PlayDefaultBackground();
+            HideCursor();
+        }
+    }
+
+    // Online, the menu gets its own copy of the input actions, like PlayerNetworkController does for gameplay.
+    // The birds' PlayerInputs would otherwise be using the same ones as the menu, and a local match only
+    // avoids that by giving the menu the actions of whoever paused, which there's no equivalent of online.
+    private void SetOnlineMenuInput(bool menuOpen)
+    {
+        if (onlineMenuActions == null)
+        {
+            onlineMenuActions = Instantiate(inputModule.actionsAsset);
+            inputModule.actionsAsset = onlineMenuActions;
+
+            // There's no mouse in the menus, but clicking on a window to focus it would still clear the selection,
+            // which is what both navigating and the cursor go by
+            inputModule.deselectOnBackgroundClick = false;
+        }
+
+        // Only while it's open, so that playing the match doesn't also move around the menu
+        InputActionMap menuMap = onlineMenuActions.FindActionMap("UI");
+        if (menuOpen) menuMap.Enable();
+        else menuMap.Disable();
+    }
+
+    void OnDestroy()
+    {
+        if (onlineMenuActions != null) Destroy(onlineMenuActions);
+    }
+
+    // Shows the cursor of the player using this menu. Each player has their own art for it, in Resources.
+    private void ShowCursor(int playerIndex)
+    {
+        HideCursor();
+
+        // The cursor follows the selection, so make sure that the pause menu has one
+        GameObject selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+        if (EventSystem.current != null && (selected == null || !selected.transform.IsChildOf(pauseMenuUI.transform)))
+            EventSystem.current.SetSelectedGameObject(pauseMenuUI.GetComponentInChildren<Button>().gameObject);
+
+        GameObject prefab = Resources.Load<GameObject>($"MenuCursor{Mathf.Clamp(playerIndex, 0, 3) + 1}");
+        cursor = Instantiate(prefab, pauseMenuUI.transform.parent).AddComponent<PauseMenuCursor>();
+    }
+
+    private void HideCursor()
+    {
+        if (cursor != null) Destroy(cursor.gameObject);
+    }
+
+    // Online, each machine only has one player, and it's whichever bird this client owns
+    private int GetOnlinePlayerIndex()
+    {
+        NetworkObject playerObject = NetworkManager.Singleton.LocalClient?.PlayerObject;
+        return playerObject != null && playerObject.TryGetComponent(out BallInteract ballInteract) ? ballInteract.playerID : 0;
+    }
+
     // Resumes Gameplay
     public void Resume()
     {
+        // The pause button only goes back one screen while the options are open
+        if (CloseOptions()) return;
+
+        if (NetworkSession.IsOnline)
+        {
+            if (GameIsPaused) ToggleOnlinePause();
+            return;
+        }
+
         pauseMenuUI.SetActive(false);
         Time.timeScale = 1f;
         GameIsPaused = false;
         pausedPlayerID = -1;
+        HideCursor();
 
         // Enable UI for all players — guarded against null because AI birds have no PlayerInput
         // (demo mode spawns 4 AIs, none of which carry a PlayerInput component)
@@ -71,6 +168,7 @@ public class PauseMenu : MonoBehaviour
         pauseMenuUI.SetActive(true);
         Time.timeScale = 0f;
         GameIsPaused = true;
+        ShowCursor(pausedPlayerID);
 
         // Enable UI for the player that paused it — guarded against null because AI birds have no
         // PlayerInput (demo mode spawns 4 AIs, none of which carry a PlayerInput component).
@@ -135,11 +233,77 @@ public class PauseMenu : MonoBehaviour
 
     public void LoadOptions()
     {
-        Debug.Log("Loading Options Menu......");
+        if (OptionsMenuUI.ActivePanel != null) return;
+
+        if (optionsMenu == null)
+        {
+            TMP_Text fontSource = pauseMenuUI.GetComponentInChildren<TMP_Text>(true);
+
+            optionsMenu = gameObject.AddComponent<OptionsMenuUI>();
+            optionsMenu.Build(pauseMenuUI.GetComponentInParent<Canvas>(true), fontSource != null ? fontSource.font : null,
+                () => NetworkSession.IsOnline ? Gamepad.current : optionsGamepad, true, () => CloseOptions());
+            AddButtonSounds(optionsMenu.Panel);
+        }
+
+        optionsGamepad = FindPausedPlayerGamepad();
+        optionsReturnSelection = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+
+        pauseMenuUI.SetActive(false);
+        optionsMenu.Show();
+        StartCoroutine(SelectNextFrame(optionsMenu.FirstButton.gameObject));
+    }
+
+    // Returns whether the options were open
+    private bool CloseOptions()
+    {
+        if (OptionsMenuUI.ActivePanel == null) return false;
+
+        optionsMenu.Hide();
+        pauseMenuUI.SetActive(true);
+        StartCoroutine(SelectNextFrame(optionsReturnSelection));
+        return true;
+    }
+
+    // Clears the selection for a frame first, so the press that got here can't also click the new selection.
+    private IEnumerator SelectNextFrame(GameObject selection)
+    {
+        if (EventSystem.current == null) yield break;
+
+        EventSystem.current.SetSelectedGameObject(null);
+        yield return null;
+        EventSystem.current.SetSelectedGameObject(selection);
+    }
+
+    // In a local match, the options only listen to the player that paused the game, the same as the pause menu.
+    // That's nobody's controller if they're on keyboard. Demo mode has no players, so it's whichever was used last.
+    private Gamepad FindPausedPlayerGamepad()
+    {
+        GameManager manager = GameManager.Instance;
+        GameObject[] birds = { manager.leftPlayer1, manager.leftPlayer2, manager.rightPlayer1, manager.rightPlayer2 };
+
+        foreach (GameObject bird in birds)
+        {
+            if (bird == null || !bird.TryGetComponent(out PlayerInput playerInput)) continue;
+            if (!bird.TryGetComponent(out BallInteract ballInteract) || ballInteract.playerID != pausedPlayerID) continue;
+
+            foreach (InputDevice device in playerInput.devices)
+            {
+                if (device is Gamepad gamepad) return gamepad;
+            }
+            return null;
+        }
+
+        return Gamepad.current;
     }
 
     public void MainMenu()
     {
+        if (NetworkSession.IsOnline)
+        {
+            NetworkSession.LeaveToMainMenu();
+            return;
+        }
+
         Time.timeScale = 1f;
         SceneManager.LoadScene("MainMenu");
     }

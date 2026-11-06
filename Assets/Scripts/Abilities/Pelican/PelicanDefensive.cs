@@ -84,10 +84,10 @@ public class PelicanDefensive : BirdAbility
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
         {
-            myBallInteract.animator.SetTrigger("DefensiveAbility");
+            myBallInteract.animator.SetTriggerSynced("DefensiveAbility");
         }
 
-        BallManager.Instance.gameObject.SetActive(false);
+        NetworkFx.SetActive(BallManager.Instance.gameObject, false);
         isBallEaten = true;
 
         holdCoroutine = StartCoroutine(HoldTime());
@@ -114,7 +114,7 @@ public class PelicanDefensive : BirdAbility
     {
         // Position and re-enable the ball first
         BallManager.Instance.gameObject.transform.position = transform.position + new Vector3(0, 3f, 0) + transform.forward;
-        BallManager.Instance.gameObject.SetActive(true);
+        NetworkFx.SetActive(BallManager.Instance.gameObject, true);
 
         // Wait one frame so physics and state catch up before registering the hit
         yield return null;

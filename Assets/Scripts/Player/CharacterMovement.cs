@@ -24,6 +24,8 @@ public class CharacterMovement : NetworkBehaviour
     private float originalMaxAirSpeed = 1.0f; // Original max air speed before buff
 
     private PlayerInput playerInput; // Input of the player for local multiplayer functionality
+    private bool networkedJumpHeld; // If the player is holding jump, set by the input RPC for online multiplayer
+    private bool inputInverted; // If this player's online movement input is flipped
     private Rigidbody rb; // Rigid body of the character
     public bool grounded = false; // If the character is touching the ground
 
@@ -102,8 +104,8 @@ public class CharacterMovement : NetworkBehaviour
 
         Move();
 
-        // Check if local session and jump pressed this frame
-        if (GameManager.Instance.isLocal && playerInput.actions["Jump"].IsPressed())
+        // Check if jump is being held, from this machine's input or from the input RPC
+        if (JumpHeld)
             Jump();
     }
 
@@ -251,11 +253,7 @@ public class CharacterMovement : NetworkBehaviour
     /// </summary>
     public void Move()
     {
-        if (!GameManager.Instance.isLocal && !IsServer)
-        {
-            Debug.Log($"[CLIENT] Move() called on Object {NetworkObjectId} - should NOT happen.");
-            return;
-        }
+        if (!NetworkSession.HasAuthority) return;
 
         // Get the input for local if necessary
         if (GameManager.Instance.isLocal) movementInput = playerInput.actions["Move"].ReadValue<Vector2>();
@@ -335,13 +333,32 @@ public class CharacterMovement : NetworkBehaviour
         }
     }
 
+    // Whether jump is being held. Abilities should use this instead of reading PlayerInput,
+    // since online input arrives through PlayerNetworkController.
+    public bool JumpHeld => GameManager.Instance.isLocal
+        ? playerInput != null && playerInput.actions["Jump"].IsPressed()
+        : networkedJumpHeld;
+
+    // Setter for holding jump from the PlayerNetworkController component.
+    public void SetJumpHeld(bool held)
+    {
+        networkedJumpHeld = held;
+    }
+
+    // Flips this player's online movement input (Macaw's Flip Flap).
+    public void SetInputInverted(bool inverted)
+    {
+        if (inputInverted != inverted) movementInput = -movementInput;
+        inputInverted = inverted;
+    }
+
     /// <summary>
     /// Setter for the input from the PlayerNetworkController component.
     /// </summary>
     /// <param name="input">2D input movement vector.</param>
     public void SetInput(Vector2 input)
     {
-        movementInput = input;
+        movementInput = inputInverted ? -input : input;
         // Debug.Log($"Updated input for Player{NetworkObjectId}: {networkedInput}");
     }
 }

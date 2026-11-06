@@ -134,7 +134,7 @@ public class MacawDefensive : BirdAbility
         if (currentAbility == null || playerID < 0 || HUDManager.Instance == null) return;
 
         BirdType sourceBird = GetBirdType(currentAbility.gameObject);
-        HUDManager.Instance.SetDefensiveIcon(playerID, HUDManager.Instance.GetDefensiveIconForBird(sourceBird));
+        HUDManager.Instance.SetDefensiveIconForBird(playerID, sourceBird);
     }
 
     // Attaches a fresh copy of the stolen ability's type directly onto Macaw so its effect

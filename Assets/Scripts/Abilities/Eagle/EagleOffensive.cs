@@ -39,7 +39,7 @@ public class EagleOffensive : BirdAbility
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
         {
-            myBallInteract.animator.SetTrigger("OffensiveAbility");
+            myBallInteract.animator.SetTriggerSynced("OffensiveAbility");
         }
 
         // Play sound effect using AudioManager

@@ -47,7 +47,7 @@ public class PukekoOffensiveAbility : BirdAbility
             Quaternion vfxRotation = facingRotation * Quaternion.Euler(0f, -90f, 0f);
 
             GameObject particles =
-                Instantiate(squawkParticlesPrefab, transform.position, vfxRotation);
+                NetworkFx.Instantiate(squawkParticlesPrefab, transform.position, vfxRotation);
 
             ParticleSystem[] allSystems = particles.GetComponentsInChildren<ParticleSystem>(true);
             foreach (ParticleSystem ps in allSystems)
@@ -64,7 +64,7 @@ public class PukekoOffensiveAbility : BirdAbility
         // Trigger offensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
-            myBallInteract.animator.SetTrigger("OffensiveAbility");
+            myBallInteract.animator.SetTriggerSynced("OffensiveAbility");
 
         // Play sound effect
         AudioManager.PlayBirdSound(BirdType.PUKEKO, SoundType.OFFENSIVE, 1.0f);

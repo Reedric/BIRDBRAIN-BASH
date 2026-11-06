@@ -1,7 +1,6 @@
-using Unity.Netcode;
 using UnityEngine;
 
-public class BirdAbilityRuleService : NetworkBehaviour
+public class BirdAbilityRuleService : MonoBehaviour
 {
     public static BirdAbilityRuleService Instance { get; private set; }
 

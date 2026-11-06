@@ -68,6 +68,8 @@ public class HitEffects : MonoBehaviour
     /// </param>
     public void PlayEffect(HitType hitType, int playerIndex)
     {
+        NetworkFx.ForwardHitEffect(hitType, playerIndex);
+
         GameObject prefab = ResolvePrefab(hitType, playerIndex);
 
         if (prefab == null)

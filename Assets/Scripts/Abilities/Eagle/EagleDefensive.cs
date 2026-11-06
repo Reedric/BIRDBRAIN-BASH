@@ -47,7 +47,7 @@ public class EagleDefensive : BirdAbility
 		List<Vector3> positions = FindStarPositions(isLeftPlayer);
 		foreach (Vector3 position in positions)
 		{
-			GameObject star = Instantiate(starPrefab, position, Quaternion.identity);
+			GameObject star = NetworkFx.Instantiate(starPrefab, position, Quaternion.identity);
 			EagleStar starCollision = star.AddComponent<EagleStar>();
 			starCollision.Initialize(this, star, starLifetime, true);
 

@@ -75,7 +75,7 @@ public class LovebirdOffensive : BirdAbility
         // Trigger offensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
-            myBallInteract.animator.SetTrigger("OffensiveAbility");
+            myBallInteract.animator.SetTriggerSynced("OffensiveAbility");
 
         // Gets opponents
         GameManager gameManager = GameManager.Instance;
@@ -107,7 +107,7 @@ public class LovebirdOffensive : BirdAbility
                 if (opponent.GetComponent<AIBehavior>())
                     opponent.GetComponent<AIBehavior>().SetEnamored(true);  // instead of .enabled = false
 
-                ParticleSystem heart = Instantiate(hearts, opponent.transform);
+                ParticleSystem heart = NetworkFx.Instantiate(hearts, opponent.transform);
                 heart.transform.position += new Vector3(0f, heartsOffset, 0f);
                 heart.Play();
                 _hearts.Add(heart);
@@ -134,7 +134,7 @@ public class LovebirdOffensive : BirdAbility
         }
 
         foreach (ParticleSystem heart in _hearts)
-            Destroy(heart);
+            Destroy(heart.gameObject);
 
         opponents.Clear();
         _hearts.Clear();

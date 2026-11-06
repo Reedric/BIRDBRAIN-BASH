@@ -82,7 +82,7 @@ public class OstrichOffensive : BirdAbility
     private void PlayActivationEffects()
     {
         if (ballInteract != null && ballInteract.animator != null)
-            ballInteract.animator.SetTrigger("OffensiveAbility");
+            ballInteract.animator.SetTriggerSynced("OffensiveAbility");
 
         AudioManager.PlayBirdSound(BirdType.OSTRICH, SoundType.HAPPY, 1.0f);
     }

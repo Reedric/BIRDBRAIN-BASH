@@ -1,4 +1,6 @@
 using System.Collections;
+using TMPro;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -27,6 +29,11 @@ public class countdown : MonoBehaviour
     private CanvasGroup canvasGroup;
     private bool isCountdownComplete = false;
 
+    // Online, the network time everyone's countdown starts at. Negative means this screen just uses its own timer
+    private double sharedStartTime = -1;
+    private GameObject waitingOverlay;
+    private Animator cameraAnimator;
+
     public bool IsCountdownComplete => isCountdownComplete;
 
     private void Awake()
@@ -47,12 +54,74 @@ public class countdown : MonoBehaviour
             scaleCurve = AnimationCurve.EaseInOut(0, 0.2f, 1, 1);
         if (alphaCurve == null || alphaCurve.keys.Length == 0)
             alphaCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+
+        // Done here rather than in Start, since the message to start the countdown could get here before Start runs
+        if (!DataTransferManager.isLocal && targetImage != null)
+        {
+            CreateWaitingOverlay();
+            HoldCameraAnimation();
+        }
+    }
+
+    // Online, the camera's intro waits on its first frame until everyone is ready, then plays alongside the countdown.
+    private void HoldCameraAnimation()
+    {
+        GameObject mainCamera = GameObject.FindWithTag("MainCamera");
+        if (mainCamera != null && mainCamera.TryGetComponent(out cameraAnimator))
+            cameraAnimator.speed = 0f;
+    }
+
+    // Greys out the screen so that it looks paused, with a message saying why. Built in code so that it doesn't
+    // need adding to each of the game scenes. Shows until the countdown starts.
+    private void CreateWaitingOverlay()
+    {
+        Transform parent = targetImage.transform.parent;
+        TMP_Text fontSource = parent.GetComponentInChildren<TMP_Text>(true);
+
+        waitingOverlay = new GameObject("Waiting For Players Overlay", typeof(RectTransform), typeof(Image));
+        waitingOverlay.transform.SetParent(parent, false);
+
+        Image overlayImage = waitingOverlay.GetComponent<Image>();
+        overlayImage.color = new Color(0.2f, 0.2f, 0.2f, 0.55f);
+        overlayImage.raycastTarget = false;
+
+        RectTransform overlayRect = waitingOverlay.GetComponent<RectTransform>();
+        overlayRect.anchorMin = Vector2.zero;
+        overlayRect.anchorMax = Vector2.one;
+        overlayRect.offsetMin = overlayRect.offsetMax = Vector2.zero;
+
+        // Goes over the HUD, but under the pause menu so that it doesn't grey that out as well
+        PauseMenu pauseMenu = FindFirstObjectByType<PauseMenu>();
+        if (pauseMenu != null && pauseMenu.pauseMenuUI != null && pauseMenu.pauseMenuUI.transform.parent == parent)
+            waitingOverlay.transform.SetSiblingIndex(pauseMenu.pauseMenuUI.transform.GetSiblingIndex());
+
+        GameObject waitingText = TMP_DefaultControls.CreateText(new TMP_DefaultControls.Resources());
+        waitingText.name = "Waiting For Players Text";
+        waitingText.transform.SetParent(waitingOverlay.transform, false);
+
+        RectTransform rect = waitingText.GetComponent<RectTransform>();
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = Vector2.zero;
+        rect.sizeDelta = new Vector2(1200f, 100f);
+
+        TMP_Text text = waitingText.GetComponent<TMP_Text>();
+        if (fontSource != null) text.font = fontSource.font;
+        text.text = "Waiting for players...";
+        text.fontSize = 64f;
+        text.color = Color.white;
+        text.outlineColor = Color.black;
+        text.outlineWidth = 0.2f;
+        text.alignment = TextAlignmentOptions.Center;
+        text.raycastTarget = false;
     }
 
     private void Start()
     {
-        if (playOnStart)
+        // Online, everyone starts together once the birds are spawned (see MultiplayerManager)
+        if (playOnStart && DataTransferManager.isLocal)
             StartCountdown();
+        else if (!DataTransferManager.isLocal && canvasGroup != null)
+            canvasGroup.alpha = 0f; // Keep it hidden until then, since the image starts out showing a number
     }
 
     public void StartCountdown()
@@ -65,17 +134,49 @@ public class countdown : MonoBehaviour
         StartCoroutine(RunCountdown());
     }
 
+    // The online version of StartCountdown. Every screen follows the network time instead of its own timer,
+    // so the countdown stays lined up no matter when this message arrived or how the scene load went.
+    public void StartCountdownAt(double networkTime)
+    {
+        sharedStartTime = networkTime;
+        StartCountdown();
+    }
+
+    // How far through a stage an online countdown should be right now
+    private float GetSharedStageTime(int stage)
+    {
+        return (float)(NetworkManager.Singleton.ServerTime.Time - sharedStartTime) - stage * stageDuration;
+    }
+
     private IEnumerator RunCountdown()
     {
-        // Skip a couple frames so Time.deltaTime settles after scene load,
-        // then wait the initial delay before the first stage begins
-        yield return null;
-        yield return null;
-        yield return new WaitForSeconds(initialDelay);
+        bool isShared = sharedStartTime >= 0;
+
+        if (isShared)
+        {
+            while (GetSharedStageTime(0) < 0f)
+                yield return null;
+
+            if (waitingOverlay != null) waitingOverlay.SetActive(false);
+            if (cameraAnimator != null) cameraAnimator.speed = 1f;
+        }
+        else
+        {
+            // Skip a couple frames so Time.deltaTime settles after scene load,
+            // then wait the initial delay before the first stage begins
+            yield return null;
+            yield return null;
+            yield return new WaitForSeconds(initialDelay);
+        }
 
         int stages = Mathf.Min(4, textures.Length);
         for (int i = 0; i < stages; i++)
         {
+            // If a hitch on this screen made it miss a stage, skip it to catch up with everyone else.
+            // GO always runs, since that's what starts the game music.
+            if (isShared && i < stages - 1 && GetSharedStageTime(i) >= stageDuration)
+                continue;
+
             // Play countdown sfx for this stage (0=3, 1=2, 2=1, 3=GO)
             AudioManager.PlayCountdownSfx(i);
 
@@ -103,7 +204,7 @@ public class countdown : MonoBehaviour
                 float t = 0f;
                 while (t < stageDuration)
                 {
-                    t += Time.deltaTime;
+                    t = isShared ? GetSharedStageTime(i) : t + Time.deltaTime;
                     float p = Mathf.Clamp01(t / stageDuration);
                     float s = scaleCurve.Evaluate(p);
                     float a = alphaCurve.Evaluate(p);

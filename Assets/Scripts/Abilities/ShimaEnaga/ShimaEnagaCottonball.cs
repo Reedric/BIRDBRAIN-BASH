@@ -383,7 +383,7 @@ public class ShimaEnagaCottonball : MonoBehaviour
         if (!Application.isPlaying)
             return;
 
-        GameObject poof = Instantiate(
+        GameObject poof = NetworkFx.Instantiate(
             poofVFXPrefab,
             transform.position,
             Quaternion.identity

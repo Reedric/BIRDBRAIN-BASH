@@ -40,7 +40,7 @@ public class RobopigeonOffensive : BirdAbility
 		StartCoroutine(ResolveStrike(strikePosition, region));
 
 		if (ballInteract.animator != null)
-			ballInteract.animator.SetTrigger("OffensiveAbility");
+			ballInteract.animator.SetTriggerSynced("OffensiveAbility");
 
 		AudioManager.PlayBirdSound(BirdType.ROBOPIGEON, SoundType.OFFENSIVE, 1f);
 		if (HUDManager.Instance != null)
@@ -71,7 +71,7 @@ public class RobopigeonOffensive : BirdAbility
 		if (strikeRegionPrefab == null)
 			return null;
 
-		GameObject region = Instantiate(strikeRegionPrefab, position, Quaternion.identity);
+		GameObject region = NetworkFx.Instantiate(strikeRegionPrefab, position, Quaternion.identity);
 		float diameter = strikeRadius * 2f;
 		region.transform.localScale = new Vector3(diameter, region.transform.localScale.y, diameter);
 		return region;
@@ -208,7 +208,7 @@ public class RobopigeonOffensive : BirdAbility
 		if (hitmarkerVfxPrefab == null || activeHitmarkers.ContainsKey(bird))
 			return;
 
-		GameObject hitmarker = Instantiate(hitmarkerVfxPrefab, bird.transform);
+		GameObject hitmarker = NetworkFx.Instantiate(hitmarkerVfxPrefab, bird.transform);
 		hitmarker.transform.localPosition = Vector3.zero;
 		activeHitmarkers[bird] = hitmarker;
 	}

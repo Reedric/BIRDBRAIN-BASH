@@ -111,6 +111,10 @@ public abstract class BirdAbility : MonoBehaviour
         return false;
     }
 
+    // Client side of NetworkFx.AbilityEvent, for abilities with visuals NetworkFx can't show on its own.
+    // Abilities are disabled on clients, so this is the only part of one that runs there.
+    public virtual void OnNetworkEvent(int eventId, Vector3 argument) { }
+
     // TODO: make this return bool, true means the cooldown will start, false means it won't (for abilities with multiple activations)
     protected abstract bool Activate();
 

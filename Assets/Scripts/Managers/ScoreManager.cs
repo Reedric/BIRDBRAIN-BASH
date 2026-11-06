@@ -10,7 +10,7 @@ using Unity.Netcode;
 public class ScoreManager : NetworkBehaviour
 {
     private int side1ScoreLocal;
-    private NetworkVariable<int> side1ScoreNet;
+    private NetworkVariable<int> side1ScoreNet = new();
     public int side1Score
     {
         get => GameManager.Instance.isLocal ? side1ScoreLocal : side1ScoreNet.Value;
@@ -22,7 +22,7 @@ public class ScoreManager : NetworkBehaviour
     }
 
     private int side2ScoreLocal;
-    private NetworkVariable<int> side2ScoreNet;
+    private NetworkVariable<int> side2ScoreNet = new();
     public int side2Score
     {
         get => GameManager.Instance.isLocal ? side2ScoreLocal : side2ScoreNet.Value;
@@ -34,7 +34,7 @@ public class ScoreManager : NetworkBehaviour
     }
 
     private int side1SetsWonLocal;
-    private NetworkVariable<int> side1SetsWonNet;
+    private NetworkVariable<int> side1SetsWonNet = new();
     public int side1SetsWon
     {
         get => GameManager.Instance.isLocal ? side1SetsWonLocal : side1SetsWonNet.Value;
@@ -46,7 +46,7 @@ public class ScoreManager : NetworkBehaviour
     }
 
     private int side2SetsWonLocal;
-    private NetworkVariable<int> side2SetsWonNet;
+    private NetworkVariable<int> side2SetsWonNet = new();
     public int side2SetsWon
     {
         get => GameManager.Instance.isLocal ? side2SetsWonLocal : side2SetsWonNet.Value;
@@ -114,19 +114,17 @@ public class ScoreManager : NetworkBehaviour
     private bool pointIntercepted;
 
     private GameObject lastPhysicalTouchLocal;
-    private NetworkVariable<ulong> lastPhysicalTouchNet;
+    private NetworkVariable<ulong> lastPhysicalTouchNet = new();
     public GameObject lastPhysicalTouch
     {
         get
         {
-            if (GameManager.Instance.isLocal) return lastPhysicalTouchLocal;
-            else if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(lastPhysicalTouchNet.Value, out var netObj)) return netObj.gameObject;
-            return null;
+            return GameManager.Instance.isLocal ? lastPhysicalTouchLocal : NetworkSession.Resolve(lastPhysicalTouchNet.Value);
         }
         set
         {
             if (GameManager.Instance.isLocal) lastPhysicalTouchLocal = value;
-            else lastPhysicalTouchNet.Value = value.GetComponent<NetworkObject>().NetworkObjectId;;
+            else lastPhysicalTouchNet.Value = NetworkSession.IdOf(value);
         }
     }
 
@@ -154,24 +152,11 @@ public class ScoreManager : NetworkBehaviour
 
         // Initialize singleton to this script
         instance = this;
-
-        // Instantiate the networked variables if necessary
-        if (GameObject.Find("StartLobbyIf2Players"))
-        {
-            instance.side1ScoreNet = new NetworkVariable<int>();
-            instance.side2ScoreNet = new NetworkVariable<int>();
-            instance.side1SetsWonNet = new NetworkVariable<int>();
-            instance.side2SetsWonNet = new NetworkVariable<int>();
-            instance.lastPhysicalTouchNet = new NetworkVariable<ulong>();
-        }
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        // If not the server, don't do anything
-        // if (!IsServer) return;
-
         // Make sure the invisible wall is in the right spot and the end screens aren't showing
         invisWall.transform.position = new Vector3(16, -0.2f, -0.08f);
         fadeScreen.color = new Color(0, 0, 0, 0);
@@ -194,21 +179,17 @@ public class ScoreManager : NetworkBehaviour
         scoreboard.SetActive(true);
         birdBars.SetActive(true);
 
-        // Initialize all network variables if it is a online multiplayer match
-        if (!GameManager.Instance.isLocal)
-        {
-            side1ScoreNet = new NetworkVariable<int>();
-            side2ScoreNet = new NetworkVariable<int>();
-            side1SetsWonNet = new NetworkVariable<int>();
-            side2SetsWonNet = new NetworkVariable<int>();
-            lastPhysicalTouchNet = new NetworkVariable<ulong>();
-        }
+        // Set the score text to 0. Everything after this is gameplay, which online is only for the host
+        side1ScoreUI.text = "0";
+        side2ScoreUI.text = "0";
+        side1SetUI.text = "0";
+        side2SetUI.text = "0";
+
+        if (!NetworkSession.HasAuthority) return;
 
         // Set the scores to 0, right to serve, and the ball is in play
         side1Score = 0;
         side2Score = 0;
-        side1ScoreUI.text = "0";
-        side2ScoreUI.text = "0";
         leftLastScored = false;
         inPlay = true;
 
@@ -232,8 +213,8 @@ public class ScoreManager : NetworkBehaviour
     // Checking to see if the ball hits the court on either side
     void OnCollisionEnter(Collision collision)
     {
-        // If not the server, don't do anything
-        // if (!IsServer) return;
+        // Only the host decides when a point is scored
+        if (!NetworkSession.HasAuthority) return;
 
         // if it touches side 1, then side 2 scores
         if (collision.gameObject.CompareTag("Side1") && inPlay)
@@ -472,13 +453,13 @@ public class ScoreManager : NetworkBehaviour
         {
             Debug.Log("Side 1 wins the match!");
             inPlay = false;
-            StartCoroutine(TransitionToEnd(true));
+            BeginEndTransition(true);
         }
         else if (side2SetsWon >= setsToWin)
         {
             Debug.Log("Side 2 wins the match!");
             inPlay = false;
-            StartCoroutine(TransitionToEnd(false));
+            BeginEndTransition(false);
         }
         else
         {
@@ -506,6 +487,7 @@ public class ScoreManager : NetworkBehaviour
 
         // Updates UI For Which Side is Serving
         UpdateServeIndicator(leftJustScored);
+        if (NetworkSession.IsServer) UpdateServeIndicatorRpc(leftJustScored);
 
         // Wait 3 seconds
         yield return new WaitForSeconds(3.0f);
@@ -633,6 +615,25 @@ public class ScoreManager : NetworkBehaviour
         }
     }
 
+    // The end of the match is mostly UI and cameras, so it plays on every machine
+    private void BeginEndTransition(bool leftSideJustWon)
+    {
+        if (NetworkSession.IsServer) BeginEndTransitionRpc(leftSideJustWon);
+        else StartCoroutine(TransitionToEnd(leftSideJustWon));
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void BeginEndTransitionRpc(bool leftSideJustWon)
+    {
+        StartCoroutine(TransitionToEnd(leftSideJustWon));
+    }
+
+    [Rpc(SendTo.NotServer)]
+    private void UpdateServeIndicatorRpc(bool leftJustScored)
+    {
+        UpdateServeIndicator(leftJustScored);
+    }
+
     private IEnumerator TransitionToEnd(bool leftSideJustWon)
     {
         // Fade to black
@@ -646,7 +647,7 @@ public class ScoreManager : NetworkBehaviour
         }
 
         // Indicate end of game
-        GameManager.Instance.gameState = GameManager.GameState.GameOver;
+        if (NetworkSession.HasAuthority) GameManager.Instance.gameState = GameManager.GameState.GameOver;
 
         // Switch cameras
         endCamera.enabled = true;
@@ -664,10 +665,8 @@ public class ScoreManager : NetworkBehaviour
         // Move all of the birds and show the correct screen
         if (leftSideJustWon)
         {
-            GameManager.Instance.leftPlayer1.transform.position = endLocations[0].position;
-            GameManager.Instance.leftPlayer2.transform.position = endLocations[1].position;
-            GameManager.Instance.rightPlayer1.transform.position = endLocations[2].position;
-            GameManager.Instance.rightPlayer2.transform.position = endLocations[3].position;
+            MoveBirdsToEndLocations(GameManager.Instance.leftPlayer1, GameManager.Instance.leftPlayer2,
+                GameManager.Instance.rightPlayer1, GameManager.Instance.rightPlayer2);
             blueWin.enabled = true;
             blueWinScore.text = $"{side1SetsWon}-{side2SetsWon}";
             blueWinScore.enabled = true;
@@ -678,10 +677,8 @@ public class ScoreManager : NetworkBehaviour
         }
         else
         {
-            GameManager.Instance.rightPlayer1.transform.position = endLocations[0].position;
-            GameManager.Instance.rightPlayer2.transform.position = endLocations[1].position;
-            GameManager.Instance.leftPlayer1.transform.position = endLocations[2].position;
-            GameManager.Instance.leftPlayer2.transform.position = endLocations[3].position;
+            MoveBirdsToEndLocations(GameManager.Instance.rightPlayer1, GameManager.Instance.rightPlayer2,
+                GameManager.Instance.leftPlayer1, GameManager.Instance.leftPlayer2);
             pinkWin.enabled = true;
             pinkWinScore.text = $"{side1SetsWon}-{side2SetsWon}";
             pinkWinScore.enabled = true;
@@ -699,6 +696,14 @@ public class ScoreManager : NetworkBehaviour
             fadeScreen.color = new Color(0, 0, 0, 1 - time / 2.0f);
             yield return null;
         }
+    }
+
+    private void MoveBirdsToEndLocations(params GameObject[] birds)
+    {
+        if (!NetworkSession.HasAuthority) return;
+
+        for (int i = 0; i < birds.Length; ++i)
+            NetworkSession.Teleport(birds[i], endLocations[i].position);
     }
 
     void UpdateScoreDisplay(TextMeshProUGUI scoreText, int score)
@@ -832,18 +837,63 @@ public class ScoreManager : NetworkBehaviour
         }
 
         // Everyone is ready, go back to main menu
+        if (NetworkSession.IsServer)
+        {
+            ReturnToMenuRpc();
+            StartCoroutine(HostReturnToMenu());
+            return;
+        }
+
         SceneManager.LoadScene("MainMenu");
     }
 
     public override void OnNetworkSpawn()
     {
-        Debug.Log(
-            $"[SM] OnNetworkSpawn | " +
-            $"IsServer={IsServer} | " +
-            $"IsClient={IsClient} | " +
-            $"IsSpawned={IsSpawned} | " +
-            $"NetworkObjectId={NetworkObjectId}",
-            this
-        );
+        // The host updates its score text as points happen. Clients follow along from the network variables.
+        if (IsServer) return;
+
+        side1ScoreNet.OnValueChanged += OnSide1ScoreChanged;
+        side2ScoreNet.OnValueChanged += OnSide2ScoreChanged;
+        side1SetsWonNet.OnValueChanged += OnSide1SetsChanged;
+        side2SetsWonNet.OnValueChanged += OnSide2SetsChanged;
+
+        // In case any of them changed before this object was spawned here
+        side1ScoreUI.text = side1ScoreNet.Value.ToString();
+        side2ScoreUI.text = side2ScoreNet.Value.ToString();
+        side1SetUI.text = side1SetsWonNet.Value.ToString();
+        side2SetUI.text = side2SetsWonNet.Value.ToString();
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        side1ScoreNet.OnValueChanged -= OnSide1ScoreChanged;
+        side2ScoreNet.OnValueChanged -= OnSide2ScoreChanged;
+        side1SetsWonNet.OnValueChanged -= OnSide1SetsChanged;
+        side2SetsWonNet.OnValueChanged -= OnSide2SetsChanged;
+    }
+
+    private void OnSide1ScoreChanged(int previous, int current) => ShowNetworkedScore(side1ScoreUI, previous, current);
+    private void OnSide2ScoreChanged(int previous, int current) => ShowNetworkedScore(side2ScoreUI, previous, current);
+    private void OnSide1SetsChanged(int previous, int current) => side1SetUI.text = current.ToString();
+    private void OnSide2SetsChanged(int previous, int current) => side2SetUI.text = current.ToString();
+
+    private void ShowNetworkedScore(TextMeshProUGUI scoreText, int previous, int current)
+    {
+        // Only a point gets the bounce and flourish, not the score going back to 0 for a new set
+        if (current > previous) UpdateScoreDisplay(scoreText, current);
+        else scoreText.text = current.ToString();
+    }
+
+    [Rpc(SendTo.NotServer)]
+    private void ReturnToMenuRpc()
+    {
+        NetworkSession.LeaveToMainMenu();
+    }
+
+    // The host waits a moment so the message has time to reach the clients before the connection closes
+    private IEnumerator HostReturnToMenu()
+    {
+        yield return new WaitForSecondsRealtime(0.5f);
+        NetworkSession.LeaveToMainMenu();
     }
 }

@@ -19,7 +19,12 @@ public class ChickenOffensive : BirdAbility
     void Start()
     {
         ballInteract = GetComponent<BallInteract>();
-        mainCanvas = GameObject.Find("Canvas").GetComponent<Canvas>();
+        FindCanvas();
+    }
+
+    private void FindCanvas()
+    {
+        if (mainCanvas == null) mainCanvas = GameObject.Find("Canvas").GetComponent<Canvas>();
     }
 
     protected override bool Activate()
@@ -33,32 +38,46 @@ public class ChickenOffensive : BirdAbility
             return false;
         }
 
-        //spawn the egg splat on the opponents side
-        GameObject splash = Instantiate(eggSplashPrefab, mainCanvas.transform);
-        RectTransform rt = splash.GetComponent<RectTransform>();
-
         //Decide which side
         bool onLeft = ballInteract.onLeft;
         float xMin = onLeft ? 100f : -300f;
         float xMax = onLeft ? 300f : -100f;
-        rt.anchoredPosition = new Vector2(Random.Range(xMin, xMax), Random.Range(-150f, 150f));
+        Vector2 position = new Vector2(Random.Range(xMin, xMax), Random.Range(-150f, 150f));
 
         // Random rotation
-        rt.localRotation = Quaternion.Euler(0, 0, Random.Range(0f, 360f));
+        float rotation = Random.Range(0f, 360f);
+
+        //spawn the egg splat on the opponents side, on every screen
+        ShowSplash(position, rotation);
+        NetworkFx.AbilityEvent(this, 0, new Vector3(position.x, position.y, rotation));
 
         int playerID = GetComponent<BallInteract>().playerID;
         HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
 
         // Play animation
         if (animator != null)
-            animator.SetTrigger("OffensiveAbility");
+            animator.SetTriggerSynced("OffensiveAbility");
 
         // Play sound effect using AudioManager
         AudioManager.PlayBirdSound(BirdType.CHICKEN, SoundType.OFFENSIVE, 1.0f);
 
-        StartCoroutine(AnimateSplash(splash, rt));
-
         return true;
+    }
+
+    public override void OnNetworkEvent(int eventId, Vector3 argument)
+    {
+        FindCanvas();
+        ShowSplash(new Vector2(argument.x, argument.y), argument.z);
+    }
+
+    private void ShowSplash(Vector2 position, float rotation)
+    {
+        GameObject splash = Instantiate(eggSplashPrefab, mainCanvas.transform);
+        RectTransform rt = splash.GetComponent<RectTransform>();
+        rt.anchoredPosition = position;
+        rt.localRotation = Quaternion.Euler(0, 0, rotation);
+
+        StartCoroutine(AnimateSplash(splash, rt));
     }
 
     private IEnumerator AnimateSplash(GameObject splash, RectTransform rt)

@@ -33,6 +33,9 @@ public class PenguinOffensive : BirdAbility
     private GameObject iceMaskInstance;
     private GameObject snowballTrackInstance;
 
+    private const int snowballMaterialEvent = 0;
+    private const int normalMaterialEvent = 1;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     IEnumerator Start()
     {
@@ -119,12 +122,20 @@ public class PenguinOffensive : BirdAbility
         if (ballObj == null)
             return;
 
-        snowballTrackInstance = Instantiate(snowballTrackPrefab, ballObj.transform.position, Quaternion.identity);
-        snowballTrackInstance.transform.SetParent(ballObj.transform, true);
+        snowballTrackInstance = NetworkFx.Instantiate(snowballTrackPrefab, ballObj.transform.position, Quaternion.identity, ballObj.transform);
+    }
+
+    // Sent to clients: the ball's material isn't something that gets synced on its own
+    public override void OnNetworkEvent(int eventId, Vector3 argument)
+    {
+        if (eventId == snowballMaterialEvent) ApplySnowballMaterial();
+        else if (eventId == normalMaterialEvent) RestoreNormalBallMaterial();
     }
 
     void ApplySnowballMaterial()
     {
+        NetworkFx.AbilityEvent(this, snowballMaterialEvent);
+
         // Always refresh renderers before swapping materials
         dodgeBallRenderers = BallManager.Instance.gameObject.GetComponentsInChildren<Renderer>();
 
@@ -193,6 +204,8 @@ public class PenguinOffensive : BirdAbility
 
     void RestoreNormalBallMaterial()
     {
+        NetworkFx.AbilityEvent(this, normalMaterialEvent);
+
         // Always refresh renderers before restoring materials
         dodgeBallRenderers = BallManager.Instance.gameObject.GetComponentsInChildren<Renderer>();
 
@@ -288,7 +301,7 @@ public class PenguinOffensive : BirdAbility
         Vector3 hitterPos = opponent.transform.position;
         Vector3 iceSpawnPos = new Vector3(hitterPos.x, 0, hitterPos.z);
 
-        iceInstance = Instantiate(tempIce, iceSpawnPos, Quaternion.identity);
+        iceInstance = NetworkFx.Instantiate(tempIce, iceSpawnPos, Quaternion.identity);
         PrepareIceForFade(iceInstance);
         StartCoroutine(FadeInIce(iceInstance, iceSpawnFadeTime));
         iceSpawned = true;
@@ -307,7 +320,7 @@ public class PenguinOffensive : BirdAbility
                 iceMaskCoroutine = null;
             }
 
-            iceMaskInstance = Instantiate(iceCircularMaskPrefab, iceInstance.transform);
+            iceMaskInstance = NetworkFx.Instantiate(iceCircularMaskPrefab, iceInstance.transform);
             iceMaskInstance.transform.localPosition = Vector3.zero;
             iceMaskInstance.transform.localRotation = Quaternion.identity;
             iceMaskInstance.transform.localScale = Vector3.zero;
@@ -333,7 +346,7 @@ public class PenguinOffensive : BirdAbility
         // play a ground particle effect attached to the ice while it exists
         if (iceSpawnBurstPrefab != null)
         {
-            GameObject burstInstance = Instantiate(iceSpawnBurstPrefab, iceInstance.transform);
+            GameObject burstInstance = NetworkFx.Instantiate(iceSpawnBurstPrefab, iceInstance.transform);
             burstInstance.transform.localPosition = Vector3.zero;
         }
 

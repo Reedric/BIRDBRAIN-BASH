@@ -18,7 +18,6 @@ public class KiwiDefensive : BirdAbility
     [SerializeField] private Vector3 markerOffset = new Vector3(0f, 0.05f, 0f); // sits just above ground
 
     private bool isBurrowed = false;
-    private bool _cancelRequested = false;
     private float timeBurrowed = 2f;
 
     private GameObject _activeBurrowMarker;
@@ -112,7 +111,6 @@ public class KiwiDefensive : BirdAbility
     private void StealthBurrowing()
     {
         isBurrowed = true;
-        _cancelRequested = false;
 
         // Burrow down
         meshRenderer.enabled = false;
@@ -128,7 +126,7 @@ public class KiwiDefensive : BirdAbility
         if (burrowMarkerPrefab != null)
         {
             Vector3 markerPos = surfacePosition + markerOffset;
-            _activeBurrowMarker = Instantiate(burrowMarkerPrefab, markerPos, Quaternion.identity);
+            _activeBurrowMarker = NetworkFx.Instantiate(burrowMarkerPrefab, markerPos, Quaternion.identity);
         }
 
         // Set time burrowed to 0

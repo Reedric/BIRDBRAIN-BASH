@@ -617,7 +617,7 @@ PrefabInstance:
     - target: {fileID: 4409379762550130969, guid: af6b0de727940974290da44e8d98454b, type: 3}
       propertyPath: NetworkConfig.PlayerPrefab
       value: 
-      objectReference: {fileID: 8379060495865577183, guid: 5237adce10f0ed6498eff4b789f2e10f, type: 3}
+      objectReference: {fileID: 0}
     - target: {fileID: 4409379762550130969, guid: af6b0de727940974290da44e8d98454b, type: 3}
       propertyPath: NetworkConfig.ForceSamePrefabs
       value: 1
@@ -932,7 +932,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   numHumanPlayers: 2
-  Instance: {fileID: 0}
+  autoStartWhenFull: 1
 --- !u!4 &916503466
 Transform:
   m_ObjectHideFlags: 0

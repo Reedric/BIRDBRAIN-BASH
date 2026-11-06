@@ -59,6 +59,17 @@ public class MacawOffensive : BirdAbility
     {
         foreach (var opponent in opponentControls)
         {
+            // Can already be gone when this runs from OnDestroy while the scene is unloading
+            if (opponent == null) continue;
+
+            // Online input comes through PlayerNetworkController, not this PlayerInput
+            if (NetworkSession.IsOnline)
+            {
+                if (opponent.TryGetComponent(out CharacterMovement characterMovement))
+                    characterMovement.SetInputInverted(shouldFlip);
+                continue;
+            }
+
             var movement = opponent.actions["Move"];
             for (int i = 0; i < movement.bindings.Count; i++)
             {
@@ -98,7 +109,7 @@ public class MacawOffensive : BirdAbility
 
         foreach (PlayerInput opponent in opponentControls)
         {
-            GameObject vfx = Instantiate(flipVfxPrefab, opponent.transform);
+            GameObject vfx = NetworkFx.Instantiate(flipVfxPrefab, opponent.transform);
             vfx.transform.localPosition = Vector3.zero;
             activeVfx.Add(vfx);
         }

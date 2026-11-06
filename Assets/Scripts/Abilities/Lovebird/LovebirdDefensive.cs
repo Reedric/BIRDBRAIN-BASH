@@ -67,7 +67,7 @@ public class LovebirdDefensive : BirdAbility
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
         {
-            myBallInteract.animator.SetTrigger("DefensiveAbility");
+            myBallInteract.animator.SetTriggerSynced("DefensiveAbility");
         }
 
         Debug.Log("Dashing towards ally...");

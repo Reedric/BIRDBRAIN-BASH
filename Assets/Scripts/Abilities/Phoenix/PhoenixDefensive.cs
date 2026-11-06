@@ -86,12 +86,12 @@ public class PhoenixDefensive : BirdAbility
         AudioManager.PlayBirdSound(BirdType.PHOENIX, SoundType.DEFENSIVE, 1.0f);
 
         if (myBallInteract.animator != null)
-            myBallInteract.animator.SetTrigger("DefensiveAbility");
+            myBallInteract.animator.SetTriggerSynced("DefensiveAbility");
 
         // Rise-from-the-ashes VFX at the spot the ball landed
         if (ashesEffect != null)
         {
-            GameObject ashesInstance = Instantiate(ashesEffect, contactPoint, Quaternion.identity);
+            GameObject ashesInstance = NetworkFx.Instantiate(ashesEffect, contactPoint, Quaternion.identity);
             ParticleSystem ashes = ashesInstance.GetComponent<ParticleSystem>();
 
             if (ashes != null)

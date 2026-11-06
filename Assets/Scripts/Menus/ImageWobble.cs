@@ -21,6 +21,9 @@ public class ImageWobble : MonoBehaviour
     [Range(0f, 10f)]
     public float masterSpeed = 1f;
 
+    [Tooltip("Keeps it moving while the game is paused.")]
+    public bool useUnscaledTime = false;
+
 
     // Vertical (Y) Wobble
 
@@ -149,7 +152,7 @@ public class ImageWobble : MonoBehaviour
 
     private void Update()
     {
-        float time = Time.time * masterSpeed;
+        float time = (useUnscaledTime ? Time.unscaledTime : Time.time) * masterSpeed;
 
         float deltaX = horizontalEnabled
             ? Mathf.Sin(time * horizontalSpeed * Mathf.PI * 2f + horizontalPhaseShift)

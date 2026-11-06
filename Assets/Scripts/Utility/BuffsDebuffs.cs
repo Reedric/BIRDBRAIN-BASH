@@ -161,7 +161,7 @@ public class BuffsDebuffs : MonoBehaviour
         GameObject prefab = ResolvePrefab(type, onLeft);
         if (prefab == null) return null;
 
-        GameObject vfx = Instantiate(prefab, bird.transform);
+        GameObject vfx = NetworkFx.Instantiate(prefab, bird.transform);
         vfx.transform.localPosition = Vector3.zero;
 
         activeVFX[bird][type] = vfx;

@@ -80,6 +80,8 @@ public class OwlDefensive : BirdAbility
         widthCurve.AddKey(1f, 0.01f);
         lineRenderer.widthCurve = widthCurve;
 
+        NetworkFx.MirrorLine(line);
+
         return line;
     }
 

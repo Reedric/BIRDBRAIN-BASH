@@ -56,7 +56,7 @@ public class DodoOffensive : BirdAbility
 		SpawnDodo(secondDodoPrefab, new Vector3(enemyCourtDirection * farCourtXOffset, spawnHeight, secondSpawnZ), laneBoundary, courtMaximumZ);
 
 		if (ballInteract.animator != null)
-			ballInteract.animator.SetTrigger("OffensiveAbility");
+			ballInteract.animator.SetTriggerSynced("OffensiveAbility");
 
 		AudioManager.PlayBirdSound(BirdType.DODO, SoundType.OFFENSIVE, 1f);
 		if (HUDManager.Instance != null)
@@ -68,7 +68,7 @@ public class DodoOffensive : BirdAbility
 
 	private void SpawnDodo(GameObject dodoPrefab, Vector3 spawnPosition, float minimumPatrolZ, float maximumPatrolZ)
 	{
-		GameObject dodo = Instantiate(dodoPrefab, spawnPosition, Quaternion.identity);
+		GameObject dodo = NetworkFx.Instantiate(dodoPrefab, spawnPosition, Quaternion.identity);
 		DodoCompanion companion = dodo.GetComponent<DodoCompanion>();
 		if (companion == null)
 			companion = dodo.AddComponent<DodoCompanion>();
@@ -119,7 +119,7 @@ public class DodoOffensive : BirdAbility
 		if (vfxPrefab == null)
 			return;
 
-		GameObject vfx = Instantiate(vfxPrefab, position, Quaternion.identity);
+		GameObject vfx = NetworkFx.Instantiate(vfxPrefab, position, Quaternion.identity);
 		Destroy(vfx, 5f);
 	}
 

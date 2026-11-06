@@ -72,11 +72,11 @@ public class HummingbirdDefensive : BirdAbility
 
         if (ballInteract != null && ballInteract.animator != null)
         {
-            ballInteract.animator.SetTrigger("DefensiveAbility");
+            ballInteract.animator.SetTriggerSynced("DefensiveAbility");
         }
         else if (cM.animator != null)
         {
-            cM.animator.SetTrigger("DefensiveAbility");
+            cM.animator.SetTriggerSynced("DefensiveAbility");
         }
 
         AudioManager.PlayBirdSound(
@@ -163,6 +163,8 @@ public class HummingbirdDefensive : BirdAbility
         if (renderers == null)
             return;
 
+        NetworkFx.SetVisible(gameObject, visible);
+
         foreach (Renderer renderer in renderers)
         {
             if (renderer != null)
@@ -175,7 +177,7 @@ public class HummingbirdDefensive : BirdAbility
         if (dashEffectPrefab == null)
             return;
 
-        GameObject effect = Instantiate(
+        GameObject effect = NetworkFx.Instantiate(
             dashEffectPrefab,
             transform.position,
             transform.rotation

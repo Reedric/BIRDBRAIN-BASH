@@ -107,6 +107,7 @@ public class KiwiOffensive : BirdAbility
         lineRenderer.positionCount = 2;
         lineRenderer.SetPosition(0, eyePosition);
         lineRenderer.SetPosition(1, ballPosition);
+        NetworkFx.MirrorLine(temp);
         return temp;
     }
 

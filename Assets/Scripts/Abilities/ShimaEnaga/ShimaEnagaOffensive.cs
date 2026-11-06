@@ -27,8 +27,6 @@ public class ShimaEnagaOffensive : BirdAbility
     [SerializeField] private float spawnHeightOffset = 0.5f;
 
     [Header("Landing Positions")]
-    [SerializeField] private float courtSideMinX = 0.5f;
-    [SerializeField] private float courtSideMaxX = 7f;
     [SerializeField] private float courtMinZ = -4f;
     [SerializeField] private float courtMaxZ = 4f;
     [SerializeField] private float minimumLandingSpacing = 2f;
@@ -174,7 +172,7 @@ public class ShimaEnagaOffensive : BirdAbility
                 yield break;
             }
 
-            GameObject cottonball = Instantiate(
+            GameObject cottonball = NetworkFx.Instantiate(
                 cottonballPrefab,
                 spawnPosition,
                 Quaternion.identity

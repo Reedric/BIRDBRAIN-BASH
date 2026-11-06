@@ -627,7 +627,7 @@ public class AIBehavior : MonoBehaviour
         if (animator != null)
         {
             // Debug.Log("Setting Bump trigger!");
-            animator.SetTrigger("Bump");
+            animator.SetTriggerSynced("Bump");
         }
     }
 
@@ -688,7 +688,7 @@ public class AIBehavior : MonoBehaviour
         // Trigger set animation
         if (animator != null)
         {
-            animator.SetTrigger("Set");
+            animator.SetTriggerSynced("Set");
         }
     }
 
@@ -750,7 +750,7 @@ public class AIBehavior : MonoBehaviour
         // Trigger spike animation
         if (animator != null)
         {
-            animator.SetTrigger("Spike");
+            animator.SetTriggerSynced("Spike");
         }
     }
 
@@ -811,7 +811,7 @@ public class AIBehavior : MonoBehaviour
         // Trigger serve animation
         if (animator != null)
         {
-            animator.SetTrigger("Spike");
+            animator.SetTriggerSynced("Spike");
         }
         
         // Reset timer for serve

@@ -26,7 +26,7 @@ public class PukekoScript : MonoBehaviour
     {
         // Play animation
         if (animator != null)
-            animator.SetTrigger("OffensiveAbility"); // Make sure you have a trigger called "OffensiveAbility" in Animator
+            animator.SetTriggerSynced("OffensiveAbility"); // Make sure you have a trigger called "OffensiveAbility" in Animator
 
         // Play sound effect using AudioManager
         AudioManager.PlayBirdSound(BirdType.PUKEKO, SoundType.OFFENSIVE, 1.0f);

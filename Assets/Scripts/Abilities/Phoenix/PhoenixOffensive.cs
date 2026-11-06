@@ -281,13 +281,16 @@ public class PhoenixOffensive : BirdAbility
             BallInteract targetBallInteract = target.GetComponent<BallInteract>();
 
             if (targetBallInteract != null)
+            {
                 onLeft = targetBallInteract.onLeft;
+                playerID = targetBallInteract.playerID;
+            }
         }
 
         Vector3 spawnPosition = target.transform.position;
         Quaternion spawnRotation = target.transform.rotation;
 
-        target.SetActive(false);
+        NetworkFx.SetActive(target, false);
 
         if (rotisserieChickenPrefab == null)
         {
@@ -295,10 +298,16 @@ public class PhoenixOffensive : BirdAbility
             return;
         }
 
-        GameObject chicken = Instantiate(
+        // A human's chicken belongs to them online, so that their input goes to it
+        ulong ownerClientId = target.TryGetComponent(out Unity.Netcode.NetworkObject targetNetObj) && !chickenTarget.wasAI
+            ? targetNetObj.OwnerClientId
+            : Unity.Netcode.NetworkManager.ServerClientId;
+
+        GameObject chicken = NetworkFx.InstantiateOwned(
             rotisserieChickenPrefab,
             spawnPosition,
-            spawnRotation
+            spawnRotation,
+            ownerClientId
         );
 
         chickenTarget.chicken = chicken;
@@ -310,6 +319,8 @@ public class PhoenixOffensive : BirdAbility
             if (follower != null)
                 follower.target = chicken.transform;
         }
+
+        NetworkFx.RetargetFollowers(target, chicken);
 
         ConfigureChicken(chicken, onLeft, playerID, chickenTarget.wasAI);
 
@@ -344,7 +355,13 @@ public class PhoenixOffensive : BirdAbility
         if (chickenBallInteract != null)
         {
             chickenBallInteract.enabled = true;
+            chickenBallInteract.onLeft = onLeft;
+            chickenBallInteract.playerID = playerID;
         }
+
+        // An AI's chicken is owned by the host, whose own input should not reach it
+        if (wasAI && chicken.TryGetComponent(out PlayerNetworkController networkController))
+            networkController.enabled = false;
 
         BirdAbility[] chickenAbilities =
             chicken.GetComponentsInChildren<BirdAbility>(true);
@@ -426,7 +443,10 @@ public class PhoenixOffensive : BirdAbility
                         follower.target = chickenTarget.original.transform;
                 }
 
-                chickenTarget.original.SetActive(chickenTarget.wasActive);
+                if (chickenTarget.chicken != null)
+                    NetworkFx.RetargetFollowers(chickenTarget.chicken, chickenTarget.original);
+
+                NetworkFx.SetActive(chickenTarget.original, chickenTarget.wasActive);
 
                 if (chickenTarget.characterMovement != null)
                 {
@@ -487,7 +507,7 @@ public class PhoenixOffensive : BirdAbility
         if (prefab == null)
             return;
 
-        GameObject effect = Instantiate(
+        GameObject effect = NetworkFx.Instantiate(
             prefab,
             position,
             Quaternion.identity

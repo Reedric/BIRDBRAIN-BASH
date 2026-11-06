@@ -62,7 +62,7 @@ public class PenguinDefensive : BirdAbility
         // Trigger dash animation if animator exists
         if (cM.animator != null)
         {
-            cM.animator.SetTrigger("Dash");
+            cM.animator.SetTriggerSynced("Dash");
         }
 
         // Override CharacterMovement rotation to do belly slide

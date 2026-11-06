@@ -333,7 +333,7 @@ public class HUDManager : MonoBehaviour
         }
     }
 
-    private void UpdateTeamCardBackgrounds()
+    public void UpdateTeamCardBackgrounds()
     {
         MultiplayerManager multiplayerManager =
             FindFirstObjectByType<MultiplayerManager>();
@@ -371,6 +371,8 @@ public class HUDManager : MonoBehaviour
     /// </summary>
     public void TriggerOffensiveCooldown(int playerIndex, float duration)
     {
+        NetworkFx.ForwardHud(NetworkFx.HudEvent.TriggerOffensiveCooldown, playerIndex, duration);
+
         AbilityIconUI icon = GetOffensiveIcon(playerIndex);
         if (icon == null) return;
 
@@ -385,6 +387,8 @@ public class HUDManager : MonoBehaviour
     /// Example: HUDManager.Instance.TriggerDefensiveCooldown(playerIndex, 5f);
     public void TriggerDefensiveCooldown(int playerIndex, float duration)
     {
+        NetworkFx.ForwardHud(NetworkFx.HudEvent.TriggerDefensiveCooldown, playerIndex, duration);
+
         AbilityIconUI icon = GetDefensiveIcon(playerIndex);
         if (icon == null) return;
 
@@ -396,6 +400,8 @@ public class HUDManager : MonoBehaviour
 
     public void UpdateOffensiveCooldown(int playerIndex, float remainingDuration, float totalDuration)
     {
+        NetworkFx.ForwardHud(NetworkFx.HudEvent.UpdateOffensiveCooldown, playerIndex, remainingDuration, totalDuration);
+
         AbilityIconUI icon = GetOffensiveIcon(playerIndex);
         if (icon == null) return;
 
@@ -409,6 +415,8 @@ public class HUDManager : MonoBehaviour
 
     public void UpdateDefensiveCooldown(int playerIndex, float remainingDuration, float totalDuration)
     {
+        NetworkFx.ForwardHud(NetworkFx.HudEvent.UpdateDefensiveCooldown, playerIndex, remainingDuration, totalDuration);
+
         AbilityIconUI icon = GetDefensiveIcon(playerIndex);
         if (icon == null) return;
 
@@ -466,6 +474,8 @@ public class HUDManager : MonoBehaviour
     /// Useful if a cooldown reduction effect fires mid-cooldown.
     public void ResetOffensiveCooldown(int playerIndex)
     {
+        NetworkFx.ForwardHud(NetworkFx.HudEvent.ResetOffensiveCooldown, playerIndex);
+
         if (offensiveCooldowns[playerIndex] != null)
             StopCoroutine(offensiveCooldowns[playerIndex]);
 
@@ -475,6 +485,8 @@ public class HUDManager : MonoBehaviour
 
     public void ResetDefensiveCooldown(int playerIndex)
     {
+        NetworkFx.ForwardHud(NetworkFx.HudEvent.ResetDefensiveCooldown, playerIndex);
+
         if (defensiveCooldowns[playerIndex] != null)
             StopCoroutine(defensiveCooldowns[playerIndex]);
 
@@ -486,6 +498,8 @@ public class HUDManager : MonoBehaviour
     /// (Penguin, Phoenix). Pass playFeedback = false to revert the indicator silently, e.g. once the ability fires.
     public void SetOffensiveArmed(int playerIndex, bool armed, bool playFeedback = true)
     {
+        NetworkFx.ForwardHud(NetworkFx.HudEvent.SetOffensiveArmed, playerIndex, 0f, playFeedback ? 1f : 0f, armed);
+
         PlayerCardUI[] cards = GetOrderedCards();
         if (playerIndex < 0 || playerIndex >= cards.Length || cards[playerIndex] == null) return;
 
@@ -571,8 +585,17 @@ public class HUDManager : MonoBehaviour
         if (ability?.baseIcon != null) ability.baseIcon.texture = icon;
     }
 
+    // Same as SetDefensiveIcon using another bird's icon. Unlike a texture, a bird type can be sent to online clients.
+    public void SetDefensiveIconForBird(int playerIndex, BirdType bird)
+    {
+        NetworkFx.ForwardHud(NetworkFx.HudEvent.SetDefensiveIconForBird, playerIndex, (int)bird);
+        SetDefensiveIcon(playerIndex, GetDefensiveIconForBird(bird));
+    }
+
     public void RefreshPlayerCard(int playerIndex)
     {
+        NetworkFx.ForwardHud(NetworkFx.HudEvent.RefreshPlayerCard, playerIndex);
+
         if (DataTransferManager.selectedBirds == null ||
             playerIndex < 0 ||
             playerIndex >= DataTransferManager.selectedBirds.Count) return;

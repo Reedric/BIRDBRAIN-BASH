@@ -12,7 +12,6 @@ public class CrowDefensive : BirdAbility
     private int oldScore = 0; // Score of the last round
     public GameObject coin; // Coin item
     private List<GameObject> coins = new List<GameObject>(); // List to keep track of spawned coins
-    private bool buffActive = false; // If the stat buff is currently active
     private Vector3 randomSpawnPosition1;
     private Vector3 randomSpawnPosition2;
     private Vector3 randomSpawnPosition3;
@@ -64,9 +63,9 @@ public class CrowDefensive : BirdAbility
         }
 
         // Spawn three coins randomly on the court
-        GameObject coin1 = Instantiate(coin, randomSpawnPosition1, Quaternion.identity);
-        GameObject coin2 = Instantiate(coin, randomSpawnPosition2, Quaternion.identity);
-        GameObject coin3 = Instantiate(coin, randomSpawnPosition3, Quaternion.identity);
+        GameObject coin1 = NetworkFx.Instantiate(coin, randomSpawnPosition1, Quaternion.identity);
+        GameObject coin2 = NetworkFx.Instantiate(coin, randomSpawnPosition2, Quaternion.identity);
+        GameObject coin3 = NetworkFx.Instantiate(coin, randomSpawnPosition3, Quaternion.identity);
         coins.Add(coin1);
         coins.Add(coin2);
         coins.Add(coin3);
@@ -81,7 +80,6 @@ public class CrowDefensive : BirdAbility
         Debug.Log("Buff activated");
         BuffsDebuffs.Instance.ApplyEffect(BuffsDebuffs.EffectType.Buff, gameObject, buffLength,
             gameObject == GameManager.Instance.leftPlayer1 || gameObject == GameManager.Instance.leftPlayer2);
-        buffActive = true;
         int playerID = GetComponent<BallInteract>().playerID;
         HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
     }

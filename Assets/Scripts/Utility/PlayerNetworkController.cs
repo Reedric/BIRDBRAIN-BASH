@@ -4,6 +4,8 @@ using UnityEngine.InputSystem;
 
 public class PlayerNetworkController : NetworkBehaviour
 {
+    private const float minSendInterval = 1f / 30f; // How often input is sent, at most, in seconds
+
     /// <summary>
     /// Struct for player input data.
     /// ServerRPCs don't know how to deserialize custom structs, so you must explicitly tell it how to.
@@ -11,45 +13,75 @@ public class PlayerNetworkController : NetworkBehaviour
     struct PlayerInputData : INetworkSerializable
     {
         public Vector2 move;
-        public bool jumpPressed;
+        public bool jumpHeld;
         public bool defActionPressed;
         public bool offActionPressed;
         public bool blockPressed;
         public bool defAbilityPressed;
         public bool offAbilityPressed;
         public Vector2 interactionDirection;
-        public bool pausePressed;
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
             serializer.SerializeValue(ref move);
-            serializer.SerializeValue(ref jumpPressed);
+            serializer.SerializeValue(ref jumpHeld);
             serializer.SerializeValue(ref defActionPressed);
             serializer.SerializeValue(ref offActionPressed);
             serializer.SerializeValue(ref blockPressed);
             serializer.SerializeValue(ref defAbilityPressed);
             serializer.SerializeValue(ref offAbilityPressed);
             serializer.SerializeValue(ref interactionDirection);
-            serializer.SerializeValue(ref pausePressed);
+        }
+
+        // Button presses only last one frame, so they cannot be dropped while waiting for the next send
+        public bool HasButtonPress => defActionPressed || offActionPressed || blockPressed || defAbilityPressed || offAbilityPressed;
+
+        public bool SameHeldInputAs(PlayerInputData other)
+        {
+            return move == other.move && jumpHeld == other.jumpHeld && interactionDirection == other.interactionDirection;
         }
     }
 
     private CharacterMovement characterMovement;
-    private PlayerInput input;
     private BallInteract ballInteract;
     private BirdAbilityInput birdAbilityInput;
+    private EndScreen endScreen;
+
+    private InputActionAsset actions; // This machine's copy of the input actions (owner only)
+    private PlayerInputData pendingInput; // Input read since the last send
+    private PlayerInputData lastSentInput;
+    private float nextSendTime;
 
     public override void OnNetworkSpawn()
-    {        
+    {
         characterMovement = GetComponent<CharacterMovement>();
-        input = GetComponent<PlayerInput>();
         ballInteract = GetComponent<BallInteract>();
         birdAbilityInput = GetComponent<BirdAbilityInput>();
+        endScreen = GetComponent<EndScreen>();
 
-        // REMOVE THIS ONCE CONTROLLER ASSIGNMENT HAS BEEN NETWORKED
-        if (Gamepad.all.Count > 0)
+        if (!IsOwner) return;
+
+        // Online, each machine has one player, who can use whichever device they like. So rather than pairing
+        // devices through PlayerInput, the owner reads from their own copy of the actions, which listens to all of them.
+        actions = Instantiate(GetComponent<PlayerInput>().actions);
+        actions.FindActionMap("Player").Enable();
+        actions["Pause"].Enable(); // Pause is in the UI map, which online pausing doesn't otherwise need
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        if (actions != null) Destroy(actions);
+    }
+
+    // When a player disconnects, the host takes over their bird, so stop whatever it was last told to do.
+    protected override void OnOwnershipChanged(ulong previous, ulong current)
+    {
+        if (!IsServer || current != NetworkManager.ServerClientId) return;
+
+        if (characterMovement != null)
         {
-            input.SwitchCurrentControlScheme(Gamepad.all[input.playerIndex]);
+            characterMovement.SetInput(Vector2.zero);
+            characterMovement.SetJumpHeld(false);
         }
     }
 
@@ -57,22 +89,39 @@ public class PlayerNetworkController : NetworkBehaviour
     void Update()
     {
         // If not the owner of this networked object, don't do anything
-        if (!IsOwner) return;
+        if (!IsOwner || actions == null) return;
 
-        PlayerInputData inputData = ReadInput();
-        SendInputServerRpc(inputData);
+        if (actions["Pause"].WasPressedThisFrame() && PauseMenu.Instance != null)
+            PauseMenu.Instance.ToggleOnlinePause();
+
+        // Pausing online only opens the menu for this player, so the bird has to stop moving
+        bool paused = PauseMenu.Instance != null && PauseMenu.Instance.GameIsPaused;
+        ReadInput(paused);
+
+        bool heldInputChanged = !pendingInput.SameHeldInputAs(lastSentInput);
+        if (!pendingInput.HasButtonPress && !heldInputChanged) return;
+        if (!pendingInput.HasButtonPress && Time.unscaledTime < nextSendTime) return;
+
+        SendInputServerRpc(pendingInput);
+
+        lastSentInput = pendingInput;
+        pendingInput = default;
+        nextSendTime = Time.unscaledTime + minSendInterval;
     }
 
     /// <summary>
     /// Send client information over to server for processing.
     /// </summary>
     /// <param name="inputData">Input data for the client</param>
-    [ServerRpc]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
     void SendInputServerRpc(PlayerInputData inputData)
     {
-        // Character movement 
+        // Phoenix's Burn Ball deactivates the bird while its owner controls a chicken instead
+        if (!gameObject.activeInHierarchy) return;
+
+        // Character movement
         characterMovement.SetInput(inputData.move);
-        if (inputData.jumpPressed) characterMovement.Jump();
+        characterMovement.SetJumpHeld(inputData.jumpHeld);
 
         // Character interaction
         if (inputData.defActionPressed) ballInteract.DefActionPressed();
@@ -81,38 +130,35 @@ public class PlayerNetworkController : NetworkBehaviour
         ballInteract.SetDirection(inputData.interactionDirection);
 
         // Ability interaction
-        if (inputData.defAbilityPressed) birdAbilityInput.OnDefensiveAbility();
-        if (inputData.offAbilityPressed) birdAbilityInput.OnOffensiveAbility();
+        if (inputData.defAbilityPressed) birdAbilityInput.ActivateDefensive();
+        if (inputData.offAbilityPressed) birdAbilityInput.ActivateOffensive();
 
-        // UI interaction
-        if (inputData.pausePressed && !PauseMenu.Instance.GameIsPaused)
-        {
-            PauseMenu.Instance.pausedPlayerID = ballInteract.playerID;
-            PauseMenu.Instance.inputModule.actionsAsset = input.actions;
-            PauseMenu.Instance.Pause();
-        }
-        else if (inputData.pausePressed && PauseMenu.Instance.GameIsPaused && PauseMenu.Instance.pausedPlayerID == ballInteract.playerID)
-            PauseMenu.Instance.Resume();
+        // End of game ready up
+        if (inputData.offActionPressed && endScreen != null
+            && GameManager.Instance.gameState == GameManager.GameState.GameOver)
+            endScreen.ReadyUp();
     }
 
-
     /// <summary>
-    /// Reads the player input component and assigns variables accordingly.
+    /// Reads the actions and adds them to the input waiting to be sent.
     /// </summary>
-    /// <returns></returns>
-    private PlayerInputData ReadInput()
+    private void ReadInput(bool paused)
     {
-        return new PlayerInputData
+        if (paused)
         {
-            move = input.actions["Move"].ReadValue<Vector2>(),
-            jumpPressed = input.actions["Jump"].WasPressedThisFrame(),
-            defActionPressed = input.actions["Defensive Action"].WasPressedThisFrame(),
-            offActionPressed = input.actions["Offensive Action"].WasPressedThisFrame(),
-            blockPressed = input.actions["Block"].WasPressedThisFrame(),
-            defAbilityPressed = input.actions["Defensive Ability"].WasPressedThisFrame(),
-            offAbilityPressed = input.actions["Offensive Ability"].WasPressedThisFrame(),
-            interactionDirection = input.actions["Direction"].ReadValue<Vector2>(),
-            pausePressed = input.actions["Pause"].WasPressedThisFrame()
-        };
+            pendingInput.move = Vector2.zero;
+            pendingInput.jumpHeld = false;
+            pendingInput.interactionDirection = Vector2.zero;
+            return;
+        }
+
+        pendingInput.move = actions["Move"].ReadValue<Vector2>();
+        pendingInput.jumpHeld = actions["Jump"].IsPressed();
+        pendingInput.interactionDirection = actions["Direction"].ReadValue<Vector2>();
+        pendingInput.defActionPressed |= actions["Defensive Action"].WasPressedThisFrame();
+        pendingInput.offActionPressed |= actions["Offensive Action"].WasPressedThisFrame();
+        pendingInput.blockPressed |= actions["Block"].WasPressedThisFrame();
+        pendingInput.defAbilityPressed |= actions["Defensive Ability"].WasPressedThisFrame();
+        pendingInput.offAbilityPressed |= actions["Offensive Ability"].WasPressedThisFrame();
     }
 }

@@ -50,7 +50,7 @@ public class RobopigeonDefensive : BirdAbility
         }
 
         Vector3 spawnPosition = transform.position + Vector3.up * 10f;
-        activeMinion = Instantiate(mini31RDPrefab, spawnPosition, transform.rotation);
+        activeMinion = NetworkFx.Instantiate(mini31RDPrefab, spawnPosition, transform.rotation);
         activeMinion.transform.localScale = Vector3.one * miniScale;
 
         Debug.Log($"[RobopigeonDefensive] Spawned minion at {spawnPosition} for player {ballInteract.playerID}.");
@@ -127,7 +127,7 @@ public class RobopigeonDefensive : BirdAbility
     {
         if (spawnVFXPrefab != null)
         {
-            GameObject vfx = Instantiate(spawnVFXPrefab, position, Quaternion.identity);
+            GameObject vfx = NetworkFx.Instantiate(spawnVFXPrefab, position, Quaternion.identity);
             Destroy(vfx, 5f);
         }
     }
@@ -136,7 +136,7 @@ public class RobopigeonDefensive : BirdAbility
     {
         if (despawnVFXPrefab != null)
         {
-            GameObject vfx = Instantiate(despawnVFXPrefab, position, Quaternion.identity);
+            GameObject vfx = NetworkFx.Instantiate(despawnVFXPrefab, position, Quaternion.identity);
             Destroy(vfx, 5f);
         }
     }

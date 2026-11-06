@@ -35,11 +35,11 @@ public class PelicanOffensive : BirdAbility
         // Trigger offensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
-            myBallInteract.animator.SetTrigger("OffensiveAbility");
+            myBallInteract.animator.SetTriggerSynced("OffensiveAbility");
 
         // Instantiate fish at the pelican's mouth position
         Vector3 mouthPos = transform.position + transform.forward * mouthForwardOffset + transform.up * mouthUpOffset;
-        GameObject fish = Instantiate(fishPrefab, mouthPos, transform.rotation);
+        GameObject fish = NetworkFx.Instantiate(fishPrefab, mouthPos, transform.rotation);
 
         // Let the fish know who the pelican is (to ignore self-collision)
         // and which side the pelican is on (so SlipFish can pass the correct

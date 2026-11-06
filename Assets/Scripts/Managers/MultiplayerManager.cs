@@ -9,6 +9,25 @@ using UnityEngine.InputSystem.Users;
 using Unity.Netcode.Components;
 using Unity.Netcode;
 
+/// <summary>
+/// What clients need to know about each bird in an online match.
+/// </summary>
+public struct OnlineRosterEntry : INetworkSerializable
+{
+    public NetworkObjectReference bird;
+    public BirdType birdType;
+    public bool onLeft;
+    public bool isAI;
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref bird);
+        serializer.SerializeValue(ref birdType);
+        serializer.SerializeValue(ref onLeft);
+        serializer.SerializeValue(ref isAI);
+    }
+}
+
 public class MultiplayerManager : NetworkBehaviour
 {
     [Header("Player Transforms")]
@@ -37,6 +56,12 @@ public class MultiplayerManager : NetworkBehaviour
     // We store pending AI registrations here and flush them in Start() once HUDManager exists.
     private List<(int playerIndex, BirdType birdType)> pendingAIRegistrations = new();
 
+    // Online: how long to wait for clients to load the match scene before starting without them
+    private const float clientLoadTimeout = 120f;
+
+    // Online: the bird in each player slot, sent to clients once they have all been spawned
+    private readonly OnlineRosterEntry[] onlineRoster = new OnlineRosterEntry[4];
+
     void Awake()
     {
         // Assign the instance
@@ -58,39 +83,18 @@ public class MultiplayerManager : NetworkBehaviour
         InputSystem.onDeviceChange += OnDeviceChange;
     }
 
-    public override void OnNetworkSpawn()
-    {
-        Debug.Log(
-            $"OnNetworkSpawn: {gameObject.name}, " +
-            $"IsServer={IsServer}, " +
-            $"IsClient={IsClient}, " +
-            $"IsSpawned={IsSpawned}, " +
-            $"Id={NetworkObjectId}"
-        );
-    }
-
     void Start()
     {
-        // TEMP: Try to get the information from the test scene to add players
-        if (GameObject.Find("StartLobbyIf2Players"))
+        // Online matches get their players from the lobby, and only the host sets them up
+        if (!DataTransferManager.isLocal)
         {
-            Debug.Log("Found game object");
-            GameManager.Instance.isLocal = false;
+            HidePlayerIndicators();
+            if (NetworkSession.IsServer) StartCoroutine(InitializeOnlinePlayers());
+            return;
+        }
 
-            int numPlayers = GameObject.Find("StartLobbyIf2Players").GetComponent<StartNetworkedLobbyForNumPlayers>().Instance.numHumanPlayers;
-            instance.isKBMInput = new List<bool>(numPlayers);
-            instance.selectedBirds = new List<BirdType>(numPlayers);
-            for (int i = 0; i < numPlayers; ++i)
-            {
-                instance.isKBMInput.Add(false);
-                instance.selectedBirds.Add(BirdType.PENGUIN);
-            }
-        }
-        else
-        {
-            instance.isKBMInput = DataTransferManager.isKBMInput;
-            instance.selectedBirds = DataTransferManager.selectedBirds;
-        }
+        instance.isKBMInput = DataTransferManager.isKBMInput;
+        instance.selectedBirds = DataTransferManager.selectedBirds;
 
         // An empty isKBMInput list means the demo button was pressed — no human players
         isDemoMode = (isKBMInput == null || isKBMInput.Count == 0);
@@ -99,10 +103,7 @@ public class MultiplayerManager : NetworkBehaviour
         InitializePlayers();
 
         // Hide player ready indicators
-        foreach (RawImage indicator in playerIndicators)
-        {
-            indicator.enabled = false;
-        }
+        HidePlayerIndicators();
 
         // Flush deferred AI card registrations now that HUDManager.Instance is guaranteed to exist.
         // MakeAI() stores registrations here instead of calling HUDManager directly during Awake(),
@@ -135,10 +136,158 @@ public class MultiplayerManager : NetworkBehaviour
         }
     }
 
-    void OnDestroy()
+    public override void OnDestroy()
     {
         // Always unsubscribe to avoid stale callbacks after scene unload
         InputSystem.onDeviceChange -= OnDeviceChange;
+        base.OnDestroy();
+    }
+
+    private void HidePlayerIndicators()
+    {
+        foreach (RawImage indicator in playerIndicators)
+        {
+            indicator.enabled = false;
+        }
+    }
+
+    // ============================================================
+    // ONLINE PLAYERS
+    // ============================================================
+
+    // Host only. Waits for everyone to load, then spawns a bird for each player in the lobby and AI for
+    // the rest of the slots. Spawning them through NGO is what makes them exist on the clients.
+    private IEnumerator InitializeOnlinePlayers()
+    {
+        float elapsed = 0f;
+        while (!NetworkSession.MatchSceneLoaded && elapsed < clientLoadTimeout)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        List<LobbyPlayer> lobbyPlayers = DataTransferManager.onlineRoster ?? new List<LobbyPlayer>();
+
+        // Everyone online counts as a controller player for AI difficulty purposes
+        isKBMInput = new List<bool>();
+        selectedBirds = new List<BirdType>();
+        foreach (LobbyPlayer lobbyPlayer in lobbyPlayers)
+        {
+            isKBMInput.Add(false);
+            selectedBirds.Add(lobbyPlayer.bird);
+        }
+
+        ScoreManager.Instance.readiedUp = new bool[4];
+
+        for (int playerIndex = 0; playerIndex < 4; ++playerIndex)
+        {
+            if (playerIndex < lobbyPlayers.Count) SpawnOnlinePlayer(playerIndex, lobbyPlayers[playerIndex].clientId);
+            else MakeAI(playerIndex);
+        }
+
+        ApplyRosterRpc(onlineRoster, GameSettings.EnsureInstance().CurrentTeamArrangement);
+        NetworkFx.StartCountdownEverywhere();
+    }
+
+    private void SpawnOnlinePlayer(int playerIndex, ulong clientId)
+    {
+        BirdType type = selectedBirds[playerIndex];
+        if (type == BirdType.OTHER)
+        {
+            type = (BirdType)UnityEngine.Random.Range(0, (int)BirdType.OTHER);
+            selectedBirds[playerIndex] = type;
+        }
+
+        GameObject bird = Instantiate(GetBirdModel(type, true, false));
+        int spawnSlot = GetSpawnSlot(playerIndex);
+
+        // Place the bird before spawning it so clients don't see it slide over from somewhere else
+        bird.transform.SetPositionAndRotation(playerSpawnpoints[spawnSlot].position, playerSpawnpoints[spawnSlot].rotation);
+
+        // If this player leaves, keep their bird on the court so the match can continue
+        NetworkObject netObj = bird.GetComponent<NetworkObject>();
+        netObj.DontDestroyWithOwner = true;
+        netObj.SpawnAsPlayerObject(clientId, true);
+
+        MakePlayer(bird, playerIndex);
+
+        onlineRoster[playerIndex] = new OnlineRosterEntry
+        {
+            bird = netObj,
+            birdType = type,
+            onLeft = spawnSlot < 2,
+            isAI = false
+        };
+    }
+
+    // Everything about the birds that clients need but can't work out on their own. Also used by the
+    // host, since it fills in the HUD the same way.
+    [Rpc(SendTo.ClientsAndHost)]
+    private void ApplyRosterRpc(OnlineRosterEntry[] roster, GameSettings.TeamArrangement teamArrangement)
+    {
+        GameSettings.EnsureInstance().CurrentTeamArrangement = teamArrangement;
+        StartCoroutine(ApplyRoster(roster));
+    }
+
+    private IEnumerator ApplyRoster(OnlineRosterEntry[] roster)
+    {
+        // The birds were spawned just before this message was sent, but wait for them to exist to be safe
+        NetworkObject[] birds = new NetworkObject[roster.Length];
+        float elapsed = 0f;
+        while (elapsed < clientLoadTimeout)
+        {
+            bool allFound = true;
+            for (int i = 0; i < roster.Length; ++i)
+                allFound &= roster[i].bird.TryGet(out birds[i]);
+
+            if (allFound) break;
+
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        // HUDManager.RefreshPlayerCard reads this list for every card in an online match
+        DataTransferManager.selectedBirds = new List<BirdType>();
+        foreach (OnlineRosterEntry entry in roster)
+            DataTransferManager.selectedBirds.Add(entry.birdType);
+
+        for (int playerIndex = 0; playerIndex < roster.Length; ++playerIndex)
+        {
+            OnlineRosterEntry entry = roster[playerIndex];
+            HUDManager.Instance?.RegisterAICard(playerIndex, entry.birdType);
+
+            NetworkObject bird = birds[playerIndex];
+            if (IsServer || bird == null) continue;
+
+            bird.name = entry.isAI ? $"AI {playerIndex + 1}" : $"Player {playerIndex + 1}";
+
+            if (bird.TryGetComponent(out BallInteract ballInteract))
+            {
+                ballInteract.playerID = playerIndex;
+                ballInteract.onLeft = entry.onLeft;
+            }
+
+            if (bird.TryGetComponent(out AIBehavior aiBehavior))
+                aiBehavior.SetIdentity(entry.onLeft, playerIndex);
+
+            FollowObject follower = GetFollowObjectForPlayerIndex(playerIndex);
+            if (follower != null) follower.target = bird.transform;
+        }
+
+        HUDManager.Instance?.UpdateTeamCardBackgrounds();
+    }
+
+    // Lights up a player's ready indicator on the end screen for clients.
+    public static void ShowReadyIndicatorOnClients(int playerIndex)
+    {
+        if (NetworkSession.IsServer && instance != null) instance.ShowReadyIndicatorRpc(playerIndex);
+    }
+
+    [Rpc(SendTo.NotServer)]
+    private void ShowReadyIndicatorRpc(int playerIndex)
+    {
+        if (playerIndex >= 0 && playerIndex < playerIndicators.Length)
+            playerIndicators[playerIndex].enabled = true;
     }
 
     // Handles controller disconnect and reconnect events
@@ -178,6 +327,9 @@ public class MultiplayerManager : NetworkBehaviour
     void InitializePlayers()
     {
         int playerCount = 0;
+
+        // One entry for each slot. MakeAI marks the AI slots as already ready.
+        ScoreManager.Instance.readiedUp = new bool[4];
 
         // In demo mode isKBMInput is empty, so this loop is skipped entirely and
         // all four slots fall through to the MakeAI loop below.
@@ -233,9 +385,6 @@ public class MultiplayerManager : NetworkBehaviour
             Debug.Log("Made player");
         }
 
-        // Instantiate readied up for score manager
-        ScoreManager.Instance.readiedUp = new bool[playerCount];
-
         // Now add AI players, if necessary.
         // In demo mode playerCount starts at 0, so all four slots are filled with AI here.
         while (playerCount < 4)
@@ -266,7 +415,7 @@ public class MultiplayerManager : NetworkBehaviour
     PlayerInput InitializeControllerPlayer(GameObject prefab, int playerCount)
     {
         // Get an available gamepad if possible
-        Gamepad controller = GameManager.Instance.isLocal ?  AvailableGamepad() : AvailableNetworkedGamepad(playerCount);
+        Gamepad controller = AvailableGamepad();
 
         // If there is no available gamepad, start a wait coroutine instead of hard erroring
         if (controller == null)
@@ -291,7 +440,7 @@ public class MultiplayerManager : NetworkBehaviour
 
         while (elapsed < controllerWaitTimeout)
         {
-            Gamepad controller = GameManager.Instance.isLocal ?  AvailableGamepad() : AvailableNetworkedGamepad(playerCount);
+            Gamepad controller = AvailableGamepad();
             if (controller != null)
             {
                 Debug.Log($"[MultiplayerManager] Controller found for Player {playerCount + 1} after {elapsed:F1}s wait.");
@@ -345,13 +494,6 @@ public class MultiplayerManager : NetworkBehaviour
         }
 
         return null;
-    }
-
-    Gamepad AvailableNetworkedGamepad(int playerIndex)
-    {
-        // Network logic: for now, it just chooses the gamepad related to the player ID, but in future it should just
-        // grab the first gamepad as people playing on different devices would have different first gamepads.
-        return Gamepad.all[playerIndex];
     }
 
     GameObject GetBirdModel(BirdType type, bool isPlayer, bool isKBM)
@@ -431,9 +573,9 @@ public class MultiplayerManager : NetworkBehaviour
         // --------------------------------------------------------
         if (GameManager.Instance.isLocal)
         {
-            player.GetComponent<NetworkTransform>().enabled = false;
-            player.GetComponent<NetworkObject>().DontDestroyWithOwner = true;
-            player.GetComponent<PlayerNetworkController>().enabled = false;
+            // Not every prefab has these. The KBM birds never go online, for example.
+            if (player.TryGetComponent(out NetworkTransform networkTransform)) networkTransform.enabled = false;
+            if (player.TryGetComponent(out PlayerNetworkController networkController)) networkController.enabled = false;
         }
 
         // --------------------------------------------------------
@@ -558,7 +700,10 @@ public class MultiplayerManager : NetworkBehaviour
 
         // Fallback if AI model does not exist.
         if (aiModel == null)
+        {
             aiModel = cManager.PenguinAI;
+            birdType = BirdType.PENGUIN;
+        }
 
         // --------------------------------------------------------
         // CREATE AI
@@ -648,6 +793,28 @@ public class MultiplayerManager : NetworkBehaviour
         ai.transform.name =
             $"AI {playerIndex + 1}";
 
+        // AI never needs to ready up on the end screen
+        ScoreManager.Instance.readiedUp[spawnSlot] = true;
+
+        if (DataTransferManager.isLocal)
+        {
+            if (ai.TryGetComponent(out NetworkTransform networkTransform)) networkTransform.enabled = false;
+        }
+        else
+        {
+            // Must happen before GameManager is told about this bird, since it stores the network id
+            NetworkObject netObj = ai.GetComponent<NetworkObject>();
+            netObj.Spawn(true);
+
+            onlineRoster[playerIndex] = new OnlineRosterEntry
+            {
+                bird = netObj,
+                birdType = birdType,
+                onLeft = onLeft,
+                isAI = true
+            };
+        }
+
         // --------------------------------------------------------
         // FOLLOW OBJECT
         // --------------------------------------------------------
@@ -687,9 +854,13 @@ public class MultiplayerManager : NetworkBehaviour
         // HUD REGISTRATION
         // --------------------------------------------------------
 
-        pendingAIRegistrations.Add(
-            (playerIndex, birdType)
-        );
+        // Online, the roster fills in every card instead
+        if (DataTransferManager.isLocal)
+        {
+            pendingAIRegistrations.Add(
+                (playerIndex, birdType)
+            );
+        }
     }
 
     // ============================================================

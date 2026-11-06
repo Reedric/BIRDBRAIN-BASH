@@ -3,7 +3,6 @@ using UnityEngine;
 
 public class ScissortailOffensive : BirdAbility
 {
-    private bool shotHappened; // Whether or not the ability happened for return purposes
     override protected bool Activate()
     {
         BallInteract ballInteraction = GetComponent<BallInteract>();
@@ -16,9 +15,6 @@ public class ScissortailOffensive : BirdAbility
 
     private IEnumerator ScissorShot()
     {
-        // Ability has not yet happened
-        shotHappened = false;
-
         BallInteract ballInteraction = GetComponent<BallInteract>();
         if (ballInteraction == null || !ballInteraction.CanSpikeBall())
             yield break;
@@ -52,9 +48,6 @@ public class ScissortailOffensive : BirdAbility
         // If the ball actually reached the midpoint
         if (BallManager.Instance.gameObject.transform.position.y <= ballMidHeight)
         {
-            // Ability happened
-            shotHappened = true;
-
             // Ball should be at the halfway point, change its direction
             Vector3 changeTo;
             if (ballRb.linearVelocity.z > 0)

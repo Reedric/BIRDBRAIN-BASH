@@ -30,7 +30,7 @@ public class OwlOffensive : BirdAbility
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
         {
-            myBallInteract.animator.SetTrigger("OffensiveAbility");
+            myBallInteract.animator.SetTriggerSynced("OffensiveAbility");
         }
 
         // Play sound effect using AudioManager
@@ -62,6 +62,7 @@ public class OwlOffensive : BirdAbility
         lineRenderer.endWidth = lineWidth;
         lineRenderer.positionCount = 2;
         lineRenderer.SetPosition(0, start);
+        NetworkFx.MirrorLine(line);
         lineRenderer.SetPosition(1, start); // begin at start — tip will lerp to end
 
         // Collider is added after the draw animation so it only blocks once fully drawn

@@ -130,6 +130,11 @@ public class BallInteract : NetworkBehaviour
         }
 
         CheckState();
+
+        // Button presses only count for one frame, the same as WasPressedThisFrame in a local match
+        defActionPressed = false;
+        offActionPressed = false;
+        blockPressed = false;
     }
 
     // Check the game state in relation to the player
@@ -363,7 +368,7 @@ public class BallInteract : NetworkBehaviour
         // trigger animation
         if (animator != null)
         {
-            animator.SetTrigger("Bump");
+            animator.SetTriggerSynced("Bump");
         }
     }
 
@@ -415,7 +420,7 @@ public class BallInteract : NetworkBehaviour
         GameManager.Instance.lastHit = gameObject;
         if (animator != null)
         {
-            animator.SetTrigger("Set");
+            animator.SetTriggerSynced("Set");
         }
     }
 
@@ -474,7 +479,7 @@ public class BallInteract : NetworkBehaviour
         GameManager.Instance.lastHit = gameObject;
         if (animator != null)
         {
-            animator.SetTrigger("Spike");
+            animator.SetTriggerSynced("Spike");
         }
 
         // Fire any offensive ability that was armed before this spike (e.g. Penguin, Phoenix).
@@ -525,7 +530,7 @@ public class BallInteract : NetworkBehaviour
         serverMovement.overrideRotation = false; // allow normal rotation after serve
         if (animator != null)
         {
-            animator.SetTrigger("Spike");
+            animator.SetTriggerSynced("Spike");
         }
     }
 
@@ -537,7 +542,7 @@ public class BallInteract : NetworkBehaviour
 
         if (animator != null)
         {
-            animator.SetTrigger("Block");
+            animator.SetTriggerSynced("Block");
         }
 
         // handle vfx
@@ -576,7 +581,7 @@ public class BallInteract : NetworkBehaviour
         }
         if (animator != null)
         {
-            animator.SetTrigger("Block");
+            animator.SetTriggerSynced("Block");
         }
     }
 

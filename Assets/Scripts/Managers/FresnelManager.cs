@@ -22,7 +22,7 @@ public class FresnelManager : MonoBehaviour
         ballRb = ballObj.GetComponent<Rigidbody>();
 
         // Find all BallInteract scripts (players) and sort by their stable slot IDs
-        allPlayers = FindObjectsOfType<BallInteract>();
+        allPlayers = FindObjectsByType<BallInteract>(FindObjectsSortMode.None);
         System.Array.Sort(allPlayers, (a, b) =>
         {
             int idCompare = a.playerID.CompareTo(b.playerID);
@@ -32,7 +32,7 @@ public class FresnelManager : MonoBehaviour
         });
 
         // Find all AIBehavior scripts (AIs) and sort by their assigned slot IDs as well.
-        allAIs = FindObjectsOfType<AIBehavior>();
+        allAIs = FindObjectsByType<AIBehavior>(FindObjectsSortMode.None);
         System.Array.Sort(allAIs, (a, b) =>
         {
             int idCompare = a.playerID.CompareTo(b.playerID);

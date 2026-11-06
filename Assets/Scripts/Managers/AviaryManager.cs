@@ -136,14 +136,6 @@ public class AviaryManager : MonoBehaviour
     [Tooltip("Seconds to smooth cursor rotation when multiple players overlap")]
     public float cursorRotationSmoothTime = 0.08f;
 
-    [Header("Bird Icon Bounce")]
-    [SerializeField] private float iconShrinkDuration = 0.08f;
-    [SerializeField] private float iconBounceDuration = 0.2f;
-    [SerializeField] private float iconPressScale = 0.75f;
-    [SerializeField] private float iconBounceOvershoot = 1.15f;
-
-    private Coroutine iconBounceCoroutines;
-
     // per-player data maintained while on the select screen
     private int chosenBirdIndex = -1;
     private Transform playerCursor;
@@ -1059,7 +1051,7 @@ public class AviaryManager : MonoBehaviour
         }
 
         // Fallback: include BirdSelectButton instances as rect targets if not already present
-        BirdSelectButton[] birdButtons = FindObjectsOfType<BirdSelectButton>(true);
+        BirdSelectButton[] birdButtons = FindObjectsByType<BirdSelectButton>(FindObjectsInactive.Include, FindObjectsSortMode.InstanceID);
         foreach (var b in birdButtons)
         {
             RectTransform rt = b.GetComponent<RectTransform>();

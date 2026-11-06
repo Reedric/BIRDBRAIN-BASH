@@ -7,75 +7,67 @@ public class GameManager : NetworkBehaviour
     [Header("Left Team")]
     private GameObject leftPlayer1Local; // First player on left side (local multiplayer)
     private GameObject leftPlayer2Local; // Second player on left side (local multiplayer)
-    private NetworkVariable<ulong> leftPlayer1Net; // First player on left side (online multiplayer)
-    private NetworkVariable<ulong> leftPlayer2Net; // Second player on left side (online multiplayer)
+    private NetworkVariable<ulong> leftPlayer1Net = new(); // First player on left side (online multiplayer)
+    private NetworkVariable<ulong> leftPlayer2Net = new(); // Second player on left side (online multiplayer)
     public GameObject leftPlayer1 // First player on left side (API version)
     {
         get
         {
-            if (isLocal) return leftPlayer1Local;
-            else if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(leftPlayer1Net.Value, out var netObj)) return netObj.gameObject;
-            return null;
+            return isLocal ? leftPlayer1Local : NetworkSession.Resolve(leftPlayer1Net.Value);
         }
         set
         {
             if (isLocal) leftPlayer1Local = value;
-            else leftPlayer1Net.Value = value.GetComponent<NetworkObject>().NetworkObjectId;
+            else leftPlayer1Net.Value = NetworkSession.IdOf(value);
         }
     } 
     public GameObject leftPlayer2 // Second player on left side (API version)
     {
         get
         {
-            if (isLocal) return leftPlayer2Local;
-            else if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(leftPlayer2Net.Value, out var netObj)) return netObj.gameObject;
-            return null;
+            return isLocal ? leftPlayer2Local : NetworkSession.Resolve(leftPlayer2Net.Value);
         }
         set
         {
             if (isLocal) leftPlayer2Local = value;
-            else leftPlayer2Net.Value = value.GetComponent<NetworkObject>().NetworkObjectId;;
+            else leftPlayer2Net.Value = NetworkSession.IdOf(value);
         }
     }  
 
     [Header("Right Team")]
     private GameObject rightPlayer1Local; // First player on right side (local multiplayer)
     private GameObject rightPlayer2Local; // Second player on right side (local multiplayer)
-    private NetworkVariable<ulong> rightPlayer1Net; // First player on right side (online multiplayer)
-    private NetworkVariable<ulong> rightPlayer2Net; // Second player on right side (online multiplayer)
+    private NetworkVariable<ulong> rightPlayer1Net = new(); // First player on right side (online multiplayer)
+    private NetworkVariable<ulong> rightPlayer2Net = new(); // Second player on right side (online multiplayer)
     public GameObject rightPlayer1 // First player on right side (API version)
     {
         get
         {
-            if (isLocal) return rightPlayer1Local;
-            else if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(rightPlayer1Net.Value, out var netObj)) return netObj.gameObject;
-            return null;
+            return isLocal ? rightPlayer1Local : NetworkSession.Resolve(rightPlayer1Net.Value);
         }
         set
         {
             if (isLocal) rightPlayer1Local = value;
-            else rightPlayer1Net.Value = value.GetComponent<NetworkObject>().NetworkObjectId;;
+            else rightPlayer1Net.Value = NetworkSession.IdOf(value);
         }
     } 
     public GameObject rightPlayer2 // Second player on right side (API version)
     {
         get
         {
-            if (isLocal) return rightPlayer2Local;
-            else if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(rightPlayer2Net.Value, out var netObj)) return netObj.gameObject;
-            return null;
+            return isLocal ? rightPlayer2Local : NetworkSession.Resolve(rightPlayer2Net.Value);
         }
         set
         {
             if (isLocal) rightPlayer2Local = value;
-            else rightPlayer2Net.Value = value.GetComponent<NetworkObject>().NetworkObjectId;;
+            else rightPlayer2Net.Value = NetworkSession.IdOf(value);
         }
     } 
     
 
     [Header("Game Manager Stuff")]
     private GameState gameStateLocal; // State of the match (local multiplayer)
-    private NetworkVariable<GameState> gameStateNet; // State of the match (online multiplayer)
+    private NetworkVariable<GameState> gameStateNet = new(); // State of the match (online multiplayer)
     public GameState gameState // State of the match (API version)
     {
         get => isLocal ? gameStateLocal : gameStateNet.Value;
@@ -87,42 +79,38 @@ public class GameManager : NetworkBehaviour
     }
 
     private GameObject lastHitLocal; // Player that had the last hit (local multiplayer)
-    private NetworkVariable<ulong> lastHitNet; // Player that had the last hit (online multiplayer)
+    private NetworkVariable<ulong> lastHitNet = new(); // Player that had the last hit (online multiplayer)
     public GameObject lastHit // Player that had the last hit (API version)
     {
         get
         {
-            if (isLocal) return lastHitLocal;
-            else if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(lastHitNet.Value, out var netObj)) return netObj.gameObject;
-            return null;
+            return isLocal ? lastHitLocal : NetworkSession.Resolve(lastHitNet.Value);
         }
         set
         {
             if (isLocal) lastHitLocal = value;
-            else lastHitNet.Value = value.GetComponent<NetworkObject>().NetworkObjectId;;
+            else lastHitNet.Value = NetworkSession.IdOf(value);
         }
     }
 
 
     private GameObject serverLocal; // Player who serves this point (local multiplayer)
-    private NetworkVariable<ulong> serverNet; // Player who serves this point (online multiplayer)
+    private NetworkVariable<ulong> serverNet = new(); // Player who serves this point (online multiplayer)
     public GameObject server // Player who serves this point (API version)
     {
         get
         {
-            if (isLocal) return serverLocal;
-            else if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(serverNet.Value, out var netObj)) return netObj.gameObject;
-            return null;
+            return isLocal ? serverLocal : NetworkSession.Resolve(serverNet.Value);
         }
         set
         {
             if (isLocal) serverLocal = value;
-            else serverNet.Value = value.GetComponent<NetworkObject>().NetworkObjectId;;
+            else serverNet.Value = NetworkSession.IdOf(value);
         }
     }
 
     private bool leftAttackLocal; // If left is attacking (local multiplayer)
-    private NetworkVariable<bool> leftAttackNet; // If left is attacking (online multiplayer)
+    private NetworkVariable<bool> leftAttackNet = new(); // If left is attacking (online multiplayer)
     public bool leftAttack // If left is attacking (API version)
     {
         get => isLocal ? leftAttackLocal : leftAttackNet.Value;
@@ -180,32 +168,21 @@ public class GameManager : NetworkBehaviour
         // Auto-find countdown script if not assigned
         if (countdownScript == null)
         {
-            countdownScript = FindObjectOfType<countdown>();
-        }
-
-        // Initialize all network variables if it is a online multiplayer match
-        if (!isLocal)
-        {
-            leftPlayer1Net = new NetworkVariable<ulong>();
-            leftPlayer2Net = new NetworkVariable<ulong>();
-            rightPlayer1Net = new NetworkVariable<ulong>();
-            rightPlayer2Net = new NetworkVariable<ulong>();
-            gameStateNet = new NetworkVariable<GameState>();
-            lastHitNet = new NetworkVariable<ulong>();
-            serverNet = new NetworkVariable<ulong>();
-            leftAttackNet = new NetworkVariable<bool>();
+            countdownScript = FindFirstObjectByType<countdown>();
         }
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        StartCoroutine(InitializeWhenPlayersAreReady());
+        // The host runs the match online, and clients just follow the network variables
+        if (NetworkSession.HasAuthority) StartCoroutine(InitializeWhenPlayersAreReady());
     }
 
     private IEnumerator InitializeWhenPlayersAreReady()
     {
-        float timeout = 5f;
+        // Online has to wait on other machines loading, so it gets more time
+        float timeout = isLocal ? 5f : 120f;
         while (!HasRequiredMatchObjects() && timeout > 0f)
         {
             timeout -= Time.deltaTime;
@@ -354,10 +331,10 @@ public class GameManager : NetworkBehaviour
         }
 
         // Reset all positions and velocities for all players
-        instance.leftPlayer1.transform.position = instance.leftPlayer1Origin;
-        instance.leftPlayer2.transform.position = instance.leftPlayer2Origin;
-        instance.rightPlayer1.transform.position = instance.rightPlayer1Origin;
-        instance.rightPlayer2.transform.position = instance.rightPlayer2Origin;
+        NetworkSession.Teleport(instance.leftPlayer1, instance.leftPlayer1Origin);
+        NetworkSession.Teleport(instance.leftPlayer2, instance.leftPlayer2Origin);
+        NetworkSession.Teleport(instance.rightPlayer1, instance.rightPlayer1Origin);
+        NetworkSession.Teleport(instance.rightPlayer2, instance.rightPlayer2Origin);
 
         ResetPlayerRigidbody(instance.leftPlayer1);
         ResetPlayerRigidbody(instance.leftPlayer2);
@@ -374,15 +351,13 @@ public class GameManager : NetworkBehaviour
         // Set server's and ball's position
         if (instance.leftAttack)
         {
-            instance.server.transform.position = instance.leftServeLocation;
-            ballManager.gameObject.transform.position =
-                instance.leftServeLocation + new Vector3(1, 0, 0);
+            NetworkSession.Teleport(instance.server, instance.leftServeLocation);
+            NetworkSession.Teleport(ballManager.gameObject, instance.leftServeLocation + new Vector3(1, 0, 0));
         }
         else
         {
-            instance.server.transform.position = instance.rightServeLocation;
-            ballManager.gameObject.transform.position =
-                instance.rightServeLocation - new Vector3(1, 0, 0);
+            NetworkSession.Teleport(instance.server, instance.rightServeLocation);
+            NetworkSession.Teleport(ballManager.gameObject, instance.rightServeLocation - new Vector3(1, 0, 0));
         }
 
         // Reset the game manager fields
@@ -396,17 +371,5 @@ public class GameManager : NetworkBehaviour
 
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
-    }
-
-    public override void OnNetworkSpawn()
-    {
-        Debug.Log(
-            $"[GM] OnNetworkSpawn | " +
-            $"IsServer={IsServer} | " +
-            $"IsClient={IsClient} | " +
-            $"IsSpawned={IsSpawned} | " +
-            $"NetworkObjectId={NetworkObjectId}",
-            this
-        );
     }
 }

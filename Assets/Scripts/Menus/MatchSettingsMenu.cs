@@ -198,7 +198,7 @@ public class MatchSettingsMenu : MonoBehaviour
         // Make sure a persistent GameSettings object exists before we read from it.
         gameSettings = GameSettings.EnsureInstance();
 
-        uiInputModule = FindObjectOfType<InputSystemUIInputModule>();
+        uiInputModule = FindFirstObjectByType<InputSystemUIInputModule>();
         if (uiInputModule != null)
             uiInputModule.enabled = false;
 

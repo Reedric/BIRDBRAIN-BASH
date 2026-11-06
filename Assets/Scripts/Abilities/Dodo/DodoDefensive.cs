@@ -15,7 +15,7 @@ public class DodoDefensive : BirdAbility
 	protected override bool Activate()
 	{
 		if (animator != null)
-			animator.SetTrigger("DefensiveAbility");
+			animator.SetTriggerSynced("DefensiveAbility");
 
 		AudioManager.PlayBirdSound(BirdType.DODO, SoundType.DEFENSIVE, 1.0f);
 

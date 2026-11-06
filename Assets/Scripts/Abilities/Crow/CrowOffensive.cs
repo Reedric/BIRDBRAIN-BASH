@@ -19,7 +19,7 @@ public class CrowOffensive : BirdAbility {
     {
         // Play animation
         if (animator != null)
-            animator.SetTrigger("OffensiveAbility");
+            animator.SetTriggerSynced("OffensiveAbility");
 
         // Play sound effect using AudioManager
         AudioManager.PlayBirdSound(BirdType.CROW, SoundType.OFFENSIVE, 1.0f);

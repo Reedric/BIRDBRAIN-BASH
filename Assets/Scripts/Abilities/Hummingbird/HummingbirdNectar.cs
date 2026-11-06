@@ -205,7 +205,7 @@ public class HummingbirdNectar : MonoBehaviour
         if (birdNectarVfxPrefab == null)
             return null;
 
-        return Instantiate(birdNectarVfxPrefab, bird.transform);
+        return NetworkFx.Instantiate(birdNectarVfxPrefab, bird.transform);
     }
 
     private IEnumerator LifetimeRoutine()
