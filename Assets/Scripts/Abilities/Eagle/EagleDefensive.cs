@@ -47,7 +47,7 @@ public class EagleDefensive : BirdAbility
 		List<Vector3> positions = FindStarPositions(isLeftPlayer);
 		foreach (Vector3 position in positions)
 		{
-			GameObject star = Instantiate(starPrefab, position, Quaternion.identity);
+			GameObject star = NetworkFx.Instantiate(starPrefab, position, Quaternion.identity);
 			EagleStar starCollision = star.AddComponent<EagleStar>();
 			starCollision.Initialize(this, star, starLifetime, true);
 
@@ -82,6 +82,11 @@ public class EagleDefensive : BirdAbility
 
 		BallInteract ballInteract = GetComponent<BallInteract>();
 		if (ballInteract == null)
+			return;
+
+		// Same rules as a normal bump. Otherwise the star would bump anything that touched it, including a teammate's
+		// bump or set, giving the team as many touches as it has stars.
+		if (!GameManager.PointInProgress() || !ballInteract.CanHit())
 			return;
 
 		PerformAutomaticBump(ballInteract);

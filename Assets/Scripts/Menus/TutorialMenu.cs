@@ -4,9 +4,20 @@ using UnityEngine.InputSystem;
 using TMPro;
 using UnityEngine.Video;
 using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Netcode;
 
+// The tutorial before a match. Online, each player goes through it (or skips it) on their own, and the host starts
+// the match once everyone still connected is done.
 public class TutorialMenu : MonoBehaviour
 {
+    // Sent to the host by a client that has finished the tutorial
+    private const string tutorialDoneMessage = "TutorialDone";
+
+    // A client keeps telling the host it's done until the match loads, in case the first one arrived before the host
+    // was listening for it
+    private const float doneResendInterval = 1f;
+
     public GameObject confirmationPanel; // Panel for confirming if players want to view tutorial
     public GameObject tutorialPanel; // Panel for actual tutorial stuff
     public TMP_Text title; // Title of the tutorial stuff
@@ -34,6 +45,13 @@ public class TutorialMenu : MonoBehaviour
     private int pageNum; // Page of the tutorial the game is currenlty showing (0 is tutorial confirmation, 1-6 is actual tutorial stuff)
     private bool player1KBM; // Whether player 1 is keyboard and mouse
     private InputDevice p1Device; // Input device of player 1
+
+    // Online
+    private bool waitingForOthers; // This player is done, and the match starts once everyone else is
+    private float nextDoneSendTime;
+    private bool matchLoading;
+    private bool listeningForDone;
+    private readonly HashSet<ulong> playersDone = new(); // Host only
 
     void Awake()
     {
@@ -68,22 +86,42 @@ public class TutorialMenu : MonoBehaviour
             "Use the RIGHT BUMPER to use your offensive ability!"
         };
 
-        // Assign player 1's input device
-        player1KBM = DataTransferManager.isKBMInput[0];
+        if (NetworkSession.IsServer)
+        {
+            NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(tutorialDoneMessage, OnPlayerDone);
+            listeningForDone = true;
+        }
 
-        // Get the device associated with player 1
-        if (player1KBM)
-        {
-            p1Device = Keyboard.current;
-        }
-        else
-        {
-            p1Device = Gamepad.all[0];
-        }
+        // Player 1's devices are looked up on every press instead (see LocalPlayerDevices), so they can use either the
+        // keyboard or their controller, and nothing breaks if no controller is plugged in.
+        if (!NetworkSession.IsOnline && !LocalPlayerDevices.IsConfigured && DataTransferManager.isKBMInput != null)
+            LocalPlayerDevices.Configure(DataTransferManager.isKBMInput);
     }
+
+    void OnDestroy()
+    {
+        NetworkManager manager = NetworkManager.Singleton;
+        if (listeningForDone && manager != null && manager.CustomMessagingManager != null)
+            manager.CustomMessagingManager.UnregisterNamedMessageHandler(tutorialDoneMessage);
+    }
+
+    // Player 1's controller, or whichever one was used last if they don't have one. Online, this machine's one player
+    // can use any of its devices.
+    private static Gamepad Player1Gamepad =>
+        NetworkSession.IsOnline ? LocalPlayerDevices.LastUsedGamepad ?? Gamepad.current
+        : LocalPlayerDevices.GetGamepad(0) ?? (LocalPlayerDevices.IsConfigured ? null : LocalPlayerDevices.LastUsedGamepad);
+
+    private static Keyboard Player1Keyboard =>
+        NetworkSession.IsOnline || LocalPlayerDevices.OwnsKeyboard(0) || !LocalPlayerDevices.IsConfigured ? Keyboard.current : null;
 
     void Update()
     {
+        if (waitingForOthers)
+        {
+            UpdateWaiting();
+            return;
+        }
+
         // Check for next, back, and skip presses
         if (NextPress())
         {
@@ -118,40 +156,22 @@ public class TutorialMenu : MonoBehaviour
     bool NextPress()
     {
         // D for Keyboard, button south for controller
-        if (player1KBM)
-        {
-            return ((Keyboard) p1Device).dKey.wasPressedThisFrame;
-        }
-        else
-        {
-            return ((Gamepad) p1Device).buttonSouth.wasPressedThisFrame;
-        }
+        return (Player1Keyboard != null && Player1Keyboard.dKey.wasPressedThisFrame)
+            || (Player1Gamepad != null && Player1Gamepad.buttonSouth.wasPressedThisFrame);
     }
 
     bool BackPress()
     {
-        // A for Keyboard, button west for controller
-        if (player1KBM)
-        {
-            return ((Keyboard) p1Device).aKey.wasPressedThisFrame;
-        }
-        else
-        {
-            return ((Gamepad) p1Device).buttonEast.wasPressedThisFrame;
-        }
+        // A for Keyboard, button east for controller
+        return (Player1Keyboard != null && Player1Keyboard.aKey.wasPressedThisFrame)
+            || (Player1Gamepad != null && Player1Gamepad.buttonEast.wasPressedThisFrame);
     }
 
     bool SkipPress()
     {
         // W for Keyboard, button north for controller
-        if (player1KBM)
-        {
-            return ((Keyboard) p1Device).wKey.wasPressedThisFrame;
-        }
-        else
-        {
-            return ((Gamepad) p1Device).buttonNorth.wasPressedThisFrame;
-        }
+        return (Player1Keyboard != null && Player1Keyboard.wKey.wasPressedThisFrame)
+            || (Player1Gamepad != null && Player1Gamepad.buttonNorth.wasPressedThisFrame);
     }
 
     void NextPage()
@@ -191,6 +211,12 @@ public class TutorialMenu : MonoBehaviour
     {
         // LET'S BASH SOME BIRDBRAINS!!!!
 
+        if (NetworkSession.IsOnline)
+        {
+            FinishOnline();
+            return;
+        }
+
         // Only maps currently enabled in the Match Settings menu are eligible.
         GameSettings gs = GameSettings.EnsureInstance();
 
@@ -212,8 +238,55 @@ public class TutorialMenu : MonoBehaviour
         SceneManager.LoadScene(playableScenes[Random.Range(0, playableScenes.Count)]);
     }
 
+    // Online, the match can't start until everyone is through the tutorial, so this player waits for the rest
+    private void FinishOnline()
+    {
+        waitingForOthers = true;
+
+        confirmationPanel.SetActive(false);
+        tutorialPanel.SetActive(true);
+        title.text = "Ready!";
+        explanation.text = "Waiting for everyone else to finish the tutorial...";
+
+        if (NetworkSession.IsServer) playersDone.Add(NetworkManager.Singleton.LocalClientId);
+        else SendDone();
+    }
+
+    private void UpdateWaiting()
+    {
+        if (!NetworkSession.IsServer)
+        {
+            if (Time.unscaledTime >= nextDoneSendTime) SendDone();
+            return;
+        }
+
+        // Checked every frame, so that someone leaving partway through doesn't hold everyone else up
+        if (matchLoading) return;
+        foreach (ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
+        {
+            if (!playersDone.Contains(clientId)) return;
+        }
+
+        matchLoading = true;
+        NetworkSession.LoadMatchScene();
+    }
+
+    private void SendDone()
+    {
+        nextDoneSendTime = Time.unscaledTime + doneResendInterval;
+
+        using FastBufferWriter writer = new(1, Allocator.Temp);
+        NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(tutorialDoneMessage, NetworkManager.ServerClientId, writer);
+    }
+
+    // Host only
+    private void OnPlayerDone(ulong senderClientId, FastBufferReader reader)
+    {
+        playersDone.Add(senderClientId);
+    }
+
     // Adds sceneName to the pool only if its map is enabled in GameSettings
-    // AND the scene is actually included in Build Settings.
+    // and the scene is included in Build Settings.
     private void AddSceneIfEnabled(List<string> playableScenes, bool mapEnabled, string sceneName)
     {
         if (!mapEnabled) return;

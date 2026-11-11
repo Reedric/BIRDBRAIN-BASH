@@ -60,8 +60,7 @@ public class ShimaEnagaCottonball : MonoBehaviour
         if (rb == null)
             rb = gameObject.AddComponent<Rigidbody>();
 
-        // IMPORTANT:
-        // Rigidbody is completely disabled during the throw.
+        // Rigidbody is disabled during the throw.
         rb.isKinematic = true;
         rb.useGravity = false;
         rb.linearVelocity = Vector3.zero;
@@ -88,9 +87,9 @@ public class ShimaEnagaCottonball : MonoBehaviour
             return;
 
         // Keep the cottonball kinematic even after landing so it acts
-        // as a fixed obstacle — birds can still collide with it (and
+        // as a fixed obstacle. Birds can still collide with it (and
         // get bounced via AddForce in BounceBird), but can't
-        // physically shove it out of position.
+        // shove it out of position.
         rb.isKinematic = true;
         rb.useGravity = false;
         rb.detectCollisions = true;
@@ -256,12 +255,11 @@ public class ShimaEnagaCottonball : MonoBehaviour
         if (birdRb == null)
             return;
 
-        // Push the bird opposite its current direction of travel so
-        // the knockback reads as a left/right shove instead of a
-        // coin-flip. If the bird is basically stationary, push it
-        // away from the cottonball itself instead. Random is only a
-        // last-resort fallback for the degenerate case where both of
-        // those vectors are zero.
+        // Push the bird opposite the way it's moving so
+        // the knockback is a left/right shove and not a
+        // coin flip. If the bird is basically standing still, push it
+        // away from the cottonball instead. Random is only the
+        // fallback for when both of those are zero.
         Vector2 currentHorizontal = new Vector2(
             birdRb.linearVelocity.x,
             birdRb.linearVelocity.z
@@ -289,7 +287,7 @@ public class ShimaEnagaCottonball : MonoBehaviour
             horizontalDirection.y
         );
 
-        // Make sure the bird gets a meaningful horizontal push.
+        // Make sure the bird gets a decent horizontal push.
         forceDirection *= randomHorizontalForce;
 
         // Always give the bird some upward launch.
@@ -322,7 +320,7 @@ public class ShimaEnagaCottonball : MonoBehaviour
         );
 
         // Animate through each pose instead of snapping to it, so the
-        // squash/stretch actually reads as motion.
+        // squash/stretch looks like motion.
         yield return LerpScale(originalScale, squashScale, squashDuration);
         yield return LerpScale(squashScale, stretchScale, squashDuration);
         yield return LerpScale(stretchScale, originalScale, squashDuration);
@@ -383,7 +381,7 @@ public class ShimaEnagaCottonball : MonoBehaviour
         if (!Application.isPlaying)
             return;
 
-        GameObject poof = Instantiate(
+        GameObject poof = NetworkFx.Instantiate(
             poofVFXPrefab,
             transform.position,
             Quaternion.identity

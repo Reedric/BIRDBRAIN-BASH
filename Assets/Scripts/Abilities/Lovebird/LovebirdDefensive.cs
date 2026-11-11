@@ -11,6 +11,8 @@ public class LovebirdDefensive : BirdAbility
     [Header("Romantic Rush")]
     public float dashSpeed = 18.0f;
     public float dashToDistance = 2.0f; // How close Loverbird dashes to Ally
+    [Tooltip("Longest the dash can go on for before giving up on reaching the ally.")]
+    [SerializeField] private float maxDashDuration = 1.5f;
     private Rigidbody rb;
 
     // Checks for Game Manager on Start
@@ -67,15 +69,23 @@ public class LovebirdDefensive : BirdAbility
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
         {
-            myBallInteract.animator.SetTrigger("DefensiveAbility");
+            myBallInteract.animator.SetTriggerSynced("DefensiveAbility");
         }
 
         Debug.Log("Dashing towards ally...");
-        // Continues moving as long as the distance is within 1 unit
-        while (Vector3.Distance(transform.position, ally.transform.position) > dashToDistance)
+        // Continues moving as long as the distance is within 1 unit.
+        // The dash holds the lovebird in place until it arrives, so it gives up if the ally can't be reached,
+        // like a Kiwi burrowed underground or a bird turned into a chicken, instead of trapping it forever.
+        float dashTime = 0f;
+        while (ally != null && Vector3.Distance(transform.position, ally.transform.position) > dashToDistance)
         {
+            if (!ally.activeInHierarchy || !GameManager.PointInProgress() || dashTime >= maxDashDuration)
+                break;
+
             Vector3 direction = (ally.transform.position - transform.position).normalized;
             rb.MovePosition(transform.position + dashSpeed * Time.deltaTime * direction);
+
+            dashTime += Time.deltaTime;
             yield return null;
         }
 

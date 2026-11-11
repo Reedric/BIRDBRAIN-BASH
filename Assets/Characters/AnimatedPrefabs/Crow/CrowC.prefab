@@ -155,10 +155,10 @@ PrefabInstance:
       addedObject: {fileID: 721020561464351418}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ec88d96789b82934d8df1ab9e6e88fe3, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6652289537862721644}
+      addedObject: {fileID: 6448808846880785637}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ec88d96789b82934d8df1ab9e6e88fe3, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6448808846880785637}
+      addedObject: {fileID: 6652289537862721644}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ec88d96789b82934d8df1ab9e6e88fe3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5749381738469533743}
@@ -177,6 +177,18 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ec88d96789b82934d8df1ab9e6e88fe3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1968467342884555791}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ec88d96789b82934d8df1ab9e6e88fe3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2475019631779618613}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ec88d96789b82934d8df1ab9e6e88fe3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 380599818969901467}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ec88d96789b82934d8df1ab9e6e88fe3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4124595976038190090}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ec88d96789b82934d8df1ab9e6e88fe3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3243467766621053749}
   m_SourcePrefab: {fileID: 100100000, guid: ec88d96789b82934d8df1ab9e6e88fe3, type: 3}
 --- !u!1 &6060949736581650276 stripped
 GameObject:
@@ -293,7 +305,7 @@ CapsuleCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 1.12
-  m_Height: 6.5
+  m_Height: 6.14
   m_Direction: 1
   m_Center: {x: 0, y: 2.86, z: 0.57}
 --- !u!95 &721020561464351418
@@ -318,24 +330,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &6652289537862721644
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6060949736581650276}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62a52fa449ea78c439b417bf12bbb9f1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  onLeft: 0
-  interactionRadius: 2.5
-  animator: {fileID: 0}
-  spikeStat: 5
-  birdType: 1
-  playerID: 0
 --- !u!114 &6448808846880785637
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -348,13 +342,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 1196387642
+  GlobalObjectIdHash: 1376875355
   InScenePlacedSourceGlobalObjectIdHash: 0
+  m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
-  Ownership: 1
+  Ownership: 0
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
-  <InScenePlaced>k__BackingField: 0
+  m_InScenePlaced: 0
   ActiveSceneSynchronization: 0
   SceneMigrationSynchronization: 0
   SpawnWithObservers: 1
@@ -362,6 +357,25 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
+--- !u!114 &6652289537862721644
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6060949736581650276}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62a52fa449ea78c439b417bf12bbb9f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  onLeft: 0
+  interactionRadius: 2.5
+  animator: {fileID: 0}
+  spikeStat: 5
+  birdType: 1
+  playerID: 0
 --- !u!114 &5749381738469533743
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5243,6 +5257,182 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   abilityController: {fileID: 41247454606701049}
+--- !u!114 &2475019631779618613
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6060949736581650276}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e96cb6065543e43c4a752faaa1468eb1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkTransformExpanded: 0
+  AutoOwnerAuthorityTickOffset: 1
+  PositionInterpolationType: 0
+  RotationInterpolationType: 0
+  ScaleInterpolationType: 0
+  PositionLerpSmoothing: 1
+  PositionMaxInterpolationTime: 0.1
+  RotationLerpSmoothing: 1
+  RotationMaxInterpolationTime: 0.1
+  ScaleLerpSmoothing: 1
+  ScaleMaxInterpolationTime: 0.1
+  AuthorityMode: 0
+  TickSyncChildren: 0
+  UseUnreliableDeltas: 0
+  SyncPositionX: 1
+  SyncPositionY: 1
+  SyncPositionZ: 1
+  SyncRotAngleX: 1
+  SyncRotAngleY: 1
+  SyncRotAngleZ: 1
+  SyncScaleX: 1
+  SyncScaleY: 1
+  SyncScaleZ: 1
+  PositionThreshold: 0.001
+  RotAngleThreshold: 0.01
+  ScaleThreshold: 0.01
+  UseQuaternionSynchronization: 0
+  UseQuaternionCompression: 0
+  UseHalfFloatPrecision: 0
+  InLocalSpace: 0
+  SwitchTransformSpaceWhenParented: 0
+  Interpolate: 1
+  SlerpPosition: 0
+--- !u!114 &380599818969901467
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6060949736581650276}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8d0727d5ae3244e3b569694d3912374, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkAnimatorExpanded: 0
+  AuthorityMode: 0
+  m_Animator: {fileID: 721020561464351418}
+  TransitionStateInfoList:
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: 2081823275
+    DestinationState: -1036680761
+    TransitionDuration: 0.24999993
+    TriggerNameHash: -1036680761
+    TransitionIndex: 1
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: 2081823275
+    DestinationState: -564567236
+    TransitionDuration: 0.25
+    TriggerNameHash: -564567236
+    TransitionIndex: 2
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: 2081823275
+    DestinationState: 779695502
+    TransitionDuration: 0.24999997
+    TriggerNameHash: 779695502
+    TransitionIndex: 3
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: 2081823275
+    DestinationState: -2131200819
+    TransitionDuration: 0.25000012
+    TriggerNameHash: -1126867370
+    TransitionIndex: 4
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: 765711723
+    DestinationState: -1036680761
+    TransitionDuration: 0.24999997
+    TriggerNameHash: -1036680761
+    TransitionIndex: 1
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: 765711723
+    DestinationState: -564567236
+    TransitionDuration: 0.24999997
+    TriggerNameHash: -564567236
+    TransitionIndex: 2
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: 765711723
+    DestinationState: 779695502
+    TransitionDuration: 0.24999994
+    TriggerNameHash: 779695502
+    TransitionIndex: 3
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: 765711723
+    DestinationState: -2131200819
+    TransitionDuration: 0.25000006
+    TriggerNameHash: -1126867370
+    TransitionIndex: 4
+  AnimatorParameterEntries:
+    ParameterEntries:
+    - name: isWalking
+      NameHash: -830007593
+      Synchronize: 1
+      ParameterType: 4
+    - name: Bump
+      NameHash: -1036680761
+      Synchronize: 1
+      ParameterType: 9
+    - name: Set
+      NameHash: -564567236
+      Synchronize: 1
+      ParameterType: 9
+    - name: Spike
+      NameHash: 779695502
+      Synchronize: 1
+      ParameterType: 9
+    - name: Dash
+      NameHash: 995914302
+      Synchronize: 1
+      ParameterType: 9
+    - name: OffensiveAbility
+      NameHash: -1126867370
+      Synchronize: 1
+      ParameterType: 9
+    - name: DefensiveAbility
+      NameHash: -143450222
+      Synchronize: 1
+      ParameterType: 9
+  AnimatorParametersExpanded: 0
+--- !u!114 &4124595976038190090
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6060949736581650276}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f096630c34e51a44290c1de6c61d2461, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &3243467766621053749
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6060949736581650276}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1ad2adbd9ce4ea4491ca722504a8c9a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!4 &6869960859456769502 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: ec88d96789b82934d8df1ab9e6e88fe3, type: 3}

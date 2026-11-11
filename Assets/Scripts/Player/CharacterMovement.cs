@@ -20,16 +20,17 @@ public class CharacterMovement : NetworkBehaviour
 
     private float directionChangeWeight = 15f; // How quickly the character can change direction
     private Coroutine buffCoroutine; // Reference to the currently active buff coroutine
-    private float originalMaxGroundSpeed = 1.0f; // Original max ground speed before buff
-    private float originalMaxAirSpeed = 1.0f; // Original max air speed before buff
 
+    private PlayerInput playerInput; // Input of the player for local multiplayer functionality
+    private bool networkedJumpHeld; // If the player is holding jump, set by the input RPC for online multiplayer
+    private bool inputInverted; // If this player's online movement input is flipped
     private Rigidbody rb; // Rigid body of the character
     public bool grounded = false; // If the character is touching the ground
 
     private bool canJump = true; // christofort: defaulted to false, ability scripts must set this to true
     private bool canMove = true; // christofort: defaulted to false, ability scripts must set this to true
     private ParticleSystem dustParticles; // Reference to particle system for ground dust
-    private PlayerInput playerInput; // Input for the player
+    private Vector2 movementInput; // Input from networked object
 
     [HideInInspector] public bool overrideRotation = false; // Allow other scripts to override rotation
     [HideInInspector] public Quaternion targetRotation; // Target rotation when overridden
@@ -48,13 +49,61 @@ public class CharacterMovement : NetworkBehaviour
     // -1 = left side, +1 = right side.
     private float netSide;
 
+    // The stats this bird spawned with, so they can be put back at the start of each point
+    private float baseMaxGroundSpeed;
+    private float baseMaxAirSpeed;
+    private float baseJumpForce;
+
+    void Awake()
+    {
+        baseMaxGroundSpeed = maxGroundSpeed;
+        baseMaxAirSpeed = maxAirSpeed;
+        baseJumpForce = jumpForce;
+    }
+
+    // Abilities put back the speeds they change when they wear off, but when two overlap (a buff ending during a stun,
+    // or a bird turned into a chicken mid-boost) one can put back the wrong value and leave the bird stuck that way.
+    public void ResetStats()
+    {
+        statModifiers.Clear();
+        ApplyStatModifiers();
+    }
+
+    // Stat changes from abilities (see BirdStats). The stats are always worked out from the ones the bird spawned with.
+    private readonly StatModifierStack statModifiers = new StatModifierStack();
+
+    public void SetStatModifier(object key, StatModifier modifier)
+    {
+        statModifiers.Set(key, modifier);
+        ApplyStatModifiers();
+    }
+
+    public void RemoveStatModifier(object key)
+    {
+        if (statModifiers.Remove(key)) ApplyStatModifiers();
+    }
+
+    private void ApplyStatModifiers()
+    {
+        statModifiers.Evaluate(baseMaxGroundSpeed, baseMaxAirSpeed, baseJumpForce,
+            out maxGroundSpeed, out maxAirSpeed, out jumpForce);
+    }
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    IEnumerator Start()
     {
         // Get the Rigidbody of the character
-        playerInput = GetComponent<PlayerInput>();
         rb = GetComponent<Rigidbody>();
         dustParticles = GetComponent<ParticleSystem>();
+
+        yield return new WaitUntil(() => GameManager.Instance != null);
+        if (GameManager.Instance.isLocal) playerInput = GetComponent<PlayerInput>();
+
+        // Error handling
+        if (GameManager.Instance.isLocal && playerInput == null)
+        {
+            Debug.LogError("Could not find player input on a local multiplayer instance for " + transform.name);
+        } 
 
         // grab animator if not assigned in inspector (mirrors AIBehavior logic)
         if (animator == null)
@@ -72,96 +121,27 @@ public class CharacterMovement : NetworkBehaviour
             }
         }
 
-        // Determine which side of the net this character belongs to.
-        if (enforceNetBoundary)
-        {
-            netSide = Mathf.Sign(transform.position.x);
+        // Determine which side of the net this character belongs to. (Always, since every bird gets the basic guard)
+        netSide = Mathf.Sign(transform.position.x);
 
-            // Safety fallback if the character starts directly on the net.
-            if (Mathf.Approximately(netSide, 0f))
-            {
-                netSide = 1f;
-            }
+        // Safety fallback if the character starts directly on the net.
+        if (Mathf.Approximately(netSide, 0f))
+        {
+            netSide = 1f;
         }
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
-        // Check for player inputs for lateral movement
-        Vector2 inputDirection = playerInput.actions.FindAction("Move").ReadValue<Vector2>();
+        // Network: wait until the start stuff has happened
+        if (GameManager.Instance == null) return;
 
-        // Update the current direction and speed of the character based on player input
-        // christofort: added check for canMove to be true
-        if (!inputDirection.Equals(Vector2.zero) && canMove)
-        {
-            // Calculate new velocity, ensure it doesn't exceed max ground or air speed, then assign the velocity
-            Vector2 newVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.z) + inputDirection * Time.fixedDeltaTime * directionChangeWeight;
+        Move();
 
-            // If on the ground and new velocity exceeds max ground speed, cap the speed
-            if (grounded && newVelocity.magnitude > maxGroundSpeed)
-            {
-                newVelocity.Normalize();
-                newVelocity *= maxGroundSpeed;
-            }
-            // Else if in the air and new velocity exceeds max air speed, cap the speed
-            else if (!grounded && newVelocity.magnitude > maxAirSpeed)
-            {
-                newVelocity.Normalize();
-                newVelocity *= maxAirSpeed;
-            }
-
-            rb.linearVelocity = new Vector3(newVelocity.x, rb.linearVelocity.y, newVelocity.y);
-            
-            // Rotate to face movement direction (unless overridden by another script)
-            if (!overrideRotation && inputDirection.magnitude > 0.1f)
-            {
-                Vector3 movementDirection = new Vector3(inputDirection.x, 0, inputDirection.y);
-                Quaternion baseRotation = Quaternion.LookRotation(movementDirection);
-
-                if (rotationOffsetEuler != Vector3.zero)
-                {
-                    baseRotation *= Quaternion.Euler(rotationOffsetEuler);
-                }
-
-                targetRotation = baseRotation;
-            }
-        }
-
-        // Apply rotation (either from movement or override)
-        if (!overrideRotation ||
-            Vector3.Distance(transform.eulerAngles, targetRotation.eulerAngles) > 0.1f)
-        {
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
-        }
-
-        // update walking flag for animator
-        Rigidbody localRb = rb; // alias for clarity
-        isWalking = new Vector2(localRb.linearVelocity.x, localRb.linearVelocity.z).magnitude > 0.1f;
-        if (animator != null)
-        {
-            animator.SetBool("isWalking", isWalking);
-        }
-
-        // Check for player input for vertical movement
-        InputAction jump = playerInput.actions.FindAction("Jump");
-
-        // If character touching ground AND player presses jump button, character jumps
-        // christofort: addded a check for canJump to prevent jumping if ability script hasn't allowed for it
-        if (canJump && grounded && jump.IsPressed())
-        {
-            float jumpAmount = 5 + 0.3f * jumpForce;
-            // Assign Y velocity directly rather than += - prevents leftover fall velocity
-            // (which isn't always fully zeroed by the physics solver on landing) from
-            // stacking with the jump impulse and producing inconsistent jump heights
-            rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpAmount, rb.linearVelocity.z);
-            grounded = false;
-        }
-
-        // Make sure the character cannot cross the net.
-        // This runs even when normal movement is disabled,
-        // so abilities such as Hummingbird's dash are also contained.
-        EnforceNetBoundary();
+        // Check if jump is being held, from this machine's input or from the input RPC
+        if (JumpHeld)
+            Jump();
     }
 
     /// <summary>
@@ -171,16 +151,22 @@ public class CharacterMovement : NetworkBehaviour
     /// </summary>
     private void EnforceNetBoundary()
     {
-        if (!enforceNetBoundary || rb == null)
+        if (rb == null || netSide == 0f)
+            return;
+
+        // The end screen lines every bird up on one side
+        if (GameManager.Instance == null || GameManager.Instance.gameState == GameManager.GameState.GameOver)
             return;
 
         Vector3 position = rb.position;
         Vector3 velocity = rb.linearVelocity;
 
-        Collider col = GetComponent<Collider>();
-
+        // Every bird is kept from getting its middle over the net, even without enforceNetBoundary. Fast dashes
+        // (Hummingbird's is 30 units a second) could otherwise go straight through the net's collider in a single
+        // physics step and leave the bird on the other team's court. enforceNetBoundary keeps the whole body back.
         float halfWidth = 0f;
 
+        Collider col = enforceNetBoundary ? GetComponent<Collider>() : null;
         if (col != null)
         {
             halfWidth = col.bounds.extents.x;
@@ -265,16 +251,13 @@ public class CharacterMovement : NetworkBehaviour
             buffCoroutine = null;
         }
 
-        maxGroundSpeed = originalMaxGroundSpeed;
-        maxAirSpeed = originalMaxAirSpeed;
-        // originalJumpForce = jumpForce;
+        RemoveStatModifier(buffStatsKey);
     }
+
+    private readonly object buffStatsKey = new object();
 
     public IEnumerator BuffTimer(int increase, int time)
     {
-        Debug.Log("BUFFING...");
-        Debug.Log("ORIGINAL = " + maxGroundSpeed);
-
         BuffsDebuffs.Instance.ApplyEffect(
             BuffsDebuffs.EffectType.Buff,
             gameObject,
@@ -282,24 +265,128 @@ public class CharacterMovement : NetworkBehaviour
             true
         );
 
-        originalMaxGroundSpeed = maxGroundSpeed;
-        originalMaxAirSpeed = maxAirSpeed;
-        // originalJumpForce = jumpForce;
-
-        maxGroundSpeed += increase;
-        maxAirSpeed += increase;
-
-        // Clamp it so that the stat cannot go below 1
-        maxGroundSpeed = Mathf.Max(maxGroundSpeed, 1f);
-        maxAirSpeed = Mathf.Max(maxAirSpeed, 1f);
-        // jumpForce += increase;
-
-        Debug.Log("NEW = " + maxGroundSpeed);
+        SetStatModifier(buffStatsKey, StatModifier.Speed(increase));
 
         yield return new WaitForSeconds(time);
 
-        maxGroundSpeed = originalMaxGroundSpeed;
-        maxAirSpeed = originalMaxAirSpeed;
-        // jumpForce = originalJumpForce;
+        RemoveStatModifier(buffStatsKey);
+    }
+
+    /// <summary>
+    /// Moves the player depending on the input from the networked object.
+    /// </summary>
+    public void Move()
+    {
+        if (!NetworkSession.HasAuthority) return;
+
+        // Get the input for local if necessary
+        if (GameManager.Instance.isLocal && playerInput != null)
+        {
+            movementInput = playerInput.actions["Move"].ReadValue<Vector2>();
+            if (inputInverted) movementInput = -movementInput; // Macaw's Flip Flap
+        }
+
+        // Update the current direction and speed of the character based on player input
+        // christofort: added check for canMove to be true
+        if (!movementInput.Equals(Vector2.zero) && canMove)
+        {
+            // Calculate new velocity, ensure it doesn't exceed max ground or air speed, then assign the velocity
+            Vector2 newVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.z) + movementInput * Time.fixedDeltaTime * directionChangeWeight;
+
+            // If on the ground and new velocity exceeds max ground speed, cap the speed
+            if (grounded && newVelocity.magnitude > maxGroundSpeed)
+            {
+                newVelocity.Normalize();
+                newVelocity *= maxGroundSpeed;
+            }
+            // Else if in the air and new velocity exceeds max air speed, cap the speed
+            else if (!grounded && newVelocity.magnitude > maxAirSpeed)
+            {
+                newVelocity.Normalize();
+                newVelocity *= maxAirSpeed;
+            }
+
+            rb.linearVelocity = new Vector3(newVelocity.x, rb.linearVelocity.y, newVelocity.y);
+            
+            // Rotate to face movement direction (unless overridden by another script)
+            if (!overrideRotation && movementInput.magnitude > 0.1f)
+            {
+                Vector3 movementDirection = new Vector3(movementInput.x, 0, movementInput.y);
+                Quaternion baseRotation = Quaternion.LookRotation(movementDirection);
+
+                if (rotationOffsetEuler != Vector3.zero)
+                {
+                    baseRotation *= Quaternion.Euler(rotationOffsetEuler);
+                }
+
+                targetRotation = baseRotation;
+            }
+        }
+
+        // Apply rotation (either from movement or override)
+        if (!overrideRotation ||
+            Vector3.Distance(transform.eulerAngles, targetRotation.eulerAngles) > 0.1f)
+        {
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
+        }
+
+        // update walking flag for animator
+        Rigidbody localRb = rb; // alias for clarity
+        isWalking = new Vector2(localRb.linearVelocity.x, localRb.linearVelocity.z).magnitude > 0.1f;
+        if (animator != null)
+        {
+            animator.SetBool("isWalking", isWalking);
+        }
+
+        // Make sure the character cannot cross the net.
+        // This runs even when normal movement is disabled,
+        // so abilities such as Hummingbird's dash are also contained.
+        EnforceNetBoundary();
+
+        // Debug.Log($"[SERVER] Movement applied on Object {NetworkObjectId}: {transform.position}");
+    }
+
+    public void Jump()
+    {
+        // If character touching ground and not disabled from jumping, character jumps
+        // The actual check for pressing jump button is not handled in PlayerNetworkController
+        if (canJump && grounded)
+        {
+            float jumpAmount = 5 + 0.3f * jumpForce;
+            // Assign Y velocity directly rather than += - prevents leftover fall velocity
+            // (which isn't always fully zeroed by the physics solver on landing) from
+            // stacking with the jump impulse and producing inconsistent jump heights
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpAmount, rb.linearVelocity.z);
+            grounded = false;
+        }
+    }
+
+    // Whether jump is being held. Abilities should use this instead of reading PlayerInput,
+    // since online input arrives through PlayerNetworkController.
+    public bool JumpHeld => GameManager.Instance.isLocal
+        ? playerInput != null && playerInput.actions["Jump"].IsPressed()
+        : networkedJumpHeld;
+
+    // Setter for holding jump from the PlayerNetworkController component.
+    public void SetJumpHeld(bool held)
+    {
+        networkedJumpHeld = held;
+    }
+
+    // Flips this player's online movement input (Macaw's Flip Flap).
+    public void SetInputInverted(bool inverted)
+    {
+        if (inputInverted != inverted) movementInput = -movementInput;
+        inputInverted = inverted;
+    }
+
+    /// <summary>
+    /// Setter for the input from the PlayerNetworkController component.
+    /// </summary>
+    /// <param name="input">2D input movement vector.</param>
+    public void SetInput(Vector2 input)
+    {
+        movementInput = inputInverted ? -input : input;
+        // Debug.Log($"Updated input for Player{NetworkObjectId}: {networkedInput}");
     }
 }

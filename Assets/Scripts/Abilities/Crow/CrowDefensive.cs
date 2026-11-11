@@ -12,13 +12,14 @@ public class CrowDefensive : BirdAbility
     private int oldScore = 0; // Score of the last round
     public GameObject coin; // Coin item
     private List<GameObject> coins = new List<GameObject>(); // List to keep track of spawned coins
-    private bool buffActive = false; // If the stat buff is currently active
     private Vector3 randomSpawnPosition1;
     private Vector3 randomSpawnPosition2;
     private Vector3 randomSpawnPosition3;
     
     void Update()
     {
+        if (ScoreManager.Instance == null || GameManager.Instance == null) return;
+
         // Check if coins exist and if score has changed since last round, if so reset coin count
         if (oldScore != (ScoreManager.Instance.side1Score + ScoreManager.Instance.side2Score))
         {
@@ -37,12 +38,15 @@ public class CrowDefensive : BirdAbility
         // If collected all coins, activate ability
         if (coinCount == 3)
         {
-            coinCount = 0;
+            // Also forgets the collected coins. Left in the list, they'd make it look like
+            // coins were still out, and the ability couldn't be used again until somebody scored.
+            ClearCurrCoins();
             CrowDefBuff();
             return true;
         }
 
         // If coins already on the court, do not allow respawning of coins
+        coins.RemoveAll(c => c == null);
         if (coins.Count > 0) return false;
 
         // Clear coins from the court if they exist from a previous ability use
@@ -64,9 +68,9 @@ public class CrowDefensive : BirdAbility
         }
 
         // Spawn three coins randomly on the court
-        GameObject coin1 = Instantiate(coin, randomSpawnPosition1, Quaternion.identity);
-        GameObject coin2 = Instantiate(coin, randomSpawnPosition2, Quaternion.identity);
-        GameObject coin3 = Instantiate(coin, randomSpawnPosition3, Quaternion.identity);
+        GameObject coin1 = NetworkFx.Instantiate(coin, randomSpawnPosition1, Quaternion.identity);
+        GameObject coin2 = NetworkFx.Instantiate(coin, randomSpawnPosition2, Quaternion.identity);
+        GameObject coin3 = NetworkFx.Instantiate(coin, randomSpawnPosition3, Quaternion.identity);
         coins.Add(coin1);
         coins.Add(coin2);
         coins.Add(coin3);
@@ -81,7 +85,6 @@ public class CrowDefensive : BirdAbility
         Debug.Log("Buff activated");
         BuffsDebuffs.Instance.ApplyEffect(BuffsDebuffs.EffectType.Buff, gameObject, buffLength,
             gameObject == GameManager.Instance.leftPlayer1 || gameObject == GameManager.Instance.leftPlayer2);
-        buffActive = true;
         int playerID = GetComponent<BallInteract>().playerID;
         HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
     }
@@ -108,8 +111,9 @@ public class CrowDefensive : BirdAbility
         {
             Destroy(other.gameObject);
             coinCount++;
+
+            // Play sound effect using AudioManager (only for coins, not every trigger the crow touches)
+            AudioManager.PlayBirdSound(BirdType.CROW, SoundType.DEFENSIVE, 1.0f);
         }
-        // Play sound effect using AudioManager
-        AudioManager.PlayBirdSound(BirdType.CROW, SoundType.DEFENSIVE, 1.0f);
     }
 }

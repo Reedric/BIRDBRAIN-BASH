@@ -47,7 +47,7 @@ public class HummingbirdOffensive : BirdAbility
 		}
 
 		Vector3 spawnPosition = GetNectarSpawnPosition(opponent.transform.position);
-		GameObject nectar = Instantiate(nectarPrefab, spawnPosition, Quaternion.identity);
+		GameObject nectar = NetworkFx.Instantiate(nectarPrefab, spawnPosition, Quaternion.identity);
 		HummingbirdNectar nectarZone = nectar.GetComponent<HummingbirdNectar>();
 		if (nectarZone == null)
 			nectarZone = nectar.AddComponent<HummingbirdNectar>();
@@ -63,7 +63,7 @@ public class HummingbirdOffensive : BirdAbility
 		StartCoroutine(AnimateTongue(spawnPosition));
 
 		if (hummingbird.animator != null)
-			hummingbird.animator.SetTrigger("OffensiveAbility");
+			hummingbird.animator.SetTriggerSynced("OffensiveAbility");
 
 		AudioManager.PlayBirdSound(BirdType.HUMMINGBIRD, SoundType.OFFENSIVE, 1.0f);
 		HUDManager.Instance.TriggerOffensiveCooldown(hummingbird.playerID, _cooldownTime);
@@ -104,9 +104,18 @@ public class HummingbirdOffensive : BirdAbility
 		return nearest;
 	}
 
+	private GameObject activeTongue;
+
+	// Otherwise the tongue stays on screen for good if the hummingbird gets switched off while it's out
+	private void OnDisable()
+	{
+		if (activeTongue != null) Destroy(activeTongue);
+	}
+
 	private IEnumerator AnimateTongue(Vector3 targetPosition)
 	{
 		GameObject tongueObject = new GameObject("HummingbirdTongue");
+		activeTongue = tongueObject;
 		LineRenderer tongue = tongueObject.AddComponent<LineRenderer>();
 		tongue.material = new Material(Shader.Find("Sprites/Default"));
 		tongue.startColor = tongueColor;
@@ -119,6 +128,7 @@ public class HummingbirdOffensive : BirdAbility
 		Vector3 tongueStart = transform.position;
 		tongue.SetPosition(0, tongueStart);
 		tongue.SetPosition(1, tongueStart);
+		NetworkFx.MirrorLine(tongueObject);
 
 		float elapsed = 0f;
 		while (elapsed < tongueExtendDuration)

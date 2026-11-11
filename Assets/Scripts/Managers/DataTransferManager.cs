@@ -20,4 +20,10 @@ public static class DataTransferManager
 
     // The difficulty of the bots there are (if any)
     public static AIBehavior.AIDifficulty aiDifficulty;
+
+    // Whether the game is local or online. Local unless the player goes through the online menu
+    public static bool isLocal = true;
+
+    // Host only: the players from the online lobby, in player number order
+    public static List<LobbyPlayer> onlineRoster;
 }

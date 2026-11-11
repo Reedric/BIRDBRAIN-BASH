@@ -177,6 +177,7 @@ public class AudioManager : MonoBehaviour
     private static AudioManager instance;
     private AudioSource audioSource;
     private AudioSource backgroundAudioSource;
+    private float baseSfxVolume; // What the sound effects' audio source is set to in the Inspector
     private readonly System.Collections.Generic.Dictionary<GameObject, AudioSource> stunLoopSources = new();
     void Awake()
     {
@@ -184,6 +185,8 @@ public class AudioManager : MonoBehaviour
         instance = this;
         // assign audio source (required for PlayOneShot calls)
         audioSource = instance.GetComponent<AudioSource>();
+        baseSfxVolume = audioSource.volume;
+        audioSource.volume = baseSfxVolume * PlayerOptions.SfxVolume;
         // Create background audio source
         backgroundAudioSource = instance.gameObject.AddComponent<AudioSource>();
         backgroundAudioSource.loop = true;
@@ -210,12 +213,21 @@ public class AudioManager : MonoBehaviour
         // Mute/unmute background music based on inspector toggle
         if (backgroundAudioSource != null)
         {
-            backgroundAudioSource.volume = muteBackgroundMusic ? 0f : 1.0f;
+            backgroundAudioSource.volume = muteBackgroundMusic ? 0f : PlayerOptions.MusicVolume;
+        }
+
+        // Picks up changes from the options screen, which can be opened in the middle of a match
+        audioSource.volume = baseSfxVolume * PlayerOptions.SfxVolume;
+        foreach (AudioSource stunLoopSource in stunLoopSources.Values)
+        {
+            if (stunLoopSource != null) stunLoopSource.volume = stunLoopVolume * PlayerOptions.SfxVolume;
         }
     }
 
     public static void PlayBirdSound(BirdType birdType, SoundType soundType, float volume = 1.0f)
     {
+        NetworkFx.ForwardBirdSound(birdType, soundType, volume);
+
         // Decide which bird's sound set to use
         BirdSoundSet soundSet;
         switch (birdType)
@@ -358,6 +370,8 @@ public class AudioManager : MonoBehaviour
     // Play a scoring sound when a point is scored
     public static void PlayScoringSound(float volume = 1.0f)
     {
+        NetworkFx.ForwardSound(NetworkFx.Sound.Scoring, volume);
+
         if (instance.scoringSounds != null && instance.scoringSounds.Length > 0)
         {
             int randomIndex = Random.Range(0, instance.scoringSounds.Length);
@@ -389,6 +403,8 @@ public class AudioManager : MonoBehaviour
     // Play a sound when the ball interacts with a player
     public static void PlayBallPlayerInteractionSound(float volume = 1.0f)
     {
+        NetworkFx.ForwardSound(NetworkFx.Sound.BallPlayerInteraction, volume);
+
         if (instance.ballPlayerInteractionSounds != null && instance.ballPlayerInteractionSounds.Length > 0)
         {
             int randomIndex = Random.Range(0, instance.ballPlayerInteractionSounds.Length);
@@ -399,6 +415,8 @@ public class AudioManager : MonoBehaviour
     // Play a sound when the ball hits the net
     public static void PlayBallNetHitSound(float volume = 1.0f)
     {
+        NetworkFx.ForwardSound(NetworkFx.Sound.BallNetHit, volume);
+
         if (instance.ballNetHitSounds != null && instance.ballNetHitSounds.Length > 0)
         {
             int randomIndex = Random.Range(0, instance.ballNetHitSounds.Length);
@@ -409,6 +427,8 @@ public class AudioManager : MonoBehaviour
     // Play a sound when the ball hits the ground
     public static void PlayBallGroundHitSound(float volume = 1.0f)
     {
+        NetworkFx.ForwardSound(NetworkFx.Sound.BallGroundHit, volume);
+
         if (instance.ballGroundHitSounds != null && instance.ballGroundHitSounds.Length > 0)
         {
             int randomIndex = Random.Range(0, instance.ballGroundHitSounds.Length);
@@ -449,6 +469,8 @@ public class AudioManager : MonoBehaviour
     // Play when a buff is applied
     public static void PlayBuffStartSound(float volume = 1.0f)
     {
+        NetworkFx.ForwardSound(NetworkFx.Sound.BuffStart, volume);
+
         if (instance.buffStartSound != null)
             instance.audioSource.PlayOneShot(instance.buffStartSound, volume);
     }
@@ -456,6 +478,8 @@ public class AudioManager : MonoBehaviour
     // Play when a buff expires
     public static void PlayBuffEndSound(float volume = 1.0f)
     {
+        NetworkFx.ForwardSound(NetworkFx.Sound.BuffEnd, volume);
+
         if (instance.buffEndSound != null)
             instance.audioSource.PlayOneShot(instance.buffEndSound, volume);
     }
@@ -463,6 +487,8 @@ public class AudioManager : MonoBehaviour
     // Play when a debuff is applied
     public static void PlayDebuffStartSound(float volume = 1.0f)
     {
+        NetworkFx.ForwardSound(NetworkFx.Sound.DebuffStart, volume);
+
         if (instance.debuffStartSound != null)
             instance.audioSource.PlayOneShot(instance.debuffStartSound, volume);
     }
@@ -470,6 +496,8 @@ public class AudioManager : MonoBehaviour
     // Play when a debuff expires
     public static void PlayDebuffEndSound(float volume = 1.0f)
     {
+        NetworkFx.ForwardSound(NetworkFx.Sound.DebuffEnd, volume);
+
         if (instance.debuffEndSound != null)
             instance.audioSource.PlayOneShot(instance.debuffEndSound, volume);
     }
@@ -500,6 +528,8 @@ public class AudioManager : MonoBehaviour
 
     public static void PlayStunLoop(GameObject bird)
     {
+        NetworkFx.ForwardStunLoop(bird, true);
+
         if (instance == null || instance.stunLoopSound == null || bird == null) return;
 
         if (!instance.stunLoopSources.TryGetValue(bird, out AudioSource source) || source == null)
@@ -511,13 +541,15 @@ public class AudioManager : MonoBehaviour
         }
 
         source.clip = instance.stunLoopSound;
-        source.volume = instance.stunLoopVolume;
+        source.volume = instance.stunLoopVolume * PlayerOptions.SfxVolume;
         if (!source.isPlaying)
             source.Play();
     }
 
     public static void StopStunLoop(GameObject bird)
     {
+        NetworkFx.ForwardStunLoop(bird, false);
+
         if (instance == null || bird == null || !instance.stunLoopSources.TryGetValue(bird, out AudioSource source)) return;
 
         if (source != null)

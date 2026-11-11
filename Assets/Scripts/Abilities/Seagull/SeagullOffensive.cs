@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -11,21 +10,13 @@ public class SeagullOffensive : BirdAbility
 {
     public int debuffLength = 5;          // Length of debuff in seconds
     public int debuffAmount = 1;          // Amount the debuff will DECREASE stats
-    public int debuffWindowLength = 20;   // Seconds after a score the player can trigger the debuff
 
-    private bool _debuffWindow = false;
     private bool _onLeft;
 
     void Start()
     {
         _onLeft = GetComponent<BallInteract>().onLeft;
-        EventManager.SubscribeScore(OnScore);
         GetComponent<CharacterMovement>().controlMovement(true, true);
-    }
-
-    void OnDestroy()
-    {
-        EventManager.UnsubscribeScore(OnScore);
     }
 
     override protected bool Activate()
@@ -78,39 +69,18 @@ public class SeagullOffensive : BirdAbility
             AIBehavior ai = opponent.GetComponent<AIBehavior>();
             Animator opponentAnimator = cm?.animator ?? ai?.animator;
             if (opponentAnimator != null)
-                opponentAnimator.SetTrigger("OffensiveAbility");
+                opponentAnimator.SetTriggerSynced("OffensiveAbility");
         }
 
         // Trigger animation on this player
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
-            myBallInteract.animator.SetTrigger("OffensiveAbility");
-
-        _debuffWindow = false;
+            myBallInteract.animator.SetTriggerSynced("OffensiveAbility");
 
         // Play offensive sound
         AudioManager.PlayBirdSound(BirdType.SEAGULL, SoundType.OFFENSIVE, 1.0f);
 
         int playerID = GetComponent<BallInteract>().playerID;
         HUDManager.Instance.TriggerOffensiveCooldown(playerID, _cooldownTime);
-    }
-
-    // TODO: check if these two methods are necessary now with the refactor
-    public bool OnScore(bool leftScored)
-    {
-        if ((leftScored && _onLeft) || (!leftScored && !_onLeft))
-        {
-            StartCoroutine(WindowTimer());
-            return true;
-        }
-
-        return false;
-    }
-
-    private IEnumerator WindowTimer()
-    {
-        _debuffWindow = true;
-        yield return new WaitForSeconds(debuffWindowLength);
-        _debuffWindow = false;
     }
 }

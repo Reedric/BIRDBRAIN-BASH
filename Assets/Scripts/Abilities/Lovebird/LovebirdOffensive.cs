@@ -12,6 +12,7 @@ public class LovebirdOffensive : BirdAbility
     public float walkSpeed = 2.0f; // How fast the opponents walk towards you
     public ParticleSystem hearts; // Hearts effect for opponents
     public float heartsOffset = 1.15f; // How much the hearts will be offset above the opponent
+    [SerializeField] private float netMargin = 0.75f; // How close to the net the pull can bring an opponent
     private bool _debuffActive = false;
     private List<ParticleSystem> _hearts = new();
     private bool _onLeft;
@@ -40,6 +41,8 @@ public class LovebirdOffensive : BirdAbility
         {
             foreach (GameObject opponent in opponents)
             {
+                if (opponent == null) continue;
+
                 // ducky: copied over from SeagullOffensive, again what in the hell
                 BallInteract birdPlayer = opponent.GetComponent<BallInteract>();
                 BirdType birdType;
@@ -57,8 +60,13 @@ public class LovebirdOffensive : BirdAbility
                     if (lookDir != Vector3.zero)
                         opponent.transform.rotation = Quaternion.LookRotation(lookDir);
 
-                    // Stronger, irresistible pull
-                    opponent.transform.position += diff.normalized * walkSpeed * Time.deltaTime * 2f;
+                    // Stronger, irresistible pull. Moving the transform skips the net's collider, so the pull could
+                    // drag birds straight through the net onto the lovebird's side, where they could play the ball
+                    // from the wrong court. Stop them at the net instead.
+                    Vector3 pulled = opponent.transform.position + diff.normalized * walkSpeed * Time.deltaTime * 2f;
+                    bool opponentOnLeft = !_onLeft;
+                    pulled.x = opponentOnLeft ? Mathf.Min(pulled.x, -netMargin) : Mathf.Max(pulled.x, netMargin);
+                    opponent.transform.position = pulled;
                 }
             }
         }
@@ -75,7 +83,7 @@ public class LovebirdOffensive : BirdAbility
         // Trigger offensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
-            myBallInteract.animator.SetTrigger("OffensiveAbility");
+            myBallInteract.animator.SetTriggerSynced("OffensiveAbility");
 
         // Gets opponents
         GameManager gameManager = GameManager.Instance;
@@ -93,6 +101,8 @@ public class LovebirdOffensive : BirdAbility
         // disable movement but NOT BallInteract
         foreach (GameObject opponent in opponents)
         {
+            if (opponent == null) continue;
+
             BirdType birdType;
             BallInteract birdPlayer = opponent.GetComponent<BallInteract>();
             if (birdPlayer != null)
@@ -107,7 +117,7 @@ public class LovebirdOffensive : BirdAbility
                 if (opponent.GetComponent<AIBehavior>())
                     opponent.GetComponent<AIBehavior>().SetEnamored(true);  // instead of .enabled = false
 
-                ParticleSystem heart = Instantiate(hearts, opponent.transform);
+                ParticleSystem heart = NetworkFx.Instantiate(hearts, opponent.transform);
                 heart.transform.position += new Vector3(0f, heartsOffset, 0f);
                 heart.Play();
                 _hearts.Add(heart);
@@ -122,19 +132,43 @@ public class LovebirdOffensive : BirdAbility
 
     private IEnumerator DebuffTimer()
     {
-        yield return new WaitForSeconds(DebuffLength);
+        // Ends early if the point does. Otherwise the pull could carry on after the birds are reset for the
+        // next serve and drag them out of position, the same as Macaw's Flip Flap stops at the end of a point.
+        float elapsed = 0f;
+        while (elapsed < DebuffLength && GameManager.PointInProgress())
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        EndDebuff();
+    }
+
+    // If the lovebird gets switched off mid-pull (Phoenix turning it into a chicken), the timer above stops with it.
+    // The pull would then carry on for good once the lovebird came back, with the opponents unable to move.
+    private void OnDisable()
+    {
+        if (_debuffActive) EndDebuff();
+    }
+
+    private void EndDebuff()
+    {
         _debuffActive = false;
 
         foreach (GameObject opponent in opponents)
         {
+            if (opponent == null) continue;
+
             if (opponent.GetComponent<CharacterMovement>())
                 opponent.GetComponent<CharacterMovement>().enabled = true;
             if (opponent.GetComponent<AIBehavior>())
-                opponent.GetComponent<AIBehavior>().SetEnamored(false);  // ← instead of .enabled = true
+                opponent.GetComponent<AIBehavior>().SetEnamored(false);  // instead of .enabled = true
         }
 
         foreach (ParticleSystem heart in _hearts)
-            Destroy(heart);
+        {
+            if (heart != null) Destroy(heart.gameObject);
+        }
 
         opponents.Clear();
         _hearts.Clear();

@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(BallInteract))]
 public class ToucanOffensive : BirdAbility
 {
-    // Toucan now uses the same armed functionality as Penguin/Phoenix.
+    // Toucan uses the same armed functionality as Penguin/Phoenix.
     public override bool RequiresSpikeToActivate => true;
 
     protected override bool Activate()

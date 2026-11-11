@@ -18,8 +18,11 @@ public class ScissortailDefensive : BirdAbility
 
     void Start()
     {
-        lr = gameObject.AddComponent<LineRenderer>();
-        lr.enabled = false;
+        // Macaw can copy this ability more than once, and a bird can only have one LineRenderer
+        if (!TryGetComponent(out lr)) lr = gameObject.AddComponent<LineRenderer>();
+
+        // A copy made by Macaw is used on the frame it's made, and Unity calls Start again after that
+        if (!abilityActive) lr.enabled = false;
 
         // Initializes the line
         lr.positionCount = 2;
@@ -27,6 +30,8 @@ public class ScissortailDefensive : BirdAbility
         lr.endWidth = lineWidth;
         lr.generateLightingData = true;
         lr.material = lineMaterial;
+
+        NetworkFx.MirrorLine(gameObject);
     }
 
     private void OnDisable()
@@ -48,10 +53,25 @@ public class ScissortailDefensive : BirdAbility
             lr.enabled = false;
     }
 
+    // Stops the line when the ball gets set and when the point is over. Without the second part
+    // the line could outlast the point and bump the ball while it sits waiting to be served.
     private bool PointHasEnded()
     {
         return GameManager.Instance == null ||
+               !GameManager.PointInProgress() ||
                GameManager.Instance.gameState == GameManager.GameState.Set;
+    }
+
+    // Distance from the ball to the line drawn between the two birds, not to that line carried on
+    // forever in both directions, or a ball well past the ally (even across the net) could set it off.
+    private static float DistanceToSegment(Vector3 point, Vector3 start, Vector3 end)
+    {
+        Vector3 segment = end - start;
+        float lengthSquared = segment.sqrMagnitude;
+        if (lengthSquared < 0.0001f) return Vector3.Distance(point, start);
+
+        float t = Mathf.Clamp01(Vector3.Dot(point - start, segment) / lengthSquared);
+        return Vector3.Distance(point, start + segment * t);
     }
 
     // Returns which game object is ally
@@ -111,7 +131,7 @@ public class ScissortailDefensive : BirdAbility
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
         {
-            myBallInteract.animator.SetTrigger("DefensiveAbility");
+            myBallInteract.animator.SetTriggerSynced("DefensiveAbility");
         }
 
         Debug.Log("Creating line....");
@@ -122,7 +142,7 @@ public class ScissortailDefensive : BirdAbility
         Vector3 allyPos = GetLinePosition(ally);
         Vector3 toAlly = allyPos - selfPos;
 
-        // Slerp the tip outward from self toward ally — sweeps like a quill stroke
+        // Slerp the tip outward from self toward ally, sweeps like a quill stroke
         float elapsed = 0f;
 
         while (elapsed < lineDrawDuration)
@@ -146,7 +166,7 @@ public class ScissortailDefensive : BirdAbility
             yield return null;
         }
 
-        // Line is fully drawn — now track both players live while maintaining
+        // Line is fully drawn, now track both players live while maintaining
         // the same elevation above the ground.
         float timer = 0f;
 
@@ -167,16 +187,16 @@ public class ScissortailDefensive : BirdAbility
             lr.SetPosition(1, allyPos);
 
             Vector3 ballPos = BallManager.Instance.gameObject.transform.position;
-            Vector3 line = (allyPos - selfPos).normalized;
-            Vector3 toBall = ballPos - selfPos;
-            float distanceToLine = Vector3.Cross(line, toBall).magnitude;
+            float distanceToLine = DistanceToSegment(ballPos, selfPos, allyPos);
 
-            // If the ball is within the threshold range of the line ends ability
+            BallInteract interact = GetComponent<BallInteract>();
+
+            // If the ball is within the threshold range of the line ends ability.
+            // It still has to be this team's turn to hit, the same as a normal bump.
             if (distanceToLine < threshold &&
-                GameManager.Instance.gameState != GameManager.GameState.Set)
+                GameManager.Instance.gameState != GameManager.GameState.Set &&
+                (interact == null || interact.CanHit()))
             {
-                BallInteract interact = GetComponent<BallInteract>();
-
                 if (interact != null)
                 {
                     if (GameManager.Instance.gameState == GameManager.GameState.Bumped)
@@ -192,7 +212,7 @@ public class ScissortailDefensive : BirdAbility
         }
 
         // Disables the line and starts cooldown
-        // Reverse slerp — tip retreats from ally back to self
+        // Reverse slerp, tip retreats from ally back to self
         if (PointHasEnded())
         {
             StopYuriful();

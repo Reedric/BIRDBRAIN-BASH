@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(CharacterMovement))]
@@ -17,8 +16,6 @@ public class ChickenDefensive : PassiveAbility
 
     private Rigidbody rb;
     private CharacterMovement characterMovement; // Used to check grounded state - hover should only trigger mid-air
-    private PlayerInput playerInput;             // Polled directly, matching CharacterMovement's input pattern
-    private InputAction jumpAction;              // Cached Jump action reference
 
     private bool _jumpHeld = false;        // Whether the player is currently holding jump
     private bool _apexReached = false;     // Whether we've entered the apex hover window
@@ -29,22 +26,15 @@ public class ChickenDefensive : PassiveAbility
     {
         rb = GetComponent<Rigidbody>();
         characterMovement = GetComponent<CharacterMovement>();
-        playerInput = GetComponent<PlayerInput>();
-    }
-
-    private void Start()
-    {
-        // Cache the action so we're not calling FindAction every physics step
-        jumpAction = playerInput.actions.FindAction("Jump");
     }
 
     private void FixedUpdate()
     {
-        // Poll the Jump action directly instead of relying on the OnJump(InputValue)
-        // message - this project doesn't broadcast input messages (CharacterMovement
-        // polls the same way), so that callback was never actually firing.
+        if (GameManager.Instance == null) return;
+
+        // CharacterMovement knows about jump for both local and online input
         bool wasHeld = _jumpHeld;
-        _jumpHeld = jumpAction != null && jumpAction.IsPressed();
+        _jumpHeld = characterMovement.JumpHeld;
 
         // Jump was just released this frame - reset hover state and restore gravity
         if (wasHeld && !_jumpHeld)
@@ -64,7 +54,7 @@ public class ChickenDefensive : PassiveAbility
 
         float velY = rb.linearVelocity.y;
 
-        // Detect the apex — near-zero upward velocity after a jump
+        // Detect the apex (near-zero upward velocity after a jump)
         if (!_apexReached && !_slowFalling && Mathf.Abs(velY) < apexVelocityThreshold && velY <= 0)
         {
             _apexReached = true;
@@ -97,7 +87,7 @@ public class ChickenDefensive : PassiveAbility
         }
     }
 
-    private void OnDisable()
+    protected override void OnDisable()
     {
         // Make sure gravity is always restored if the component is disabled mid-hover
         rb.useGravity = true;

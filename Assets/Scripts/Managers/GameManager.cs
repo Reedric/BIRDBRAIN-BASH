@@ -1,21 +1,133 @@
 using System.Collections;
+using Unity.Netcode;
 using UnityEngine;
 
-public class GameManager : MonoBehaviour
+public class GameManager : NetworkBehaviour
 {
     [Header("Left Team")]
-    public GameObject leftPlayer1; // First player on left side
-    public GameObject leftPlayer2; // Second player on left side
+    private GameObject leftPlayer1Local; // First player on left side (local multiplayer)
+    private GameObject leftPlayer2Local; // Second player on left side (local multiplayer)
+    private NetworkVariable<ulong> leftPlayer1Net = new(); // First player on left side (online multiplayer)
+    private NetworkVariable<ulong> leftPlayer2Net = new(); // Second player on left side (online multiplayer)
+    public GameObject leftPlayer1 // First player on left side (API version)
+    {
+        get
+        {
+            return isLocal ? leftPlayer1Local : NetworkSession.Resolve(leftPlayer1Net.Value);
+        }
+        set
+        {
+            if (isLocal) leftPlayer1Local = value;
+            else leftPlayer1Net.Value = NetworkSession.IdOf(value);
+        }
+    } 
+    public GameObject leftPlayer2 // Second player on left side (API version)
+    {
+        get
+        {
+            return isLocal ? leftPlayer2Local : NetworkSession.Resolve(leftPlayer2Net.Value);
+        }
+        set
+        {
+            if (isLocal) leftPlayer2Local = value;
+            else leftPlayer2Net.Value = NetworkSession.IdOf(value);
+        }
+    }  
 
     [Header("Right Team")]
-    public GameObject rightPlayer1; // First player on right side
-    public GameObject rightPlayer2; // Second player on right side
+    private GameObject rightPlayer1Local; // First player on right side (local multiplayer)
+    private GameObject rightPlayer2Local; // Second player on right side (local multiplayer)
+    private NetworkVariable<ulong> rightPlayer1Net = new(); // First player on right side (online multiplayer)
+    private NetworkVariable<ulong> rightPlayer2Net = new(); // Second player on right side (online multiplayer)
+    public GameObject rightPlayer1 // First player on right side (API version)
+    {
+        get
+        {
+            return isLocal ? rightPlayer1Local : NetworkSession.Resolve(rightPlayer1Net.Value);
+        }
+        set
+        {
+            if (isLocal) rightPlayer1Local = value;
+            else rightPlayer1Net.Value = NetworkSession.IdOf(value);
+        }
+    } 
+    public GameObject rightPlayer2 // Second player on right side (API version)
+    {
+        get
+        {
+            return isLocal ? rightPlayer2Local : NetworkSession.Resolve(rightPlayer2Net.Value);
+        }
+        set
+        {
+            if (isLocal) rightPlayer2Local = value;
+            else rightPlayer2Net.Value = NetworkSession.IdOf(value);
+        }
+    } 
+    
 
     [Header("Game Manager Stuff")]
-    public GameState gameState; // State of the match
-    public GameObject lastHit; // Player that had the last hit
-    public GameObject server; // Player who serves this point
-    public bool leftAttack; // If left is attacking
+    private GameState gameStateLocal; // State of the match (local multiplayer)
+    private NetworkVariable<GameState> gameStateNet = new(); // State of the match (online multiplayer)
+    public GameState gameState // State of the match (API version)
+    {
+        get => isLocal ? gameStateLocal : gameStateNet.Value;
+        set
+        {
+            if (isLocal) gameStateLocal = value;
+            else gameStateNet.Value = value;
+        }
+    }
+
+    private GameObject lastHitLocal; // Player that had the last hit (local multiplayer)
+    private NetworkVariable<ulong> lastHitNet = new(); // Player that had the last hit (online multiplayer)
+    public GameObject lastHit // Player that had the last hit (API version)
+    {
+        get
+        {
+            return isLocal ? lastHitLocal : NetworkSession.Resolve(lastHitNet.Value);
+        }
+        set
+        {
+            if (isLocal) lastHitLocal = value;
+            else lastHitNet.Value = NetworkSession.IdOf(value);
+
+            // A bump, set, spike, etc. is a newer touch than the ball bouncing off someone earlier in the rally.
+            // ScoreManager checks physical touches first when the ball goes out, so an old one would otherwise
+            // decide who the point goes to, even after the other team had spiked it out.
+            if (value != null && ScoreManager.Instance != null)
+                ScoreManager.Instance.lastPhysicalTouch = null;
+        }
+    }
+
+
+    private GameObject serverLocal; // Player who serves this point (local multiplayer)
+    private NetworkVariable<ulong> serverNet = new(); // Player who serves this point (online multiplayer)
+    public GameObject server // Player who serves this point (API version)
+    {
+        get
+        {
+            return isLocal ? serverLocal : NetworkSession.Resolve(serverNet.Value);
+        }
+        set
+        {
+            if (isLocal) serverLocal = value;
+            else serverNet.Value = NetworkSession.IdOf(value);
+        }
+    }
+
+    private bool leftAttackLocal; // If left is attacking (local multiplayer)
+    private NetworkVariable<bool> leftAttackNet = new(); // If left is attacking (online multiplayer)
+    public bool leftAttack // If left is attacking (API version)
+    {
+        get => isLocal ? leftAttackLocal : leftAttackNet.Value;
+        set
+        {
+            if (isLocal) leftAttackLocal = value;
+            else leftAttackNet.Value = value;
+        }
+    }
+
+    public bool isLocal; // If the game is local or online (not networked bc it is static and would read the same across all clients)
     
     [Header("Countdown Reference")]
     [SerializeField] private countdown countdownScript; // Reference to the countdown script
@@ -28,17 +140,7 @@ public class GameManager : MonoBehaviour
     private Vector3 rightServeLocation; // The position where the right team will serve from
 
     private static GameManager instance; // Private instance of the GameManager that other classes cannot reference
-    public static GameManager Instance // Public instance of GameManager that other classes can reference
-    {
-        get
-        {
-            if (instance == null)
-            {
-                instance = new GameManager();
-            }
-            return instance;
-        }
-    }
+    public static GameManager Instance => instance; // Public instance of GameManager that other classes can reference
 
     // Enum class to represent the game state
     public enum GameState
@@ -55,25 +157,38 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
+        // Check for duplicates to ensure singleton
+        if (instance != null && instance != this)
+        {
+            Debug.Log("Getting rid of duplicate GameManager.");
+            Destroy(this);
+            return;
+        }
+
         // Initialize singleton to this script
         instance = this;
+
+        // Set the local or online variable
+        isLocal = DataTransferManager.isLocal;
         
         // Auto-find countdown script if not assigned
         if (countdownScript == null)
         {
-            countdownScript = FindObjectOfType<countdown>();
+            countdownScript = FindFirstObjectByType<countdown>();
         }
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        StartCoroutine(InitializeWhenPlayersAreReady());
+        // The host runs the match online, and clients just follow the network variables
+        if (NetworkSession.HasAuthority) StartCoroutine(InitializeWhenPlayersAreReady());
     }
 
     private IEnumerator InitializeWhenPlayersAreReady()
     {
-        float timeout = 5f;
+        // Online has to wait on other machines loading, so it gets more time
+        float timeout = isLocal ? 5f : 120f;
         while (!HasRequiredMatchObjects() && timeout > 0f)
         {
             timeout -= Time.deltaTime;
@@ -212,6 +327,12 @@ public class GameManager : MonoBehaviour
             CharacterMovement movement = player.GetComponent<CharacterMovement>();
             if (movement != null) movement.enabled = true;
 
+            // Put back the stats the bird spawned with, in case an ability's change was left behind, then put back the
+            // effects meant to last across points (Ostrich's buff), the only ones still active after ClearAllEffects.
+            if (movement != null) movement.ResetStats();
+            if (player.TryGetComponent(out AIBehavior ai)) ai.ResetStats();
+            if (BuffsDebuffs.Instance != null) BuffsDebuffs.Instance.ReapplyActiveEffects(player);
+
             Rigidbody rb = player.GetComponent<Rigidbody>();
             if (rb != null)
             {
@@ -222,10 +343,10 @@ public class GameManager : MonoBehaviour
         }
 
         // Reset all positions and velocities for all players
-        instance.leftPlayer1.transform.position = instance.leftPlayer1Origin;
-        instance.leftPlayer2.transform.position = instance.leftPlayer2Origin;
-        instance.rightPlayer1.transform.position = instance.rightPlayer1Origin;
-        instance.rightPlayer2.transform.position = instance.rightPlayer2Origin;
+        NetworkSession.Teleport(instance.leftPlayer1, instance.leftPlayer1Origin);
+        NetworkSession.Teleport(instance.leftPlayer2, instance.leftPlayer2Origin);
+        NetworkSession.Teleport(instance.rightPlayer1, instance.rightPlayer1Origin);
+        NetworkSession.Teleport(instance.rightPlayer2, instance.rightPlayer2Origin);
 
         ResetPlayerRigidbody(instance.leftPlayer1);
         ResetPlayerRigidbody(instance.leftPlayer2);
@@ -242,15 +363,13 @@ public class GameManager : MonoBehaviour
         // Set server's and ball's position
         if (instance.leftAttack)
         {
-            instance.server.transform.position = instance.leftServeLocation;
-            ballManager.gameObject.transform.position =
-                instance.leftServeLocation + new Vector3(1, 0, 0);
+            NetworkSession.Teleport(instance.server, instance.leftServeLocation);
+            NetworkSession.Teleport(ballManager.gameObject, instance.leftServeLocation + new Vector3(1, 0, 0));
         }
         else
         {
-            instance.server.transform.position = instance.rightServeLocation;
-            ballManager.gameObject.transform.position =
-                instance.rightServeLocation - new Vector3(1, 0, 0);
+            NetworkSession.Teleport(instance.server, instance.rightServeLocation);
+            NetworkSession.Teleport(ballManager.gameObject, instance.rightServeLocation - new Vector3(1, 0, 0));
         }
 
         // Reset the game manager fields

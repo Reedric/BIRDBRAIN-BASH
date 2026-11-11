@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PhoenixOffensive : BirdAbility
 {
@@ -43,6 +45,12 @@ public class PhoenixOffensive : BirdAbility
 
         public Vector3 originalVelocity;
         public Quaternion originalRotation;
+
+        // Local matches only: the devices the player was using, so they can be handed to the chicken and back.
+        // Deactivating a bird unpairs its PlayerInput, and re-enabling one pairs it with whatever is free.
+        public PlayerInput originalInput;
+        public InputDevice[] originalDevices;
+        public string originalControlScheme;
 
         public List<FollowObject> followers = new List<FollowObject>();
     }
@@ -107,7 +115,7 @@ public class PhoenixOffensive : BirdAbility
             if (gameManager.gameState == GameManager.GameState.Bumped ||
                 gameManager.gameState == GameManager.GameState.Blocked)
             {
-                // Make absolutely sure the hit came from the opposing team.
+                // Make sure the hit came from the opposing team.
                 if (gameManager.leftAttack != ballInteraction.onLeft)
                 {
                     Vector3 ballPosition = BallManager.Instance.transform.position;
@@ -131,8 +139,8 @@ public class PhoenixOffensive : BirdAbility
 
         TransformOpponentsAroundBall(center);
 
-        // If nobody was inside the radius, the ability still successfully
-        // burned the ball, so allow the normal rotisserie duration to run.
+        // If nobody was inside the radius, the ability still
+        // burned the ball, so let the normal rotisserie duration run.
         transformationCoroutine = StartCoroutine(RotisserieTimer());
 
         Debug.Log("[PhoenixOffensive] Enemy touched Burn Ball. Rotisserie activated.");
@@ -152,7 +160,7 @@ public class PhoenixOffensive : BirdAbility
         cooldownPending = false;
         transformationActive = false;
 
-        // Make sure the ability can be activated again immediately.
+        // Let the ability be used again right away.
         _cooldownRemaining = 0f;
 
         Debug.Log("[PhoenixOffensive] Burn Ball canceled. Cooldown refunded.");
@@ -219,6 +227,7 @@ public class PhoenixOffensive : BirdAbility
         ChickenTarget chickenTarget = new ChickenTarget();
 
         chickenTarget.original = target;
+        chickenTarget.originalPosition = target.transform.position;
         chickenTarget.originalRotation = target.transform.rotation;
 
         chickenTarget.characterMovement = target.GetComponent<CharacterMovement>();
@@ -281,13 +290,24 @@ public class PhoenixOffensive : BirdAbility
             BallInteract targetBallInteract = target.GetComponent<BallInteract>();
 
             if (targetBallInteract != null)
+            {
                 onLeft = targetBallInteract.onLeft;
+                playerID = targetBallInteract.playerID;
+            }
         }
 
         Vector3 spawnPosition = target.transform.position;
         Quaternion spawnRotation = target.transform.rotation;
 
-        target.SetActive(false);
+        // Remember a local human's controller before deactivating the bird releases it
+        if (!NetworkSession.IsOnline && !chickenTarget.wasAI && target.TryGetComponent(out PlayerInput targetInput))
+        {
+            chickenTarget.originalInput = targetInput;
+            chickenTarget.originalDevices = targetInput.devices.ToArray();
+            chickenTarget.originalControlScheme = targetInput.currentControlScheme;
+        }
+
+        NetworkFx.SetActive(target, false);
 
         if (rotisserieChickenPrefab == null)
         {
@@ -295,11 +315,34 @@ public class PhoenixOffensive : BirdAbility
             return;
         }
 
-        GameObject chicken = Instantiate(
-            rotisserieChickenPrefab,
-            spawnPosition,
-            spawnRotation
-        );
+        GameObject chicken;
+
+        if (HasRememberedDevices(chickenTarget))
+        {
+            // Pair the chicken with the player's own controller, the same way MultiplayerManager spawns players.
+            // Otherwise it would grab whichever device happens to be free.
+            chicken = PlayerInput.Instantiate(
+                rotisserieChickenPrefab,
+                controlScheme: chickenTarget.originalControlScheme,
+                pairWithDevices: chickenTarget.originalDevices
+            ).gameObject;
+
+            chicken.transform.SetPositionAndRotation(spawnPosition, spawnRotation);
+        }
+        else
+        {
+            // A human's chicken belongs to them online, so that their input goes to it
+            ulong ownerClientId = target.TryGetComponent(out Unity.Netcode.NetworkObject targetNetObj) && !chickenTarget.wasAI
+                ? targetNetObj.OwnerClientId
+                : Unity.Netcode.NetworkManager.ServerClientId;
+
+            chicken = NetworkFx.InstantiateOwned(
+                rotisserieChickenPrefab,
+                spawnPosition,
+                spawnRotation,
+                ownerClientId
+            );
+        }
 
         chickenTarget.chicken = chicken;
 
@@ -310,6 +353,8 @@ public class PhoenixOffensive : BirdAbility
             if (follower != null)
                 follower.target = chicken.transform;
         }
+
+        NetworkFx.RetargetFollowers(target, chicken);
 
         ConfigureChicken(chicken, onLeft, playerID, chickenTarget.wasAI);
 
@@ -344,6 +389,22 @@ public class PhoenixOffensive : BirdAbility
         if (chickenBallInteract != null)
         {
             chickenBallInteract.enabled = true;
+            chickenBallInteract.onLeft = onLeft;
+            chickenBallInteract.playerID = playerID;
+        }
+
+        // An AI's chicken is owned by the host, whose own input should not reach it
+        if (wasAI && chicken.TryGetComponent(out PlayerNetworkController networkController))
+            networkController.enabled = false;
+
+        if (chicken.TryGetComponent(out PlayerInput chickenInput))
+        {
+            // The chicken prefab has a PlayerInput, which pairs itself with any free controller when it spawns.
+            // An AI's chicken shouldn't listen to one, or a spare controller could hit the ball for it.
+            if (wasAI)
+                chickenInput.enabled = false;
+            else if (!NetworkSession.IsOnline && chickenInput.actions != null)
+                chickenInput.actions.FindActionMap("UI")?.Enable(); // So the player can still pause, like MultiplayerManager sets up
         }
 
         BirdAbility[] chickenAbilities =
@@ -389,6 +450,7 @@ public class PhoenixOffensive : BirdAbility
             if (chickenTarget == null)
                 continue;
 
+            // Where the bird was when it got turned into a chicken, which is always on its own side.
             Vector3 restorePosition = chickenTarget.originalPosition;
 
             if (chickenTarget.chicken != null)
@@ -397,6 +459,11 @@ public class PhoenixOffensive : BirdAbility
                     restoreEffectPrefab,
                     chickenTarget.chicken.transform.position
                 );
+
+                // Destroy waits for the end of the frame, so free the chicken's controller now. The original
+                // pairs itself with a free controller as soon as it's reactivated below.
+                if (chickenTarget.chicken.TryGetComponent(out PlayerInput chickenInput))
+                    chickenInput.enabled = false;
 
                 Destroy(chickenTarget.chicken);
             }
@@ -426,7 +493,16 @@ public class PhoenixOffensive : BirdAbility
                         follower.target = chickenTarget.original.transform;
                 }
 
-                chickenTarget.original.SetActive(chickenTarget.wasActive);
+                if (chickenTarget.chicken != null)
+                    NetworkFx.RetargetFollowers(chickenTarget.chicken, chickenTarget.original);
+
+                NetworkFx.SetActive(chickenTarget.original, chickenTarget.wasActive);
+
+                // Online, this also stops clients from sliding the bird over from where it was hidden
+                if (chickenTarget.original.activeInHierarchy)
+                    NetworkSession.Teleport(chickenTarget.original, restorePosition);
+
+                RestoreRememberedDevices(chickenTarget);
 
                 if (chickenTarget.characterMovement != null)
                 {
@@ -460,8 +536,40 @@ public class PhoenixOffensive : BirdAbility
         }
     }
 
+    private static bool HasRememberedDevices(ChickenTarget chickenTarget)
+    {
+        return chickenTarget.originalInput != null
+            && chickenTarget.originalDevices != null
+            && chickenTarget.originalDevices.Length > 0
+            && !string.IsNullOrEmpty(chickenTarget.originalControlScheme);
+    }
+
+    // Gives a local player back the exact controller they had before becoming a chicken, since reactivating
+    // their bird pairs it with whichever device is free first (which can be someone's spare controller).
+    private static void RestoreRememberedDevices(ChickenTarget chickenTarget)
+    {
+        PlayerInput input = chickenTarget.originalInput;
+        if (!HasRememberedDevices(chickenTarget) || !input.isActiveAndEnabled) return;
+
+        InputDevice[] devices = chickenTarget.originalDevices.Where(device => device != null && device.added).ToArray();
+
+        if (devices.Length > 0 && input.user.valid)
+            input.SwitchCurrentControlScheme(chickenTarget.originalControlScheme, devices);
+
+        // MultiplayerManager turns this on for pausing. Reactivating can leave the bird with a fresh copy of its actions.
+        input.actions?.FindActionMap("UI")?.Enable();
+    }
+
     private void StartDelayedCooldown()
     {
+        // Coroutines can't start on a bird that has been switched off (another Phoenix turning this one into a
+        // chicken), which would skip the cooldown altogether
+        if (!isActiveAndEnabled)
+        {
+            StartCooldown(_cooldownTime);
+            return;
+        }
+
         StartCoroutine(BeginCooldownNextFrame());
     }
 
@@ -487,7 +595,7 @@ public class PhoenixOffensive : BirdAbility
         if (prefab == null)
             return;
 
-        GameObject effect = Instantiate(
+        GameObject effect = NetworkFx.Instantiate(
             prefab,
             position,
             Quaternion.identity

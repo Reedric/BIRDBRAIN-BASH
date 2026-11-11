@@ -12,8 +12,8 @@ public class NumPlayersMenu : MonoBehaviour
     [Tooltip("The GameObject that holds this number-select screen.")]
     [SerializeField] private GameObject numPlayersPanel;
 
-    [Tooltip("The GameObject that holds the main menu buttons (Play, Quit, Credits, etc.)")]
-    [SerializeField] private GameObject mainMenuPanel;
+    [Tooltip("The GameObject that holds the online or local buttons.")]
+    [SerializeField] private GameObject localOrOnlinePanel;
 
     [Header("Scene")]
     [SerializeField] private string characterSelectSceneName = "CharSelect";
@@ -31,7 +31,7 @@ public class NumPlayersMenu : MonoBehaviour
     public void GoBack()
     {
         if (numPlayersPanel != null)  numPlayersPanel.SetActive(false);
-        if (mainMenuPanel  != null)   mainMenuPanel.SetActive(true);
+        if (localOrOnlinePanel  != null)   localOrOnlinePanel.SetActive(true);
     }
 
     /// <summary>

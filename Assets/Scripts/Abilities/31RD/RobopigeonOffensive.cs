@@ -40,7 +40,7 @@ public class RobopigeonOffensive : BirdAbility
 		StartCoroutine(ResolveStrike(strikePosition, region));
 
 		if (ballInteract.animator != null)
-			ballInteract.animator.SetTrigger("OffensiveAbility");
+			ballInteract.animator.SetTriggerSynced("OffensiveAbility");
 
 		AudioManager.PlayBirdSound(BirdType.ROBOPIGEON, SoundType.OFFENSIVE, 1f);
 		if (HUDManager.Instance != null)
@@ -71,10 +71,20 @@ public class RobopigeonOffensive : BirdAbility
 		if (strikeRegionPrefab == null)
 			return null;
 
-		GameObject region = Instantiate(strikeRegionPrefab, position, Quaternion.identity);
+		GameObject region = NetworkFx.Instantiate(strikeRegionPrefab, position, Quaternion.identity);
 		float diameter = strikeRadius * 2f;
 		region.transform.localScale = new Vector3(diameter, region.transform.localScale.y, diameter);
+
+		// Removed on a timer of its own too, in case 31RD gets switched off before the strike lands
+		Destroy(region, Mathf.Max(regionLifetime, strikeDelay));
 		return region;
+	}
+
+	// The coroutines stop if 31RD gets switched off (Phoenix turning it into a chicken), which would leave the
+	// target markers stuck on the opponents
+	private void OnDisable()
+	{
+		ClearHitmarkers();
 	}
 
 	private IEnumerator ResolveStrike(Vector3 strikePosition, GameObject region)
@@ -208,7 +218,7 @@ public class RobopigeonOffensive : BirdAbility
 		if (hitmarkerVfxPrefab == null || activeHitmarkers.ContainsKey(bird))
 			return;
 
-		GameObject hitmarker = Instantiate(hitmarkerVfxPrefab, bird.transform);
+		GameObject hitmarker = NetworkFx.Instantiate(hitmarkerVfxPrefab, bird.transform);
 		hitmarker.transform.localPosition = Vector3.zero;
 		activeHitmarkers[bird] = hitmarker;
 	}

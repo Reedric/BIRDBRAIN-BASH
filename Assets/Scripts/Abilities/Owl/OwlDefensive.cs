@@ -23,14 +23,26 @@ public class OwlDefensive : BirdAbility
 
     private void Awake() 
     {
-        GameObject ball = GameObject.FindWithTag("Ball");
-        ballTransform = ball.transform;
-        ballRigidbody = ball.GetComponent<Rigidbody>();
         predictionPoints = new Vector3[lineSegments];
+        FindBall();
+    }
+
+    // The ball can't be found while it's switched off (in a pelican's mouth) or before it has spawned online,
+    // so it's looked for again whenever it's missing.
+    private bool FindBall()
+    {
+        if (ballTransform != null && ballRigidbody != null) return true;
+        if (BallManager.Instance == null) return false;
+
+        ballTransform = BallManager.Instance.transform;
+        ballRigidbody = BallManager.Instance.GetComponent<Rigidbody>();
+        return ballRigidbody != null;
     }
 
     override protected bool Activate()
     {
+        if (!FindBall()) return false;
+
         StartCoroutine(Investigation());
 
         // Ability successfully activated
@@ -40,6 +52,7 @@ public class OwlDefensive : BirdAbility
     private IEnumerator Investigation()
     {
         GameObject line = CreateLine();
+        activeLine = line;
         LineRenderer lineRenderer = line.GetComponent<LineRenderer>();
 
         float time = 0f;
@@ -61,6 +74,16 @@ public class OwlDefensive : BirdAbility
         HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
     }
 
+    private GameObject activeLine;
+
+    // If the owl gets switched off mid-ability (Phoenix turning it into a chicken), the coroutine stops before it
+    // removes the line, which would leave it frozen on the court for the rest of the match.
+    private void OnDisable()
+    {
+        if (activeLine != null) Destroy(activeLine);
+        activeLine = null;
+    }
+
     private GameObject CreateLine()
     {
         GameObject line = new("OwlDefensiveLine");
@@ -79,6 +102,8 @@ public class OwlDefensive : BirdAbility
         widthCurve.AddKey(0f, lineWidth);
         widthCurve.AddKey(1f, 0.01f);
         lineRenderer.widthCurve = widthCurve;
+
+        NetworkFx.MirrorLine(line);
 
         return line;
     }

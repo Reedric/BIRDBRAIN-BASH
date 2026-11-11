@@ -50,7 +50,7 @@ public class RobopigeonDefensive : BirdAbility
         }
 
         Vector3 spawnPosition = transform.position + Vector3.up * 10f;
-        activeMinion = Instantiate(mini31RDPrefab, spawnPosition, transform.rotation);
+        activeMinion = NetworkFx.Instantiate(mini31RDPrefab, spawnPosition, transform.rotation);
         activeMinion.transform.localScale = Vector3.one * miniScale;
 
         Debug.Log($"[RobopigeonDefensive] Spawned minion at {spawnPosition} for player {ballInteract.playerID}.");
@@ -79,9 +79,7 @@ public class RobopigeonDefensive : BirdAbility
         {
             minionAI.onLeft = ballInteract.onLeft;
             minionAI.playerID = ballInteract.playerID;
-            minionAI.maxGroundSpeed = miniGroundSpeed;
-            minionAI.maxAirSpeed = miniGroundSpeed;
-            minionAI.jumpForce = miniJumpForce;
+            minionAI.SetBaseStats(miniGroundSpeed, miniGroundSpeed, miniJumpForce);
             minionAI.SetAIDifficulty(AIBehavior.AIDifficulty.Hard);
             minionAI.easyBumpChance = 1f;
             minionAI.mediumBumpChance = 1f;
@@ -113,8 +111,11 @@ public class RobopigeonDefensive : BirdAbility
 
     private IEnumerator MinionLifetime()
     {
+        // Leaves early when the point ends, like Dodo's companions. Otherwise it would stay for the next serve and could
+        // hit the ball during it, as a bird that isn't one of the four players.
         float remaining = duration;
-        while (remaining > 0f)
+        while (remaining > 0f && GameManager.Instance != null
+            && GameManager.Instance.gameState != GameManager.GameState.PointEnd)
         {
             remaining -= Time.deltaTime;
             yield return null;
@@ -127,7 +128,7 @@ public class RobopigeonDefensive : BirdAbility
     {
         if (spawnVFXPrefab != null)
         {
-            GameObject vfx = Instantiate(spawnVFXPrefab, position, Quaternion.identity);
+            GameObject vfx = NetworkFx.Instantiate(spawnVFXPrefab, position, Quaternion.identity);
             Destroy(vfx, 5f);
         }
     }
@@ -136,9 +137,19 @@ public class RobopigeonDefensive : BirdAbility
     {
         if (despawnVFXPrefab != null)
         {
-            GameObject vfx = Instantiate(despawnVFXPrefab, position, Quaternion.identity);
+            GameObject vfx = NetworkFx.Instantiate(despawnVFXPrefab, position, Quaternion.identity);
             Destroy(vfx, 5f);
         }
+    }
+
+    // If 31RD gets switched off (Phoenix turning it into a chicken) or this copy of the ability is removed (Macaw
+    // moving on to another one), the timer stops with it, which would leave the mini 31RD on the court for good.
+    private void OnDisable()
+    {
+        if (activeMinion == null) return;
+
+        if (gameObject.scene.isLoaded) EndAbility();
+        else Destroy(activeMinion);
     }
 
     private void EndAbility()

@@ -34,7 +34,11 @@ public class OstrichOffensive : BirdAbility
             StopCoroutine(activeCoroutine);
             activeCoroutine = null;
         }
-        abilityActive = false;
+
+        // Cut short (e.g. Phoenix turned the ostrich into a chicken). Wrap it up properly, since the abilities
+        // would stay disabled for the rest of the match otherwise, and its buff would never be let go of.
+        if (abilityActive)
+            EndAbility();
     }
 
     protected override bool Activate()
@@ -82,7 +86,7 @@ public class OstrichOffensive : BirdAbility
     private void PlayActivationEffects()
     {
         if (ballInteract != null && ballInteract.animator != null)
-            ballInteract.animator.SetTrigger("OffensiveAbility");
+            ballInteract.animator.SetTriggerSynced("OffensiveAbility");
 
         AudioManager.PlayBirdSound(BirdType.OSTRICH, SoundType.HAPPY, 1.0f);
     }

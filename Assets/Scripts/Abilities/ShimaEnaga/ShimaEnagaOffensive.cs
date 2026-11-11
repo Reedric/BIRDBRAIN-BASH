@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Shima Enaga Offensive Ability — Cottonball Bounce
+/// Shima Enaga Offensive Ability - Cottonball Bounce
 ///
 /// Spawns three cottonballs at the Shima Enaga and throws them
 /// toward random positions on the opponent's side of the court.
@@ -27,8 +27,6 @@ public class ShimaEnagaOffensive : BirdAbility
     [SerializeField] private float spawnHeightOffset = 0.5f;
 
     [Header("Landing Positions")]
-    [SerializeField] private float courtSideMinX = 0.5f;
-    [SerializeField] private float courtSideMaxX = 7f;
     [SerializeField] private float courtMinZ = -4f;
     [SerializeField] private float courtMaxZ = 4f;
     [SerializeField] private float minimumLandingSpacing = 2f;
@@ -174,7 +172,7 @@ public class ShimaEnagaOffensive : BirdAbility
                 yield break;
             }
 
-            GameObject cottonball = Instantiate(
+            GameObject cottonball = NetworkFx.Instantiate(
                 cottonballPrefab,
                 spawnPosition,
                 Quaternion.identity
@@ -213,7 +211,7 @@ public class ShimaEnagaOffensive : BirdAbility
         }
 
         // Wait until every cottonball has finished its throw.
-        // We intentionally use a point-progress check here because
+        // Checks point progress here because
         // the point may end while the balls are airborne.
         float elapsed = 0f;
 
@@ -398,6 +396,13 @@ public class ShimaEnagaOffensive : BirdAbility
             return aiBehavior.playerID;
 
         return -1;
+    }
+
+    // If the Shima Enaga gets switched off mid-throw (Phoenix turning it into a chicken), the throw stops, which
+    // would leave the cottonballs hanging in the air
+    private void OnDisable()
+    {
+        if (activeCottonballs.Count > 0) ClearCottonballs();
     }
 
     private void OnDestroy()

@@ -27,16 +27,12 @@ public class TeamArrangementToggle : MonoBehaviour
 
     private void Awake()
     {
-        // --------------------------------------------------------
-        // GET GAME SETTINGS
-        // --------------------------------------------------------
+        // Get game settings
 
         // Make sure a persistent GameSettings object exists.
         gameSettings = GameSettings.EnsureInstance();
 
-        // --------------------------------------------------------
-        // GET UI COMPONENTS
-        // --------------------------------------------------------
+        // Get UI components
 
         button = GetComponent<Button>();
 
@@ -55,9 +51,7 @@ public class TeamArrangementToggle : MonoBehaviour
         if (button.targetGraphic == null && buttonImage != null)
             button.targetGraphic = buttonImage;
 
-        // --------------------------------------------------------
-        // BUTTON LISTENER
-        // --------------------------------------------------------
+        // Button listener
 
         // Prevent duplicate listeners if this object is initialized
         // more than once.
@@ -76,9 +70,7 @@ public class TeamArrangementToggle : MonoBehaviour
         UpdateUI();
     }
 
-    // ============================================================
-    // TOGGLE
-    // ============================================================
+    // Toggle
 
     public void OnTogglePressed()
     {
@@ -94,12 +86,10 @@ public class TeamArrangementToggle : MonoBehaviour
             return;
         }
 
-        // --------------------------------------------------------
-        // CYCLE ARRANGEMENT
-        // --------------------------------------------------------
+        // Cycle arrangement
 
-        // Do NOT rely on the enum's integer order.
-        // Explicitly cycle through the three desired arrangements.
+        // Don't rely on the enum's integer order,
+        // cycle through the three arrangements explicitly.
 
         switch (gameSettings.CurrentTeamArrangement)
         {
@@ -141,18 +131,14 @@ public class TeamArrangementToggle : MonoBehaviour
         UpdateUI();
     }
 
-    // ============================================================
     // UI
-    // ============================================================
 
     private void UpdateUI()
     {
         if (gameSettings == null)
             return;
 
-        // --------------------------------------------------------
-        // UPDATE ARRANGEMENT PREVIEW
-        // --------------------------------------------------------
+        // Update arrangement preview
 
         if (buttonImage != null)
         {
@@ -186,9 +172,7 @@ public class TeamArrangementToggle : MonoBehaviour
             }
         }
 
-        // --------------------------------------------------------
-        // UPDATE PLAYER TEAM BACKGROUNDS
-        // --------------------------------------------------------
+        // Update player team backgrounds
 
         switch (gameSettings.CurrentTeamArrangement)
         {
@@ -275,9 +259,7 @@ public class TeamArrangementToggle : MonoBehaviour
         }
     }
 
-    // ============================================================
-    // PLAYER BACKGROUND
-    // ============================================================
+    // Player background
 
     private void SetPlayerBackground(
         RawImage background,
@@ -290,9 +272,7 @@ public class TeamArrangementToggle : MonoBehaviour
         background.texture = texture;
     }
 
-    // ============================================================
-    // REFRESH
-    // ============================================================
+    // Refresh
 
     /// <summary>
     /// Refreshes the displayed textures from the current

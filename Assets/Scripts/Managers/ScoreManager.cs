@@ -5,13 +5,57 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System;
+using Unity.Netcode;
 
-public class ScoreManager : MonoBehaviour
+public class ScoreManager : NetworkBehaviour
 {
-    public int side1Score = 0;
-    public int side2Score = 0;
-    public int side1SetsWon = 0;
-    public int side2SetsWon = 0;
+    private int side1ScoreLocal;
+    private NetworkVariable<int> side1ScoreNet = new();
+    public int side1Score
+    {
+        get => GameManager.Instance.isLocal ? side1ScoreLocal : side1ScoreNet.Value;
+        set
+        {
+            if (GameManager.Instance.isLocal) side1ScoreLocal = value;
+            else side1ScoreNet.Value = value;
+        }
+    }
+
+    private int side2ScoreLocal;
+    private NetworkVariable<int> side2ScoreNet = new();
+    public int side2Score
+    {
+        get => GameManager.Instance.isLocal ? side2ScoreLocal : side2ScoreNet.Value;
+        set
+        {
+            if (GameManager.Instance.isLocal) side2ScoreLocal = value;
+            else side2ScoreNet.Value = value;
+        }
+    }
+
+    private int side1SetsWonLocal;
+    private NetworkVariable<int> side1SetsWonNet = new();
+    public int side1SetsWon
+    {
+        get => GameManager.Instance.isLocal ? side1SetsWonLocal : side1SetsWonNet.Value;
+        set
+        {
+            if (GameManager.Instance.isLocal) side1SetsWonLocal = value;
+            else side1SetsWonNet.Value = value;
+        }
+    }
+
+    private int side2SetsWonLocal;
+    private NetworkVariable<int> side2SetsWonNet = new();
+    public int side2SetsWon
+    {
+        get => GameManager.Instance.isLocal ? side2SetsWonLocal : side2SetsWonNet.Value;
+        set
+        {
+            if (GameManager.Instance.isLocal) side2SetsWonLocal = value;
+            else side2SetsWonNet.Value = value;
+        }
+    }
 
     [Header("Score UI")]
     public TextMeshProUGUI side1ScoreUI;
@@ -68,8 +112,22 @@ public class ScoreManager : MonoBehaviour
     private bool inPlay;
     private bool outCheckPending; // guard against multiple outCheck coroutines
     private bool pointIntercepted;
+    private float lastInterceptTime = -10f; // When a defensive ability last saved a landing
 
-    public GameObject lastPhysicalTouch;
+    private GameObject lastPhysicalTouchLocal;
+    private NetworkVariable<ulong> lastPhysicalTouchNet = new();
+    public GameObject lastPhysicalTouch
+    {
+        get
+        {
+            return GameManager.Instance.isLocal ? lastPhysicalTouchLocal : NetworkSession.Resolve(lastPhysicalTouchNet.Value);
+        }
+        set
+        {
+            if (GameManager.Instance.isLocal) lastPhysicalTouchLocal = value;
+            else lastPhysicalTouchNet.Value = NetworkSession.IdOf(value);
+        }
+    }
 
     UnityEvent LeftScored;
     UnityEvent RightScored;
@@ -81,21 +139,18 @@ public class ScoreManager : MonoBehaviour
 
     private static ScoreManager instance; // Private instance of the GameManager that other classes cannot reference
 
-    public static ScoreManager Instance // Public instance of GameManager that other classes can reference
-    {
-        get
-        {
-            if (instance == null)
-            {
-                instance = new ScoreManager();
-            }
-
-            return instance;
-        }
-    }
+    public static ScoreManager Instance => instance; // Public instance of GameManager that other classes can reference
 
     void Awake()
     {
+        // Check for duplicates to ensure singleton
+        if (instance != null && instance != this)
+        {
+            Debug.Log("Getting rid of duplicate ScoreManager.");
+            Destroy(this);
+            return;
+        }
+
         // Initialize singleton to this script
         instance = this;
     }
@@ -125,11 +180,17 @@ public class ScoreManager : MonoBehaviour
         scoreboard.SetActive(true);
         birdBars.SetActive(true);
 
+        // Set the score text to 0. Everything after this is gameplay, which online is only for the host
+        side1ScoreUI.text = "0";
+        side2ScoreUI.text = "0";
+        side1SetUI.text = "0";
+        side2SetUI.text = "0";
+
+        if (!NetworkSession.HasAuthority) return;
+
         // Set the scores to 0, right to serve, and the ball is in play
         side1Score = 0;
         side2Score = 0;
-        side1ScoreUI.text = "0";
-        side2ScoreUI.text = "0";
         leftLastScored = false;
         inPlay = true;
 
@@ -153,6 +214,9 @@ public class ScoreManager : MonoBehaviour
     // Checking to see if the ball hits the court on either side
     void OnCollisionEnter(Collision collision)
     {
+        // Only the host decides when a point is scored
+        if (!NetworkSession.HasAuthority) return;
+
         // if it touches side 1, then side 2 scores
         if (collision.gameObject.CompareTag("Side1") && inPlay)
         {
@@ -164,10 +228,12 @@ public class ScoreManager : MonoBehaviour
             if (ballRb == null)
                 Debug.LogWarning("ScoreManager: could not resolve ball Rigidbody for Side1 collision.");
 
-            // Give any subscribed defensive ability a chance to save the point first
+            // Give any subscribed defensive ability a chance to save the point first. pointIntercepted only matters
+            // to an out check already waiting on this landing: set any other time, it would stay set and make the next
+            // time the ball goes out in the rally score nothing, leaving the point stuck.
             if (RaiseInterceptPoint(true, ballRb, collision.GetContact(0).point, false))
             {
-                pointIntercepted = true;
+                lastInterceptTime = Time.time;
                 return;
             }
 
@@ -193,7 +259,7 @@ public class ScoreManager : MonoBehaviour
 
             if (RaiseInterceptPoint(false, ballRb, collision.GetContact(0).point, false))
             {
-                pointIntercepted = true;
+                lastInterceptTime = Time.time;
                 return;
             }
 
@@ -215,8 +281,8 @@ public class ScoreManager : MonoBehaviour
     }
 
     // Invokes InterceptPoint by hand instead of calling the multicast delegate directly, so that if
-    // more than one ability is ever subscribed, each one gets checked — calling a non-void multicast
-    // delegate directly only returns the LAST subscriber's result, silently ignoring the others.
+    // more than one ability is ever subscribed, each one gets checked. Calling a non-void multicast
+    // delegate directly only returns the last subscriber's result and ignores the others.
     private bool RaiseInterceptPoint(bool leftConceding, Rigidbody ballRb, Vector3 contactPoint, bool isOut)
     {
         if (InterceptPoint == null)
@@ -238,7 +304,8 @@ public class ScoreManager : MonoBehaviour
         // before the actual court collision.
         yield return new WaitForSeconds(.2f);
 
-        if (pointIntercepted)
+        // A save in the last moment (either just before or just after the ball touched out) covers this out too
+        if (pointIntercepted || Time.time - lastInterceptTime < 0.5f)
         {
             pointIntercepted = false;
             outCheckPending = false;
@@ -261,76 +328,98 @@ public class ScoreManager : MonoBehaviour
                 Debug.LogWarning("ScoreManager: could not resolve ball Rigidbody during Out check.");
             }
 
-            // Give defensive abilities such as Phoenix one last chance
-            // to save the point before the Out collision awards it.
-            //
-            // We determine which side is conceding from the player who
-            // last physically touched the ball.
-            bool leftConceding = false;
-            bool validTouchSource = false;
+            // Whoever touched the ball last sent it out, so their side concedes the point.
+            // That can also be a bird that isn't one of the four players, like Phoenix's chickens or
+            // 31RD's mini 31RD, which still need to count for a side or the point never gets scored.
+            // If there's no telling who touched it, it goes against the team that last played it, since leaving
+            // the point unscored would leave the match stuck.
+            if (!TryGetSide(touchSource, out bool touchedByLeft))
+                touchedByLeft = gameManager.leftAttack;
 
-            if (touchSource == gameManager.rightPlayer1 ||
-                touchSource == gameManager.rightPlayer2)
-            {
-                // Right player touched it last.
-                // Therefore the ball is going against the LEFT side.
-                leftConceding = true;
-                validTouchSource = true;
-            }
-            else if (touchSource == gameManager.leftPlayer1 ||
-                     touchSource == gameManager.leftPlayer2)
-            {
-                // Left player touched it last.
-                // Therefore the ball is going against the RIGHT side.
-                leftConceding = false;
-                validTouchSource = true;
-            }
-
-            if (validTouchSource)
             {
                 Vector3 contactPoint = ballRb != null
                     ? ballRb.position
                     : transform.position;
 
-                // Out
-                if (RaiseInterceptPoint(leftConceding, ballRb, contactPoint, true))
+                // Give defensive abilities such as Phoenix one last chance to save the point
+                if (RaiseInterceptPoint(touchedByLeft, ballRb, contactPoint, true))
                 {
-                    // Phoenix saved the point.
-                    // DO NOT award a score.
+                    // Phoenix saved the point, so don't award a score.
                     lastPhysicalTouch = null;
                     outCheckPending = false;
                     yield break;
                 }
-            }
 
-            // No defensive ability saved the point.
-            // Continue with the normal Out scoring behavior.
-            if (touchSource == gameManager.rightPlayer1 ||
-                touchSource == gameManager.rightPlayer2)
-            {
-                side1Score += 1;
-                UpdateScoreDisplay(side1ScoreUI, side1Score);
-                inPlay = false;
-                lastPhysicalTouch = null;
+                if (touchedByLeft)
+                {
+                    side2Score += 1;
+                    UpdateScoreDisplay(side2ScoreUI, side2Score);
+                    inPlay = false;
+                    lastPhysicalTouch = null;
 
-                StartCoroutine(PlaySounds(true));
-                CheckWinSet(true);
-            }
-            else if (touchSource == gameManager.leftPlayer1 ||
-                     touchSource == gameManager.leftPlayer2)
-            {
-                side2Score += 1;
-                UpdateScoreDisplay(side2ScoreUI, side2Score);
-                inPlay = false;
-                lastPhysicalTouch = null;
+                    // Same as a point scored on the court, so score listeners (e.g. Ostrich) hear about it
+                    RightScored.Invoke();
+                    StartCoroutine(PlaySounds(false));
+                    CheckWinSet(false);
+                }
+                else
+                {
+                    side1Score += 1;
+                    UpdateScoreDisplay(side1ScoreUI, side1Score);
+                    inPlay = false;
+                    lastPhysicalTouch = null;
 
-                StartCoroutine(PlaySounds(false));
-                CheckWinSet(false);
+                    LeftScored.Invoke();
+                    StartCoroutine(PlaySounds(true));
+                    CheckWinSet(true);
+                }
             }
         }
 
         // Always reset this so another Out collision can be handled.
         outCheckPending = false;
+    }
+
+    // For a ball that will never land (stuck somewhere, or fallen out of the world): scores it like it went out
+    public void HandleBallLost()
+    {
+        if (!NetworkSession.HasAuthority || !inPlay || outCheckPending) return;
+
+        outCheckPending = true;
+        StartCoroutine(outCheck());
+    }
+
+    // Works out which side of the court a bird that touched the ball plays for.
+    public static bool TryGetSide(GameObject bird, out bool onLeft)
+    {
+        onLeft = false;
+        if (bird == null) return false;
+
+        GameManager gameManager = GameManager.Instance;
+        if (bird == gameManager.leftPlayer1 || bird == gameManager.leftPlayer2)
+        {
+            onLeft = true;
+            return true;
+        }
+        if (bird == gameManager.rightPlayer1 || bird == gameManager.rightPlayer2)
+        {
+            onLeft = false;
+            return true;
+        }
+
+        // Stand-ins for a player, which are set up with the side of the bird they came from
+        if (bird.TryGetComponent(out BallInteract ballInteract))
+        {
+            onLeft = ballInteract.onLeft;
+            return true;
+        }
+        if (bird.TryGetComponent(out AIBehavior aiBehavior))
+        {
+            onLeft = aiBehavior.onLeft;
+            return true;
+        }
+
+        return false;
     }
 
     // After each score, check the win conditions for both sides
@@ -390,13 +479,13 @@ public class ScoreManager : MonoBehaviour
         {
             Debug.Log("Side 1 wins the match!");
             inPlay = false;
-            StartCoroutine(TransitionToEnd(true));
+            BeginEndTransition(true);
         }
         else if (side2SetsWon >= setsToWin)
         {
             Debug.Log("Side 2 wins the match!");
             inPlay = false;
-            StartCoroutine(TransitionToEnd(false));
+            BeginEndTransition(false);
         }
         else
         {
@@ -424,6 +513,7 @@ public class ScoreManager : MonoBehaviour
 
         // Updates UI For Which Side is Serving
         UpdateServeIndicator(leftJustScored);
+        if (NetworkSession.IsServer) UpdateServeIndicatorRpc(leftJustScored);
 
         // Wait 3 seconds
         yield return new WaitForSeconds(3.0f);
@@ -551,6 +641,25 @@ public class ScoreManager : MonoBehaviour
         }
     }
 
+    // The end of the match is mostly UI and cameras, so it plays on every machine
+    private void BeginEndTransition(bool leftSideJustWon)
+    {
+        if (NetworkSession.IsServer) BeginEndTransitionRpc(leftSideJustWon);
+        else StartCoroutine(TransitionToEnd(leftSideJustWon));
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void BeginEndTransitionRpc(bool leftSideJustWon)
+    {
+        StartCoroutine(TransitionToEnd(leftSideJustWon));
+    }
+
+    [Rpc(SendTo.NotServer)]
+    private void UpdateServeIndicatorRpc(bool leftJustScored)
+    {
+        UpdateServeIndicator(leftJustScored);
+    }
+
     private IEnumerator TransitionToEnd(bool leftSideJustWon)
     {
         // Fade to black
@@ -564,7 +673,7 @@ public class ScoreManager : MonoBehaviour
         }
 
         // Indicate end of game
-        GameManager.Instance.gameState = GameManager.GameState.GameOver;
+        if (NetworkSession.HasAuthority) GameManager.Instance.gameState = GameManager.GameState.GameOver;
 
         // Switch cameras
         endCamera.enabled = true;
@@ -582,10 +691,8 @@ public class ScoreManager : MonoBehaviour
         // Move all of the birds and show the correct screen
         if (leftSideJustWon)
         {
-            GameManager.Instance.leftPlayer1.transform.position = endLocations[0].position;
-            GameManager.Instance.leftPlayer2.transform.position = endLocations[1].position;
-            GameManager.Instance.rightPlayer1.transform.position = endLocations[2].position;
-            GameManager.Instance.rightPlayer2.transform.position = endLocations[3].position;
+            MoveBirdsToEndLocations(GameManager.Instance.leftPlayer1, GameManager.Instance.leftPlayer2,
+                GameManager.Instance.rightPlayer1, GameManager.Instance.rightPlayer2);
             blueWin.enabled = true;
             blueWinScore.text = $"{side1SetsWon}-{side2SetsWon}";
             blueWinScore.enabled = true;
@@ -596,10 +703,8 @@ public class ScoreManager : MonoBehaviour
         }
         else
         {
-            GameManager.Instance.rightPlayer1.transform.position = endLocations[0].position;
-            GameManager.Instance.rightPlayer2.transform.position = endLocations[1].position;
-            GameManager.Instance.leftPlayer1.transform.position = endLocations[2].position;
-            GameManager.Instance.leftPlayer2.transform.position = endLocations[3].position;
+            MoveBirdsToEndLocations(GameManager.Instance.rightPlayer1, GameManager.Instance.rightPlayer2,
+                GameManager.Instance.leftPlayer1, GameManager.Instance.leftPlayer2);
             pinkWin.enabled = true;
             pinkWinScore.text = $"{side1SetsWon}-{side2SetsWon}";
             pinkWinScore.enabled = true;
@@ -617,6 +722,14 @@ public class ScoreManager : MonoBehaviour
             fadeScreen.color = new Color(0, 0, 0, 1 - time / 2.0f);
             yield return null;
         }
+    }
+
+    private void MoveBirdsToEndLocations(params GameObject[] birds)
+    {
+        if (!NetworkSession.HasAuthority) return;
+
+        for (int i = 0; i < birds.Length; ++i)
+            NetworkSession.Teleport(birds[i], endLocations[i].position);
     }
 
     void UpdateScoreDisplay(TextMeshProUGUI scoreText, int score)
@@ -750,6 +863,63 @@ public class ScoreManager : MonoBehaviour
         }
 
         // Everyone is ready, go back to main menu
+        if (NetworkSession.IsServer)
+        {
+            ReturnToMenuRpc();
+            StartCoroutine(HostReturnToMenu());
+            return;
+        }
+
         SceneManager.LoadScene("MainMenu");
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        // The host updates its score text as points happen. Clients follow along from the network variables.
+        if (IsServer) return;
+
+        side1ScoreNet.OnValueChanged += OnSide1ScoreChanged;
+        side2ScoreNet.OnValueChanged += OnSide2ScoreChanged;
+        side1SetsWonNet.OnValueChanged += OnSide1SetsChanged;
+        side2SetsWonNet.OnValueChanged += OnSide2SetsChanged;
+
+        // In case any of them changed before this object was spawned here
+        side1ScoreUI.text = side1ScoreNet.Value.ToString();
+        side2ScoreUI.text = side2ScoreNet.Value.ToString();
+        side1SetUI.text = side1SetsWonNet.Value.ToString();
+        side2SetUI.text = side2SetsWonNet.Value.ToString();
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        side1ScoreNet.OnValueChanged -= OnSide1ScoreChanged;
+        side2ScoreNet.OnValueChanged -= OnSide2ScoreChanged;
+        side1SetsWonNet.OnValueChanged -= OnSide1SetsChanged;
+        side2SetsWonNet.OnValueChanged -= OnSide2SetsChanged;
+    }
+
+    private void OnSide1ScoreChanged(int previous, int current) => ShowNetworkedScore(side1ScoreUI, previous, current);
+    private void OnSide2ScoreChanged(int previous, int current) => ShowNetworkedScore(side2ScoreUI, previous, current);
+    private void OnSide1SetsChanged(int previous, int current) => side1SetUI.text = current.ToString();
+    private void OnSide2SetsChanged(int previous, int current) => side2SetUI.text = current.ToString();
+
+    private void ShowNetworkedScore(TextMeshProUGUI scoreText, int previous, int current)
+    {
+        // Only a point gets the bounce and flourish, not the score going back to 0 for a new set
+        if (current > previous) UpdateScoreDisplay(scoreText, current);
+        else scoreText.text = current.ToString();
+    }
+
+    [Rpc(SendTo.NotServer)]
+    private void ReturnToMenuRpc()
+    {
+        NetworkSession.LeaveToMainMenu();
+    }
+
+    // The host waits a moment so the message has time to reach the clients before the connection closes
+    private IEnumerator HostReturnToMenu()
+    {
+        yield return new WaitForSecondsRealtime(0.5f);
+        NetworkSession.LeaveToMainMenu();
     }
 }

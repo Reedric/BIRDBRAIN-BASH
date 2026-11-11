@@ -11,10 +11,11 @@ public abstract class BirdAbility : MonoBehaviour
     
     protected float _cooldownRemaining;
     private bool _abilitiesDisabled;
+    private bool _silenced; // Kept apart from _abilitiesDisabled, so a silence wearing off can't undo an ability's own lockout
     protected bool _delayCooldownStart;
     private float _nextCooldownReduction;
 
-    public bool IsReady => _cooldownRemaining <= 0 && !_abilitiesDisabled;
+    public bool IsReady => _cooldownRemaining <= 0 && !_abilitiesDisabled && !_silenced;
 
     /// True for abilities that arm on button press and only fire on the player's next normal spike.
     public virtual bool RequiresSpikeToActivate => false;
@@ -86,6 +87,10 @@ public abstract class BirdAbility : MonoBehaviour
 
         IsArmed = false;
         UpdateArmedUI(false, false);
+
+        // Armed before being silenced (e.g. by Crow), so the spike goes off as a normal one
+        if (_abilitiesDisabled || _silenced) return false;
+
         return ActivateAndStartCooldown();
     }
 
@@ -94,14 +99,7 @@ public abstract class BirdAbility : MonoBehaviour
         if (Activate())
         {
             if (!_delayCooldownStart)
-            {
-                _cooldownRemaining = _cooldownTime * (1f - _nextCooldownReduction);
-                bool usedCooldownReduction = _nextCooldownReduction > 0f;
-                _nextCooldownReduction = 0f;
-
-                if (usedCooldownReduction)
-                    UpdateCooldownUI();
-            }
+                BeginCooldown();
 
             Debug.Log($"[BirdAbility] {GetType().Name} activated successfully.");
             return true;
@@ -110,6 +108,22 @@ public abstract class BirdAbility : MonoBehaviour
         Debug.Log($"[BirdAbility] {GetType().Name} activation failed inside Activate().");
         return false;
     }
+
+    /// Starts the normal cooldown, including any pending reduction (e.g. Shima Enaga's Helping Hand).
+    /// For abilities that finish on their own (a timer running out) rather than through a button press.
+    protected void BeginCooldown()
+    {
+        _cooldownRemaining = _cooldownTime * (1f - _nextCooldownReduction);
+        bool usedCooldownReduction = _nextCooldownReduction > 0f;
+        _nextCooldownReduction = 0f;
+
+        if (usedCooldownReduction)
+            UpdateCooldownUI();
+    }
+
+    // Client side of NetworkFx.AbilityEvent, for abilities with visuals NetworkFx can't show on its own.
+    // Abilities are disabled on clients, so this is the only part of one that runs there.
+    public virtual void OnNetworkEvent(int eventId, Vector3 argument) { }
 
     // TODO: make this return bool, true means the cooldown will start, false means it won't (for abilities with multiple activations)
     protected abstract bool Activate();
@@ -172,4 +186,6 @@ public abstract class BirdAbility : MonoBehaviour
     }
 
     public void SetAbilitiesDisabled(bool disabled) { _abilitiesDisabled = disabled; }
+
+    public void SetSilenced(bool silenced) { _silenced = silenced; }
 }

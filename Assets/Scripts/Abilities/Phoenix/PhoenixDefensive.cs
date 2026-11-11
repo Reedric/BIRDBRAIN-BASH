@@ -16,10 +16,8 @@ public class PhoenixDefensive : BirdAbility
 
     private bool _onLeft;
 
-    void Update()
-    {
-        TickCooldown(Time.deltaTime);
-    }
+    // (No Update ticking the cooldown here. BirdAbilityController already ticks every ability, so ticking it here too
+    // would take it off cooldown twice as fast as the HUD shows.)
 
     void Start()
     {
@@ -52,7 +50,7 @@ public class PhoenixDefensive : BirdAbility
             $"PHOENIX INTERCEPT: leftConceding={leftConceding}, " +
             $"phoenixOnLeft={_onLeft}, isOut={isOut}, cooldown={_cooldownRemaining}");
 
-        // Only step in when the miss is against MY side, not the opponent's
+        // Only step in when the miss is against my side, not the opponent's
         if (leftConceding != _onLeft)
             return false;
 
@@ -65,8 +63,8 @@ public class PhoenixDefensive : BirdAbility
             return false;
         }
 
-        // Still cooling down from the last revive
-        if (_cooldownRemaining > 0f)
+        // Still cooling down from the last revive, or silenced (e.g. by Crow)
+        if (!IsReady)
             return false;
 
         Rigidbody actualBallRb = ballRb;
@@ -86,12 +84,12 @@ public class PhoenixDefensive : BirdAbility
         AudioManager.PlayBirdSound(BirdType.PHOENIX, SoundType.DEFENSIVE, 1.0f);
 
         if (myBallInteract.animator != null)
-            myBallInteract.animator.SetTrigger("DefensiveAbility");
+            myBallInteract.animator.SetTriggerSynced("DefensiveAbility");
 
         // Rise-from-the-ashes VFX at the spot the ball landed
         if (ashesEffect != null)
         {
-            GameObject ashesInstance = Instantiate(ashesEffect, contactPoint, Quaternion.identity);
+            GameObject ashesInstance = NetworkFx.Instantiate(ashesEffect, contactPoint, Quaternion.identity);
             ParticleSystem ashes = ashesInstance.GetComponent<ParticleSystem>();
 
             if (ashes != null)
@@ -105,9 +103,9 @@ public class PhoenixDefensive : BirdAbility
             }
         }
 
-        // Reposition the ball straight up from where it landed - NOT sideways. Any meaningful horizontal
-        // push risks carrying the ball across the net onto the opponent's court, which registers as a
-        // brand new (and unintended) real point for Phoenix's own team once it lands over there.
+        // Put the ball straight up from where it landed, not sideways. Much of a horizontal
+        // push could carry the ball over the net onto the opponent's court, which would count as a
+        // point for Phoenix's own team once it lands over there.
         Vector3 revivePosition = contactPoint + Vector3.up * reviveHeightOffset;
 
         actualBallRb.position = revivePosition;

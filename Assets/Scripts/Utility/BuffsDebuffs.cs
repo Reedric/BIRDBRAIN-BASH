@@ -16,7 +16,6 @@ public class BuffsDebuffs : MonoBehaviour
 
     private Dictionary<GameObject, Dictionary<EffectType, GameObject>> activeVFX = new();
     private Dictionary<GameObject, Dictionary<EffectType, Coroutine>> activeEffects = new();
-    private Dictionary<GameObject, (float groundSpeed, float airSpeed, float jumpForce, float aiGroundSpeed, float aiAirSpeed, float aiJumpForce)> stunOriginalValues = new();
     private HashSet<RagdollManager> activeRagdolls = new();
     private Dictionary<GameObject, HashSet<EffectType>> preservedEffects = new();
 
@@ -39,12 +38,33 @@ public class BuffsDebuffs : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
+            // A new match is starting. Everything tracked so far belongs to birds from the last one, which are gone,
+            // and ClearAllEffects (at the start of every point) would throw on them and stop the point from resetting.
+            Instance.ResetForNewMatch();
             Destroy(gameObject);
             return;
         }
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+    }
+
+    private void ResetForNewMatch()
+    {
+        StopAllCoroutines();
+
+        foreach (Dictionary<EffectType, GameObject> vfxByType in activeVFX.Values)
+        {
+            foreach (GameObject vfx in vfxByType.Values)
+            {
+                if (vfx != null) Destroy(vfx);
+            }
+        }
+
+        activeVFX.Clear();
+        activeEffects.Clear();
+        activeRagdolls.Clear();
+        preservedEffects.Clear();
     }
 
     public void ApplyEffect(EffectType type, GameObject bird, float duration, bool onLeft)
@@ -84,6 +104,13 @@ public class BuffsDebuffs : MonoBehaviour
             preservedEffects.Remove(bird);
     }
 
+    public bool HasActiveEffects(GameObject bird)
+    {
+        return bird != null
+            && activeEffects.TryGetValue(bird, out Dictionary<EffectType, Coroutine> effects)
+            && effects.Count > 0;
+    }
+
     public bool IsEffectActive(EffectType type, GameObject bird)
     {
         return bird != null
@@ -112,6 +139,13 @@ public class BuffsDebuffs : MonoBehaviour
         ApplyGameplayEffect(type, bird, true);
 
         yield return new WaitForSeconds(duration);
+
+        // The bird can be gone by now, e.g. if the match ended and this object carried on into the next scene
+        if (bird == null)
+        {
+            ForgetBird(bird);
+            yield break;
+        }
 
         // Remove the gameplay effect
         ApplyGameplayEffect(type, bird, false);
@@ -152,7 +186,7 @@ public class BuffsDebuffs : MonoBehaviour
         if (!activeVFX.ContainsKey(bird))
             activeVFX[bird] = new Dictionary<EffectType, GameObject>();
 
-        // If VFX already exists, DON'T spawn another
+        // If VFX already exists, don't spawn another
         if (activeVFX[bird].ContainsKey(type))
         {
             return activeVFX[bird][type];
@@ -161,7 +195,7 @@ public class BuffsDebuffs : MonoBehaviour
         GameObject prefab = ResolvePrefab(type, onLeft);
         if (prefab == null) return null;
 
-        GameObject vfx = Instantiate(prefab, bird.transform);
+        GameObject vfx = NetworkFx.Instantiate(prefab, bird.transform);
         vfx.transform.localPosition = Vector3.zero;
 
         activeVFX[bird][type] = vfx;
@@ -189,129 +223,70 @@ public class BuffsDebuffs : MonoBehaviour
         else activeRagdolls.Remove(rm);
     }
 
+    // Drops everything tracked for a bird that has been destroyed. (Dictionary lookups still work on a destroyed
+    // GameObject, since it's the same C# object, even though Unity treats it as null.)
+    private void ForgetBird(GameObject bird)
+    {
+        activeEffects.Remove(bird);
+        activeVFX.Remove(bird);
+        preservedEffects.Remove(bird);
+    }
+
+    // Each effect type is one entry in the bird's stat modifiers (see BirdStats). Multiplying and dividing
+    // the stats, or saving and restoring them for a stun, goes wrong whenever two effects overlap: a buff ending
+    // during a stun undoes the stun, and a stun ending puts back the speed from before a buff that's already gone.
+    private static readonly object buffStatKey = new object();
+    private static readonly object debuffStatKey = new object();
+    private static readonly object stunStatKey = new object();
+
     private void ApplyGameplayEffect(EffectType type, GameObject bird, bool enable)
     {
-        CharacterMovement movement = bird.GetComponent<CharacterMovement>();
-        BirdAbility ability = bird.GetComponent<BirdAbility>();
-        AIBehavior ai = bird.GetComponent<AIBehavior>();
+        if (bird == null) return;
 
         switch (type)
         {
             case EffectType.Buff:
-                if (enable)
-                {
-                    if (movement != null)
-                    {
-                        movement.maxGroundSpeed *= 1.5f;
-                        movement.maxAirSpeed *= 1.5f;
-                    }
-                    if (ai != null)
-                    {
-                        ai.maxGroundSpeed *= 1.5f;
-                        ai.maxAirSpeed *= 1.5f;
-                    }
-                }
-                else
-                {
-                    if (movement != null)
-                    {
-                        movement.maxGroundSpeed /= 1.5f;
-                        movement.maxAirSpeed /= 1.5f;
-                    }
-                    if (ai != null)
-                    {
-                        ai.maxGroundSpeed /= 1.5f;
-                        ai.maxAirSpeed /= 1.5f;
-                    }
-                }
+                if (enable) BirdStats.Apply(bird, buffStatKey, StatModifier.Multiply(1.5f));
+                else BirdStats.Remove(bird, buffStatKey);
                 break;
 
             case EffectType.Debuff:
-                if (enable)
-                {
-                    if (movement != null)
-                    {
-                        movement.maxGroundSpeed *= 0.5f;
-                        movement.maxAirSpeed *= 0.5f;
-                    }
-                    if (ai != null)
-                    {
-                        ai.maxGroundSpeed *= 0.5f;
-                        ai.maxAirSpeed *= 0.5f;
-                    }
-                }
-                else
-                {
-                    if (movement != null)
-                    {
-                        movement.maxGroundSpeed *= 2f;
-                        movement.maxAirSpeed *= 2f;
-                    }
-                    if (ai != null)
-                    {
-                        ai.maxGroundSpeed *= 2f;
-                        ai.maxAirSpeed *= 2f;
-                    }
-                }
+                if (enable) BirdStats.Apply(bird, debuffStatKey, StatModifier.Multiply(0.5f));
+                else BirdStats.Remove(bird, debuffStatKey);
                 break;
 
             case EffectType.Silence:
-                ability?.SetAbilitiesDisabled(enable);
-                ai?.SilenceAbilities(enable);
+                // Every ability on the bird, not just whichever one GetComponent finds first
+                foreach (BirdAbility ability in bird.GetComponentsInChildren<BirdAbility>(true))
+                    ability.SetSilenced(enable);
+                if (bird.TryGetComponent(out AIBehavior ai)) ai.SilenceAbilities(enable);
                 break;
 
             case EffectType.Stun:
                 if (enable)
                 {
-                    if (!stunOriginalValues.ContainsKey(bird))
-                    {
-                        stunOriginalValues[bird] = (
-                            movement != null ? movement.maxGroundSpeed : 0f,
-                            movement != null ? movement.maxAirSpeed : 0f,
-                            movement != null ? movement.jumpForce : 0f,
-                            ai != null ? ai.maxGroundSpeed : 0f,
-                            ai != null ? ai.maxAirSpeed : 0f,
-                            ai != null ? ai.jumpForce : 0f);
-                    }
-
-                    if (movement != null)
-                    {
-                        movement.maxGroundSpeed = 1f;
-                        movement.maxAirSpeed = 1f;
-                        movement.jumpForce = 1f;
-                    }
-
-                    if (ai != null)
-                    {
-                        ai.maxGroundSpeed = 1f;
-                        ai.maxAirSpeed = 1f;
-                        ai.jumpForce = 1f;
-                    }
-
+                    BirdStats.Apply(bird, stunStatKey, StatModifier.Stunned);
                     AudioManager.PlayStunLoop(bird);
                 }
-                else if (stunOriginalValues.TryGetValue(bird, out var originalValues))
+                else
                 {
-                    if (movement != null)
-                    {
-                        movement.maxGroundSpeed = originalValues.groundSpeed;
-                        movement.maxAirSpeed = originalValues.airSpeed;
-                        movement.jumpForce = originalValues.jumpForce;
-                    }
-
-                    if (ai != null)
-                    {
-                        ai.maxGroundSpeed = originalValues.aiGroundSpeed;
-                        ai.maxAirSpeed = originalValues.aiAirSpeed;
-                        ai.jumpForce = originalValues.aiJumpForce;
-                    }
-
-                    stunOriginalValues.Remove(bird);
-                }
-
-                if (!enable)
+                    BirdStats.Remove(bird, stunStatKey);
                     AudioManager.StopStunLoop(bird);
+                }
                 break;
+        }
+    }
+
+    // Puts the stat changes from effects that are still running back on a bird after its stats were reset for a
+    // new point. Only effects that last across points (Ostrich's buff) are still running by then.
+    public void ReapplyActiveEffects(GameObject bird)
+    {
+        if (bird == null || !activeEffects.TryGetValue(bird, out Dictionary<EffectType, Coroutine> effects)) return;
+
+        foreach (EffectType type in effects.Keys)
+        {
+            if (type == EffectType.Buff || type == EffectType.Debuff)
+                ApplyGameplayEffect(type, bird, true);
         }
     }
 
@@ -322,6 +297,17 @@ public class BuffsDebuffs : MonoBehaviour
 
         foreach (var bird in activeEffectsCopy.Keys)
         {
+            if (bird == null)
+            {
+                foreach (Coroutine coroutine in activeEffectsCopy[bird].Values)
+                {
+                    if (coroutine != null) StopCoroutine(coroutine);
+                }
+
+                ForgetBird(bird);
+                continue;
+            }
+
             foreach (var kvp in new Dictionary<EffectType, Coroutine>(activeEffectsCopy[bird]))
             {
                 if (IsEffectPreserved(bird, kvp.Key))
@@ -336,8 +322,8 @@ public class BuffsDebuffs : MonoBehaviour
                 activeEffects.Remove(bird);
         }
 
-        // Actually destroy the spawned VFX — previously the dict was cleared
-        // but the GameObjects were left alive, causing infinite particle replay
+        // Destroy the spawned VFX too. Just clearing the dict
+        // leaves the GameObjects alive, and the particles replay forever
         var vfxCopy = new Dictionary<GameObject, Dictionary<EffectType, GameObject>>(activeVFX);
         foreach (var bird in vfxCopy.Keys)
         {
@@ -353,7 +339,5 @@ public class BuffsDebuffs : MonoBehaviour
             if (activeVFX.ContainsKey(bird) && activeVFX[bird].Count == 0)
                 activeVFX.Remove(bird);
         }
-
-        stunOriginalValues.Clear();
     }
 }

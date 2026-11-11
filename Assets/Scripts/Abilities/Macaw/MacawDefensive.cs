@@ -12,7 +12,20 @@ public class MacawDefensive : BirdAbility
     // Hard-coded until abilities carry their own "can't be mimicked" flag - Phoenix's revive is
     // driven entirely by ScoreManager.InterceptPoint (see PhoenixDefensive), not the ability button,
     // so stealing it would silently grant Macaw a revive subscription with no way to trigger it.
-    private static readonly HashSet<System.Type> unmimicableAbilities = new() { typeof(PhoenixDefensive) };
+    //
+    // A copy is used once and is then left to finish, so abilities that need a second step don't work as copies either:
+    // - Kiwi's burrow returns false while it's underground, so the copy would be destroyed with Macaw stuck below the court
+    // - Crow's coins return false until they're collected, so the copy would be destroyed and leave its coins on the court
+    // - Pelican's first press only eats the ball, so the copy would be destroyed with the ball in its mouth and drop it
+    // - Another Macaw's copy would just be this ability again
+    private static readonly HashSet<System.Type> unmimicableAbilities = new()
+    {
+        typeof(PhoenixDefensive),
+        typeof(KiwiDefensive),
+        typeof(CrowDefensive),
+        typeof(PelicanDefensive),
+        typeof(MacawDefensive)
+    };
 
     [SerializeField] private float mimicDuration = 15f;
 
@@ -134,7 +147,7 @@ public class MacawDefensive : BirdAbility
         if (currentAbility == null || playerID < 0 || HUDManager.Instance == null) return;
 
         BirdType sourceBird = GetBirdType(currentAbility.gameObject);
-        HUDManager.Instance.SetDefensiveIcon(playerID, HUDManager.Instance.GetDefensiveIconForBird(sourceBird));
+        HUDManager.Instance.SetDefensiveIconForBird(playerID, sourceBird);
     }
 
     // Attaches a fresh copy of the stolen ability's type directly onto Macaw so its effect
@@ -147,12 +160,17 @@ public class MacawDefensive : BirdAbility
         BirdAbility copy = gameObject.AddComponent(type) as BirdAbility;
         if (copy == null) return null;
 
-        // copy only the ability's own tuned fields (e.g. dash speed, buff amount) — leave BirdAbility's
-        // cooldown/runtime state untouched so the copy starts fresh and ready to use
+        // copy only the ability's own tuned fields (e.g. dash speed, buff amount) and leave BirdAbility's
+        // cooldown/runtime state untouched so the copy starts fresh and ready to use.
+        // Only serialized fields count as tuned: copying everything would also copy runtime state, like lists the
+        // copy then shares with the original (Eagle's stars) or flags saying the ability is mid-use.
         for (System.Type walk = type; walk != null && walk != typeof(BirdAbility); walk = walk.BaseType)
         {
             foreach (FieldInfo field in walk.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
-                field.SetValue(copy, field.GetValue(source));
+            {
+                if (!IsTunedField(field)) continue;
+                field.SetValue(copy, RetargetToMacaw(field.GetValue(source), source));
+            }
         }
 
         SetBaseField(copy, "_cooldownTime", GetBaseField(source, "_cooldownTime"));
@@ -164,6 +182,23 @@ public class MacawDefensive : BirdAbility
         InvokeLifecycleMethod(copy, type, "Start");
 
         return copy;
+    }
+
+    // The fields Unity serializes, i.e. the ones set in the Inspector
+    private static bool IsTunedField(FieldInfo field)
+    {
+        if (field.IsInitOnly || field.IsLiteral || field.IsNotSerialized) return false;
+        return field.IsPublic || field.IsDefined(typeof(SerializeField), true);
+    }
+
+    // A tuned field can point at one of the original bird's own components, like Pelican's BallInteract or Dodo's
+    // Animator, which would make the copy act as the original bird. Point those at Macaw's matching component instead.
+    private object RetargetToMacaw(object value, BirdAbility source)
+    {
+        if (value is not Component component || component == null) return value;
+        if (component.transform != source.transform && !component.transform.IsChildOf(source.transform)) return value;
+
+        return GetComponentInChildren(component.GetType(), true);
     }
 
     private static object GetBaseField(object target, string fieldName)

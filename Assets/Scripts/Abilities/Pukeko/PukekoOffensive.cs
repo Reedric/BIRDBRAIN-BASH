@@ -2,14 +2,15 @@ using UnityEngine;
 using System.Collections;
 
 /// <summary>
-/// Sonic Squawk — sound wave with a cone effect that silences birds
+/// Sonic Squawk - sound wave with a cone effect that silences birds
 /// (unable to use abilities for silenceDuration) and pushes them back (40s cooldown)
 /// </summary>
-public class PukekoOffensiveAbility : BirdAbility
+// The class name has to match the file name, or Unity can't load it as a component on the Pukeko prefabs
+public class PukekoOffensive : BirdAbility
 {
     [Header("Pukeko Offensive Settings")]
     [SerializeField] private float silenceDuration = 3f;
-    [SerializeField] private float pushBackForce = 8f; // increased from 2f — impulse needs more weight
+    [SerializeField] private float pushBackForce = 8f; // bumped up from 2f, impulse needs more weight
 
     [Header("Effects")]
     [SerializeField] private GameObject squawkParticlesPrefab; // Assign prefab in inspector
@@ -47,7 +48,7 @@ public class PukekoOffensiveAbility : BirdAbility
             Quaternion vfxRotation = facingRotation * Quaternion.Euler(0f, -90f, 0f);
 
             GameObject particles =
-                Instantiate(squawkParticlesPrefab, transform.position, vfxRotation);
+                NetworkFx.Instantiate(squawkParticlesPrefab, transform.position, vfxRotation);
 
             ParticleSystem[] allSystems = particles.GetComponentsInChildren<ParticleSystem>(true);
             foreach (ParticleSystem ps in allSystems)
@@ -64,10 +65,15 @@ public class PukekoOffensiveAbility : BirdAbility
         // Trigger offensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
         if (myBallInteract != null && myBallInteract.animator != null)
-            myBallInteract.animator.SetTrigger("OffensiveAbility");
+            myBallInteract.animator.SetTriggerSynced("OffensiveAbility");
 
         // Play sound effect
         AudioManager.PlayBirdSound(BirdType.PUKEKO, SoundType.OFFENSIVE, 1.0f);
+
+        // Several rays usually hit the same bird. Silencing it again for each one would restart the effect and replay
+        // its sound every time, so each bird is only silenced once. (The push still adds up per ray, which is how
+        // pushBackForce has been tuned.)
+        System.Collections.Generic.HashSet<GameObject> alreadySilenced = new();
 
         // Find all birds in the cone area via raycast
         for (int i = 0; i < coneRayCount; i++)
@@ -83,10 +89,10 @@ public class PukekoOffensiveAbility : BirdAbility
 
             for (int j = 0; j < hitCount; j++)
             {
-                if (hits[j].collider.CompareTag("Player") && hits[j].collider.gameObject != gameObject)
+                // Found by component rather than the "Player" tag, which some birds' prefabs don't have
+                GameObject target = BirdLookup.FindBird(hits[j].collider.gameObject);
+                if (target != null && target != gameObject)
                 {
-                    // Apply silence effect to the bird
-                    GameObject target = hits[j].collider.gameObject;
 
                     bool targetIsOnLeft = false;
                     BallInteract targetBallInteract = target.GetComponent<BallInteract>();
@@ -110,15 +116,18 @@ public class PukekoOffensiveAbility : BirdAbility
 
                     if (birdType == BirdType.OSTRICH) continue;
 
-                    BuffsDebuffs.Instance.ApplyEffect(
-                        BuffsDebuffs.EffectType.Silence,
-                        target,
-                        silenceDuration,
-                        targetIsOnLeft
-                    );
+                    if (alreadySilenced.Add(target))
+                    {
+                        BuffsDebuffs.Instance.ApplyEffect(
+                            BuffsDebuffs.EffectType.Silence,
+                            target,
+                            silenceDuration,
+                            targetIsOnLeft
+                        );
+                    }
 
                     // Push enemy directly away from the bird's facing direction
-                    if (hits[j].collider.TryGetComponent<Rigidbody>(out var rb))
+                    if (target.TryGetComponent<Rigidbody>(out var rb))
                     {
                         Vector3 pushDirection = firingForward;
                         rb.AddForce(pushDirection * pushBackForce, ForceMode.Impulse);

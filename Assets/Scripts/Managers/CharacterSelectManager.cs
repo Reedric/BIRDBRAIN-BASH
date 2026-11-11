@@ -7,6 +7,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
 using UnityEngine.InputSystem.UI;
+using Unity.Netcode;
 
 // This script is used to manage the character select screen.
 // It will handle the character selection and transition to the next scene when the players are ready.
@@ -144,22 +145,34 @@ public class CharacterSelectManager : MonoBehaviour
     private bool[] isHoveringTarget = new bool[4];
     // Per-player currently selected Selectable (for navigation)
     private Selectable[] currentSelectable = new Selectable[4];
-    private GameObject[] hoveredUIElements = new GameObject[4];
     // Preserve the original scale of each cursor instance.
     private Vector3[] cursorBaseScales = new Vector3[4];
 
-    // One coroutine slot per player — stops any in-progress animation before starting a new one
+    // One coroutine slot per player, so any in-progress animation can be stopped before starting a new one
     private readonly Coroutine[] cursorAnimCoroutines = new Coroutine[4];
-    private int previousControllingPlayer = -1;
 
-    // name of the scene to load once selections are done (MAKE SURE THIS MATCHES MULTIPLAYER MANAGER AND CHANGES WHEN NEEDED)
+    // name of the scene to load once selections are done, when the tutorial is on (MAKE SURE THIS MATCHES MULTIPLAYER MANAGER AND CHANGES WHEN NEEDED)
     private const string mainSceneName = "HowToPlay";
 
     // Name of the main menu scene (update as needed)
     private const string mainMenuSceneName = "MainMenu";
 
-    // Unity's built-in UI input module — disabled below, see Awake().
+    // Unity's built-in UI input module (disabled below, see Awake()).
     private InputSystemUIInputModule uiInputModule;
+
+    // Online, each player only controls their own card. The rest follow the lobby's player list.
+    private bool isOnline;
+    private int localOnlineSlot = -1;
+    private readonly int[] onlineCardBirds = { -2, -2, -2, -2 }; // What each card is showing. -1 means no pick yet
+    private readonly bool[] onlineCardHumans = new bool[4];
+    private readonly Texture[] defaultIconTextures = new Texture[4];
+
+    // Where the other players' cursors last were, as a fraction of the screen
+    private const float cursorSendInterval = 0.05f;
+    private const float cursorHoverThreshold = 10f;
+    private readonly Vector2[] remoteCursorFractions = new Vector2[4];
+    private readonly bool[] remoteCursorKnown = new bool[4];
+    private float nextCursorSendTime;
 
     // Tracks important input info for each player
     private class PlayerInputState
@@ -191,7 +204,7 @@ public class CharacterSelectManager : MonoBehaviour
         }
         instance = this;
 
-        uiInputModule = FindObjectOfType<InputSystemUIInputModule>();
+        uiInputModule = FindFirstObjectByType<InputSystemUIInputModule>();
         if (uiInputModule != null)
             uiInputModule.enabled = false;
 
@@ -218,6 +231,10 @@ public class CharacterSelectManager : MonoBehaviour
             if (DataTransferManager.isKBMInput == null) DataTransferManager.isKBMInput = new List<bool>();
             if (DataTransferManager.selectedBirds == null) DataTransferManager.selectedBirds = new List<BirdType>();
         }
+
+        // Every card is in play online, since any that aren't players become AI
+        isOnline = NetworkSession.IsOnline;
+        if (isOnline) numberOfPlayers = 4;
 
         ResizePlayerLists(numberOfPlayers);
         SetupPlayerInputStates();
@@ -261,6 +278,12 @@ public class CharacterSelectManager : MonoBehaviour
         if (p4Ready != null) p4Ready.enabled = false;
         if (goButton != null) goButton.enabled = false;
 
+        for (int i = 0; i < defaultIconTextures.Length; ++i)
+        {
+            RawImage icon = GetPlayerIcon(i);
+            if (icon != null) defaultIconTextures[i] = icon.texture;
+        }
+
         // Ensure that overlays are not visible
         p1Overlay.alpha = 0f;
         p2Overlay.alpha = 0f;
@@ -282,6 +305,8 @@ public class CharacterSelectManager : MonoBehaviour
 
     private void Update()
     {
+        if (isOnline) UpdateOnlineState();
+
         // Back button: Escape/Backspace (keyboard)
         if (Keyboard.current != null &&
             (Keyboard.current.escapeKey.wasPressedThisFrame || Keyboard.current.backspaceKey.wasPressedThisFrame))
@@ -304,6 +329,10 @@ public class CharacterSelectManager : MonoBehaviour
 
         for (int i = 0; i < playerInputStates.Count; i++)
         {
+            // Online, other players' cursors are moved in LateUpdate
+            if (isOnline && i != localOnlineSlot)
+                continue;
+
             // While the settings overlay is open, only the controlling player's cursor should move
             if (settingsOpen && i != controllingPlayer)
                 continue;
@@ -311,6 +340,22 @@ public class CharacterSelectManager : MonoBehaviour
             UpdatePlayerInput(i);
             UpdatePlayerCursor(i);
         }
+    }
+
+    // This is after Update since closing the settings overlay makes every cursor visible, including any AI cards'
+    private void LateUpdate()
+    {
+        if (!isOnline) return;
+
+        bool settingsOpen = matchSettings != null && matchSettings.IsMenuOpen;
+
+        for (int i = 0; i < playerInputStates.Count; i++)
+        {
+            if (i != localOnlineSlot) UpdateRemoteCursor(i, settingsOpen);
+        }
+
+        // Nobody else can see the settings overlay, so the cursor just stays put for them while it's open
+        if (!settingsOpen) SendLocalCursor();
     }
 
     private void SnapCursorToEventSystemSelection(int playerIndex)
@@ -342,10 +387,10 @@ public class CharacterSelectManager : MonoBehaviour
 
     // Finds the uiTargets index whose underlying Selectable matches the given
     // GameObject. Matching by Selectable identity (rather than by uiTargets[i]
-    // itself) is necessary now that a Toggle's position rect can be a child
+    // itself) is needed because a Toggle's position rect can be a child
     // (its checkbox visual) rather than the Toggle's own GameObject. Falls
     // back to matching uiTargets directly for entries with no Selectable
-    // (e.g. BirdSelectButtons), where the target rect IS the identity.
+    // (e.g. BirdSelectButtons), where the target rect is the identity.
     private int FindTargetIndexForGameObject(GameObject go)
     {
         for (int i = 0; i < uiTargets.Count; i++)
@@ -385,6 +430,8 @@ public class CharacterSelectManager : MonoBehaviour
                 // Re-pair the reconnected gamepad to whichever player lost their device
                 foreach (PlayerInputState state in playerInputStates)
                 {
+                    if (isOnline && state.playerIndex != localOnlineSlot) continue;
+
                     if (!state.isKBM && state.device == null)
                     {
                         state.device = gamepad;
@@ -407,7 +454,17 @@ public class CharacterSelectManager : MonoBehaviour
     private void SetupPlayerInputStates()
     {
         playerInputStates.Clear();
-        if (DataTransferManager.isKBMInput != null && DataTransferManager.isKBMInput.Count == numberOfPlayers)
+        if (isOnline)
+        {
+            // This player's device gets assigned once the lobby says which card is theirs
+            isKBMInput.Clear();
+            for (int i = 0; i < numberOfPlayers; ++i)
+            {
+                playerInputStates.Add(new PlayerInputState(i, false, null));
+                isKBMInput.Add(false);
+            }
+        }
+        else if (DataTransferManager.isKBMInput != null && DataTransferManager.isKBMInput.Count == numberOfPlayers)
         {
             int gamepadIndex = 0;
             for (int i = 0; i < numberOfPlayers; ++i)
@@ -424,7 +481,7 @@ public class CharacterSelectManager : MonoBehaviour
                 }
                 else
                 {
-                    // No gamepad available for this player slot — log clearly instead of silently assigning null
+                    // No gamepad available for this player slot, so log it instead of silently assigning null
                     Debug.LogWarning($"[CharacterSelectManager] No gamepad available for Player {i + 1}. Their cursor will be inactive until a controller is connected.");
                     dev = null;
                 }
@@ -443,7 +500,7 @@ public class CharacterSelectManager : MonoBehaviour
                 }
                 else
                 {
-                    // No gamepad available for this player slot — log clearly instead of silently assigning null
+                    // No gamepad available for this player slot, so log it instead of silently assigning null
                     Debug.LogWarning($"[CharacterSelectManager] No gamepad available for Player {i + 1}. Their cursor will be inactive until a controller is connected.");
                     dev = null;
                 }
@@ -452,6 +509,19 @@ public class CharacterSelectManager : MonoBehaviour
             isKBMInput.Clear();
             foreach (var state in playerInputStates) isKBMInput.Add(state.isKBM);
         }
+
+        if (isOnline) return;
+
+        // From here on LocalPlayerDevices decides who has which device, and keeps that going into the match
+        LocalPlayerDevices.Configure(isKBMInput);
+        foreach (PlayerInputState state in playerInputStates)
+        {
+            state.isKBM = LocalPlayerDevices.IsUsingKeyboard(state.playerIndex);
+            state.device = state.isKBM ? Keyboard.current : LocalPlayerDevices.GetGamepad(state.playerIndex);
+        }
+
+        // The keyboard player's cursor follows the mouse, which the main menu can leave locked in the middle of the screen
+        MenuMouse.Release();
     }
 
     private void CreatePlayerCursors()
@@ -473,6 +543,7 @@ public class CharacterSelectManager : MonoBehaviour
 
             Transform cursor = Instantiate(prefab, mainCanvas.transform);
             cursor.name = $"Cursor_Player{i}";
+            MenuMouse.MakeClickThrough(cursor.gameObject);
 
             // Color cursors per player
             Image cursorImage = cursor.GetComponent<Image>();
@@ -494,15 +565,21 @@ public class CharacterSelectManager : MonoBehaviour
         if (playerIndex < 0 || playerIndex >= playerInputStates.Count) return;
         PlayerInputState state = playerInputStates[playerIndex];
 
-        if (state.isKBM)
+        RefreshPlayerDevice(playerIndex, state);
+
+        if (state.isKBM && Mouse.current != null)
         {
             state.cursorPosition = Mouse.current.position.ReadValue();
-            UpdateMouseHoverSound(playerIndex, state.cursorPosition);
+            UpdateMouseHover(playerIndex, state.cursorPosition);
 
+            // Clicks whatever is under the mouse
             if (Mouse.current.leftButton.wasPressedThisFrame)
             {
                 PlayCursorPressAnimation(playerIndex);
-                HandlePlayerButtonPress(playerIndex);
+
+                int targetIndex = currentTargetIndex[playerIndex];
+                if (targetIndex >= 0 && TryActivateTargetAtIndex(targetIndex, playerIndex))
+                    AudioManager.PlayButtonSelectSound();
             }
         }
         else
@@ -533,9 +610,42 @@ public class CharacterSelectManager : MonoBehaviour
                         HandlePlayerButtonPress(playerIndex);
                 }
 
-                if (pad.startButton.wasPressedThisFrame)
+                if (!isOnline && pad.startButton.wasPressedThisFrame)
                     playerReady[playerIndex] = !playerReady[playerIndex];
             }
+        }
+    }
+
+    // Picks up whichever of the player's devices they used last, so they can swap between mouse and controller (or
+    // pick up a new controller) at any time.
+    private void RefreshPlayerDevice(int playerIndex, PlayerInputState state)
+    {
+        bool wasKBM = state.isKBM;
+
+        if (isOnline)
+        {
+            // Online, this machine's one player owns every device on it
+            state.isKBM = LocalPlayerDevices.KeyboardUsedLast || (Gamepad.all.Count == 0 && Mouse.current != null);
+            state.device = state.isKBM ? Keyboard.current : (LocalPlayerDevices.LastUsedGamepad ?? (Gamepad.all.Count > 0 ? Gamepad.all[0] : null));
+        }
+        else
+        {
+            state.isKBM = LocalPlayerDevices.IsUsingKeyboard(playerIndex) && Mouse.current != null;
+            state.device = state.isKBM ? Keyboard.current : LocalPlayerDevices.GetGamepad(playerIndex);
+        }
+
+        if (state.isKBM && !wasKBM)
+        {
+            // The mouse drives this cursor now, so it has to be free to move
+            MenuMouse.Release();
+        }
+        else if (!state.isKBM && wasKBM)
+        {
+            // Back on a controller: start from whatever is under the cursor rather than wherever the stick last left off
+            int closest = FindClosestSelectableIndex(state.cursorPosition);
+            currentTargetIndex[playerIndex] = closest;
+            currentSelectable[playerIndex] = closest >= 0 && closest < uiSelectables.Count ? uiSelectables[closest] : null;
+            if (closest >= 0) desiredScreenPositions[playerIndex] = GetPreferredScreenPosition(uiTargets[closest]);
         }
     }
 
@@ -550,7 +660,7 @@ public class CharacterSelectManager : MonoBehaviour
 
         PlayerInputState state = playerInputStates[playerIndex];
 
-        // If this player is using KBM, keep mouse behavior unchanged
+        // On the mouse, the cursor goes exactly where the mouse is
         if (state.isKBM)
         {
             Vector2 screenPos = state.cursorPosition;
@@ -560,7 +670,9 @@ public class CharacterSelectManager : MonoBehaviour
                 mainCanvas.worldCamera,
                 out Vector2 localPosKBM
             );
-            cursor.GetComponent<RectTransform>().localPosition = localPosKBM;
+            RectTransform cursorRect = cursor.GetComponent<RectTransform>();
+            cursorRect.localPosition = localPosKBM;
+            cursorRect.localRotation = Quaternion.identity;
             return;
         }
 
@@ -626,14 +738,82 @@ public class CharacterSelectManager : MonoBehaviour
             desiredScreenPositions[playerIndex] = desiredScreen;
         }
 
-        // Smoothly interpolate the internal cursor screen position toward desiredScreen
+        MoveCursorToDesiredPosition(playerIndex, cursor);
+    }
+
+    // Online, other players' cursors go wherever those players last said they were.
+    // They stay hidden until then, which also means AI cards never get a cursor.
+    private void UpdateRemoteCursor(int slot, bool settingsOpen)
+    {
+        Transform cursor = playerCursors[slot];
+        if (cursor == null) return;
+
+        // The settings overlay only shows the cursor of whoever opened it
+        bool visible = remoteCursorKnown[slot] && !settingsOpen;
+        cursor.gameObject.SetActive(visible);
+        if (!visible)
+        {
+            isHoveringTarget[slot] = false;
+            return;
+        }
+
+        // Which target they're on is worked out here since each screen's list of targets is different.
+        // It gives their cursor the same bobbing and fanning out as a local one.
+        Vector2 reported = GetRemoteCursorScreenPosition(slot);
+        int closest = FindClosestSelectableIndex(reported);
+        bool onTarget = closest >= 0 && Vector2.Distance(GetPreferredScreenPosition(uiTargets[closest]), reported) <= cursorHoverThreshold;
+
+        currentTargetIndex[slot] = onTarget ? closest : -1;
+        desiredScreenPositions[slot] = onTarget ? GetPreferredScreenPosition(uiTargets[closest]) : reported;
+        MoveCursorToDesiredPosition(slot, cursor);
+    }
+
+    private Vector2 GetRemoteCursorScreenPosition(int slot)
+    {
+        return new Vector2(remoteCursorFractions[slot].x * Screen.width, remoteCursorFractions[slot].y * Screen.height);
+    }
+
+    // Called with the latest position of a player's cursor, which includes this player's own.
+    public void SetRemoteCursor(int slot, Vector2 screenFraction)
+    {
+        if (!isOnline || slot == localOnlineSlot || slot >= remoteCursorFractions.Length) return;
+
+        remoteCursorFractions[slot] = screenFraction;
+
+        // Start out where they are, instead of gliding over from the middle of the screen
+        if (!remoteCursorKnown[slot])
+        {
+            remoteCursorKnown[slot] = true;
+            playerInputStates[slot].cursorPosition = GetRemoteCursorScreenPosition(slot);
+        }
+    }
+
+    // This keeps sending even when the cursor is still, since any one of these could get lost
+    private void SendLocalCursor()
+    {
+        if (localOnlineSlot < 0 || Time.time < nextCursorSendTime) return;
+
+        StartNetworkedLobbyForNumPlayers lobby = StartNetworkedLobbyForNumPlayers.Instance;
+        if (lobby == null || !lobby.IsSpawned) return;
+
+        nextCursorSendTime = Time.time + cursorSendInterval;
+
+        Vector2 position = playerInputStates[localOnlineSlot].cursorPosition;
+        lobby.SendCursorRpc(new Vector2(position.x / Screen.width, position.y / Screen.height));
+    }
+
+    private void MoveCursorToDesiredPosition(int playerIndex, Transform cursor)
+    {
+        PlayerInputState state = playerInputStates[playerIndex];
+        int tidx = currentTargetIndex[playerIndex];
+
+        // Smoothly interpolate the internal cursor screen position toward the desired position
         float t = Mathf.Clamp01(Time.deltaTime / Mathf.Max(0.0001f, cursorMoveSmoothTime));
         state.cursorPosition = Vector2.Lerp(state.cursorPosition, desiredScreenPositions[playerIndex], t);
 
         // Check hovering threshold (close enough to snap into hover state)
-        float hoverThreshold = 10f;
         float dist = Vector2.Distance(state.cursorPosition, desiredScreenPositions[playerIndex]);
-        isHoveringTarget[playerIndex] = (tidx >= 0 && dist <= hoverThreshold);
+        isHoveringTarget[playerIndex] = (tidx >= 0 && dist <= cursorHoverThreshold);
 
         Vector2 finalScreenPos = state.cursorPosition;
 
@@ -829,7 +1009,7 @@ public class CharacterSelectManager : MonoBehaviour
     }
 
     // Cursor press animation
-    // Triggers the shrink → bounce animation for a player's cursor.
+    // Triggers the shrink and bounce animation for a player's cursor.
     private void PlayCursorPressAnimation(int playerIndex)
     {
         if (playerIndex < 0 || playerIndex >= playerCursors.Count) return;
@@ -852,7 +1032,7 @@ public class CharacterSelectManager : MonoBehaviour
         Vector3 baseScale = cursorBaseScales[playerIndex];
         Vector3 pressedScale = baseScale * cursorPressScale;
 
-        // Phase 1 — shrink down to cursorPressScale * base scale
+        // Phase 1: shrink down to cursorPressScale * base scale
         float elapsed = 0f;
         while (elapsed < cursorShrinkDuration)
         {
@@ -863,7 +1043,7 @@ public class CharacterSelectManager : MonoBehaviour
         }
         cursor.localScale = pressedScale;
 
-        // Phase 2 — bounce back, briefly overshooting base scale before settling
+        // Phase 2: bounce back, briefly overshooting base scale before settling
         elapsed = 0f;
         while (elapsed < cursorBounceDuration)
         {
@@ -912,37 +1092,55 @@ public class CharacterSelectManager : MonoBehaviour
         }
     }
 
-    private void UpdateMouseHoverSound(int playerIndex, Vector2 screenPosition)
+    // Points the player at whatever target is under the mouse, which is what a click then presses. The EventSystem's
+    // input module is off in this scene, so this also gives the target its highlight.
+    private void UpdateMouseHover(int playerIndex, Vector2 screenPosition)
     {
-        if (EventSystem.current == null) return;
+        // Only a cursor snapped onto a target bobs and fans out from the others
+        isHoveringTarget[playerIndex] = false;
 
-        PointerEventData pointerData = new(EventSystem.current) { position = screenPosition };
-        List<RaycastResult> results = new();
-        EventSystem.current.RaycastAll(pointerData, results);
+        int hovered = FindTargetUnderPointer(screenPosition);
+        if (hovered == currentTargetIndex[playerIndex]) return;
 
-        GameObject hoveredElement = null;
-        foreach (RaycastResult result in results)
+        currentTargetIndex[playerIndex] = hovered;
+        currentSelectable[playerIndex] = hovered >= 0 && hovered < uiSelectables.Count ? uiSelectables[hovered] : null;
+        if (hovered < 0) return;
+
+        desiredScreenPositions[playerIndex] = GetPreferredScreenPosition(uiTargets[hovered]);
+        if (EventSystem.current != null && currentSelectable[playerIndex] != null)
+            EventSystem.current.SetSelectedGameObject(currentSelectable[playerIndex].gameObject);
+        AudioManager.PlayButtonHoverSound();
+    }
+
+    // The uiTargets index of what's under a screen position, or -1 if there's nothing there
+    private int FindTargetUnderPointer(Vector2 screenPosition)
+    {
+        if (EventSystem.current != null)
         {
-            if (result.gameObject.GetComponentInParent<BirdSelectButton>() != null)
-            {
-                hoveredElement = result.gameObject.GetComponentInParent<BirdSelectButton>().gameObject;
-                break;
-            }
+            PointerEventData pointerData = new(EventSystem.current) { position = screenPosition };
+            List<RaycastResult> results = new();
+            EventSystem.current.RaycastAll(pointerData, results);
 
-            Button button = result.gameObject.GetComponentInParent<Button>();
-            if (button != null && button.interactable)
+            // The first thing hit that's part of a target, going from the top down
+            foreach (RaycastResult result in results)
             {
-                hoveredElement = button.gameObject;
-                break;
+                for (Transform t = result.gameObject.transform; t != null; t = t.parent)
+                {
+                    int index = FindTargetIndexForGameObject(t.gameObject);
+                    if (index >= 0) return index;
+                }
             }
         }
 
-        if (hoveredElement != hoveredUIElements[playerIndex])
+        // Targets with nothing on them that can be hit by a raycast
+        for (int i = 0; i < uiTargets.Count; ++i)
         {
-            hoveredUIElements[playerIndex] = hoveredElement;
-            if (hoveredElement != null)
-                AudioManager.PlayButtonHoverSound();
+            if (uiTargets[i] != null && uiTargets[i].gameObject.activeInHierarchy
+                && RectTransformUtility.RectangleContainsScreenPoint(uiTargets[i], screenPosition, mainCanvas.worldCamera))
+                return i;
         }
+
+        return -1;
     }
 
     private bool TryActivateTargetAtIndex(int index, int playerIndex)
@@ -1049,6 +1247,13 @@ public class CharacterSelectManager : MonoBehaviour
         if (playerIndex < 0 || playerIndex >= chosenBirdIndices.Count) return;
         if (birdIndex < 0 || birdIndex >= availableBirds.Count) return;
 
+        if (isOnline)
+        {
+            // The card updates once the host has it, the same way everyone else sees it
+            StartNetworkedLobbyForNumPlayers.Instance.PickBirdRpc(availableBirds[birdIndex]);
+            return;
+        }
+
         chosenBirdIndices[playerIndex] = birdIndex;
         playerReady[playerIndex] = true;
         UpdatePlayerReadyUI(playerIndex);
@@ -1059,6 +1264,8 @@ public class CharacterSelectManager : MonoBehaviour
 
     private void CheckAllPlayersReady()
     {
+        if (isOnline) return;
+
         bool all = true;
         for (int i = 0; i < playerReady.Count; ++i)
         {
@@ -1148,7 +1355,7 @@ public class CharacterSelectManager : MonoBehaviour
 
         Vector3 originalScale = iconRect.localScale;
 
-        // Phase 1 — shrink down
+        // Phase 1: shrink down
         float elapsed = 0f;
         while (elapsed < iconShrinkDuration)
         {
@@ -1160,7 +1367,7 @@ public class CharacterSelectManager : MonoBehaviour
         }
         iconRect.localScale = originalScale * iconPressScale;
 
-        // Phase 2 — bounce back with overshoot
+        // Phase 2: bounce back with overshoot
         // sin(t * π) peaks at t = 0.5, giving a smooth overshoot arc
         elapsed = 0f;
         while (elapsed < iconBounceDuration)
@@ -1332,6 +1539,12 @@ public class CharacterSelectManager : MonoBehaviour
 
     public void BeginMatch()
     {
+        if (isOnline)
+        {
+            StartNetworkedLobbyForNumPlayers.Instance.RequestStartMatchRpc();
+            return;
+        }
+
         // Ensure every player has actually chosen a bird before allowing the match to start
         for (int i = 0; i < numberOfPlayers; ++i)
         {
@@ -1349,7 +1562,9 @@ public class CharacterSelectManager : MonoBehaviour
         for (int i = 0; i < numberOfPlayers; ++i)
             DataTransferManager.selectedBirds.Add(GetSelectedBird(i));
 
-        SceneManager.LoadScene(mainSceneName);
+        // Straight to a map if the tutorial has been turned off in Match Settings
+        GameSettings settings = GameSettings.EnsureInstance();
+        SceneManager.LoadScene(settings.ShowTutorial ? mainSceneName : settings.PickMapScene());
     }
 
     public bool IsPlayerReady(int playerIndex)
@@ -1376,6 +1591,12 @@ public class CharacterSelectManager : MonoBehaviour
 
     public void NavigateBackToMainMenu()
     {
+        if (isOnline)
+        {
+            NetworkSession.LeaveToMainMenu();
+            return;
+        }
+
         SceneManager.LoadScene(mainMenuSceneName);
     }
 
@@ -1397,11 +1618,112 @@ public class CharacterSelectManager : MonoBehaviour
         }
     }
 
+    // Online, the lobby's player list decides what each card shows and which one this player controls.
+    // Player numbers can shift if someone leaves, so this is checked rather than set just once.
+    private void UpdateOnlineState()
+    {
+        StartNetworkedLobbyForNumPlayers lobby = StartNetworkedLobbyForNumPlayers.Instance;
+        if (lobby == null || !lobby.IsSpawned) return;
+
+        int localSlot = -1;
+        for (int slot = 0; slot < onlineCardBirds.Length; ++slot)
+        {
+            bool isHuman = slot < lobby.Players.Count;
+            int birdIndex = -1;
+            if (isHuman)
+            {
+                LobbyPlayer player = lobby.Players[slot];
+                if (player.clientId == NetworkManager.Singleton.LocalClientId) localSlot = slot;
+                if (player.ready) birdIndex = availableBirds.IndexOf(player.bird);
+            }
+            else
+            {
+                remoteCursorKnown[slot] = false;
+            }
+
+            if (birdIndex != onlineCardBirds[slot] || isHuman != onlineCardHumans[slot])
+            {
+                onlineCardBirds[slot] = birdIndex;
+                onlineCardHumans[slot] = isHuman;
+                ShowOnlineCard(slot, isHuman, birdIndex);
+            }
+        }
+
+        if (localSlot != localOnlineSlot) SetLocalOnlineSlot(localSlot);
+
+        if (goButton != null) goButton.enabled = lobby.CanStartMatch();
+    }
+
+    private void ShowOnlineCard(int slot, bool isHuman, int birdIndex)
+    {
+        playerReady[slot] = birdIndex >= 0;
+        UpdatePlayerReadyUI(slot);
+
+        if (birdIndex >= 0)
+        {
+            chosenBirdIndices[slot] = birdIndex;
+            UpdatePlayerBirdUI(slot);
+            UpdatePlayerOverlay(slot);
+            return;
+        }
+
+        RawImage icon = GetPlayerIcon(slot);
+        if (icon != null) icon.texture = defaultIconTextures[slot];
+
+        TMP_Text nameText = slot switch
+        {
+            0 => blue1Name,
+            1 => blue2Name,
+            2 => pink1Name,
+            3 => pink2Name,
+            _ => null
+        };
+        if (nameText != null) nameText.text = isHuman ? "???" : "AI";
+    }
+
+    private void SetLocalOnlineSlot(int slot)
+    {
+        if (localOnlineSlot >= 0) playerInputStates[localOnlineSlot].device = null;
+        localOnlineSlot = slot;
+
+        foreach (Transform cursor in playerCursors)
+        {
+            if (cursor != null) Destroy(cursor.gameObject);
+        }
+        CreatePlayerCursors();
+
+        if (slot < 0) return;
+
+        // Starts on a controller if there is one. RefreshPlayerDevice switches to the mouse as soon as it's used.
+        PlayerInputState state = playerInputStates[slot];
+        state.isKBM = Gamepad.all.Count == 0;
+        state.device = state.isKBM ? Keyboard.current : Gamepad.all[0];
+        isKBMInput[slot] = state.isKBM;
+
+        MenuMouse.Release();
+
+        // Only the host's match settings get used, so clients have no need for them
+        if (!NetworkManager.Singleton.IsServer)
+        {
+            if (matchSettings != null && matchSettings.MatchSettingsButtonRef != null)
+                matchSettings.MatchSettingsButtonRef.gameObject.SetActive(false);
+
+            TeamArrangementToggle teamToggle = FindFirstObjectByType<TeamArrangementToggle>();
+            if (teamToggle != null) teamToggle.gameObject.SetActive(false);
+        }
+
+        CollectUITargets();
+        int targetIndex = FindClosestSelectableIndex(new Vector2(Screen.width / 2f, Screen.height / 2f));
+        currentTargetIndex[slot] = targetIndex;
+        currentSelectable[slot] = targetIndex >= 0 ? uiSelectables[targetIndex] : null;
+        if (targetIndex >= 0) desiredScreenPositions[slot] = GetPreferredScreenPosition(uiTargets[targetIndex]);
+    }
+
     // Returns the RectTransform the cursor should visually target for a given
     // Selectable. For Toggles this resolves to the checkbox visual (a child
     // named something like "Background" or "Checkmark") instead of the
-    // Toggle's own root RectTransform, which spans the whole row — checkbox
-    // AND label — and was landing the cursor in the middle of that row,
+    // Toggle's own root RectTransform, which spans the whole row (checkbox
+    // and label) and would land the cursor in the middle of that row,
     // over empty space or the label text rather than the actual tickbox.
     private RectTransform GetCursorTargetRect(Selectable selectable)
     {

@@ -4,18 +4,12 @@ using UnityEngine;
 
 public class HummingbirdNectar : MonoBehaviour
 {
+    // The slow itself is a stat modifier on the bird (see BirdStats), keyed to this nectar. Saving the bird's stats
+    // and putting them back would undo (or bring back) whatever else changed them in the meantime, like a stun.
     private sealed class AffectedBird
     {
-        public CharacterMovement movement;
-        public AIBehavior ai;
         public GameObject vfx;
         public Coroutine lingerCoroutine;
-        public float groundSpeed;
-        public float airSpeed;
-        public float jumpForce;
-        public float aiGroundSpeed;
-        public float aiAirSpeed;
-        public float aiJumpForce;
     }
 
     private readonly Dictionary<GameObject, AffectedBird> affectedBirds = new();
@@ -120,12 +114,12 @@ public class HummingbirdNectar : MonoBehaviour
     {
         if (!affectedBirds.TryGetValue(bird, out AffectedBird affected))
         {
-            affected = CaptureBirdStats(bird);
-            if (affected == null)
+            if (!bird.TryGetComponent(out CharacterMovement _) && !bird.TryGetComponent(out AIBehavior _))
                 return;
 
+            affected = new AffectedBird();
             affectedBirds[bird] = affected;
-            SetReducedStats(affected);
+            BirdStats.Apply(bird, this, new StatModifier { speedAdd = -slowAmount, jumpAdd = -jumpReduction });
             affected.vfx = SpawnBirdVfx(bird);
         }
 
@@ -133,43 +127,6 @@ public class HummingbirdNectar : MonoBehaviour
         {
             StopCoroutine(affected.lingerCoroutine);
             affected.lingerCoroutine = null;
-        }
-    }
-
-    private AffectedBird CaptureBirdStats(GameObject bird)
-    {
-        CharacterMovement movement = bird.GetComponent<CharacterMovement>();
-        AIBehavior ai = bird.GetComponent<AIBehavior>();
-        if (movement == null && ai == null)
-            return null;
-
-        return new AffectedBird
-        {
-            movement = movement,
-            ai = ai,
-            groundSpeed = movement != null ? movement.maxGroundSpeed : 0f,
-            airSpeed = movement != null ? movement.maxAirSpeed : 0f,
-            jumpForce = movement != null ? movement.jumpForce : 0f,
-            aiGroundSpeed = ai != null ? ai.maxGroundSpeed : 0f,
-            aiAirSpeed = ai != null ? ai.maxAirSpeed : 0f,
-            aiJumpForce = ai != null ? ai.jumpForce : 0f
-        };
-    }
-
-    private void SetReducedStats(AffectedBird affected)
-    {
-        if (affected.movement != null)
-        {
-            affected.movement.maxGroundSpeed = Mathf.Max(1f, affected.groundSpeed - slowAmount);
-            affected.movement.maxAirSpeed = Mathf.Max(1f, affected.airSpeed - slowAmount);
-            affected.movement.jumpForce = Mathf.Max(1f, affected.jumpForce - jumpReduction);
-        }
-
-        if (affected.ai != null)
-        {
-            affected.ai.maxGroundSpeed = Mathf.Max(1f, affected.aiGroundSpeed - slowAmount);
-            affected.ai.maxAirSpeed = Mathf.Max(1f, affected.aiAirSpeed - slowAmount);
-            affected.ai.jumpForce = Mathf.Max(1f, affected.aiJumpForce - jumpReduction);
         }
     }
 
@@ -181,19 +138,7 @@ public class HummingbirdNectar : MonoBehaviour
 
     private void RestoreBird(GameObject bird, AffectedBird affected)
     {
-        if (affected.movement != null)
-        {
-            affected.movement.maxGroundSpeed = affected.groundSpeed;
-            affected.movement.maxAirSpeed = affected.airSpeed;
-            affected.movement.jumpForce = affected.jumpForce;
-        }
-
-        if (affected.ai != null)
-        {
-            affected.ai.maxGroundSpeed = affected.aiGroundSpeed;
-            affected.ai.maxAirSpeed = affected.aiAirSpeed;
-            affected.ai.jumpForce = affected.aiJumpForce;
-        }
+        BirdStats.Remove(bird, this);
 
         if (affected.vfx != null)
             Destroy(affected.vfx);
@@ -205,7 +150,7 @@ public class HummingbirdNectar : MonoBehaviour
         if (birdNectarVfxPrefab == null)
             return null;
 
-        return Instantiate(birdNectarVfxPrefab, bird.transform);
+        return NetworkFx.Instantiate(birdNectarVfxPrefab, bird.transform);
     }
 
     private IEnumerator LifetimeRoutine()
@@ -223,13 +168,13 @@ public class HummingbirdNectar : MonoBehaviour
         foreach (Collider collider in GetComponentsInChildren<Collider>(true))
             collider.enabled = false;
 
-        foreach (AffectedBird affected in affectedBirds.Values)
+        foreach (KeyValuePair<GameObject, AffectedBird> entry in affectedBirds)
         {
-            if (affected.lingerCoroutine != null)
-                StopCoroutine(affected.lingerCoroutine);
-            RestoreBirdStats(affected);
-            if (affected.vfx != null)
-                Destroy(affected.vfx);
+            if (entry.Value.lingerCoroutine != null)
+                StopCoroutine(entry.Value.lingerCoroutine);
+            BirdStats.Remove(entry.Key, this);
+            if (entry.Value.vfx != null)
+                Destroy(entry.Value.vfx);
         }
         affectedBirds.Clear();
 
@@ -248,22 +193,6 @@ public class HummingbirdNectar : MonoBehaviour
         }
 
         Destroy(gameObject);
-    }
-
-    private void RestoreBirdStats(AffectedBird affected)
-    {
-        if (affected.movement != null)
-        {
-            affected.movement.maxGroundSpeed = affected.groundSpeed;
-            affected.movement.maxAirSpeed = affected.airSpeed;
-            affected.movement.jumpForce = affected.jumpForce;
-        }
-        if (affected.ai != null)
-        {
-            affected.ai.maxGroundSpeed = affected.aiGroundSpeed;
-            affected.ai.maxAirSpeed = affected.aiAirSpeed;
-            affected.ai.jumpForce = affected.aiJumpForce;
-        }
     }
 
     private static Color GetMaterialColor(Material material)
@@ -288,11 +217,11 @@ public class HummingbirdNectar : MonoBehaviour
         if (lifetimeCoroutine != null)
             StopCoroutine(lifetimeCoroutine);
 
-        foreach (AffectedBird affected in affectedBirds.Values)
+        foreach (KeyValuePair<GameObject, AffectedBird> entry in affectedBirds)
         {
-            RestoreBirdStats(affected);
-            if (affected.vfx != null)
-                Destroy(affected.vfx);
+            BirdStats.Remove(entry.Key, this);
+            if (entry.Value.vfx != null)
+                Destroy(entry.Value.vfx);
         }
         affectedBirds.Clear();
     }

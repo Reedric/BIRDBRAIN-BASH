@@ -26,20 +26,23 @@ public class PenguinOffensive : BirdAbility
     public Material snowballMaterial; // Material to apply to the ball when snowball is active
     private Renderer[] dodgeBallRenderers; // Christofort: grabs the dodgeball's renderer to swap materials
 
-    // New: keep track of the active coroutine so we can actually stop it correctly
+    // Keep track of the active coroutine so it can be stopped
     private Coroutine spawnIceCoroutine;
     private Coroutine iceMaskCoroutine;
     private GameObject iceInstance;
     private GameObject iceMaskInstance;
     private GameObject snowballTrackInstance;
 
+    private const int snowballMaterialEvent = 0;
+    private const int normalMaterialEvent = 1;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    IEnumerator Start()
     {
         ballInteraction = GetComponent<BallInteract>();
 
-        // Subscribe to ball collision event if ballManager is available
-        // BallManager.Instance.onBallCollision += checkNetCollision;
+        // Wait for the BallManager to be instantiated (you cannot slide before the game starts anyway, so should be enough time before first call)
+        while (BallManager.Instance == null) yield return null;
 
         // Christofort: grab all renderers on the dodgeball object and its children
         dodgeBallRenderers = BallManager.Instance.gameObject.GetComponentsInChildren<Renderer>();
@@ -53,7 +56,10 @@ public class PenguinOffensive : BirdAbility
         if (iceInstance != null)
         {
             iceTimer -= Time.deltaTime;
-            if (iceTimer <= 0)
+
+            // The ice also goes when the point ends. It lasts longer than the wait before the next serve,
+            // so birds would be left sliding around on it while getting set up for the next point.
+            if (iceTimer <= 0 || GameManager.Instance.gameState == GameManager.GameState.PointEnd)
             {
                 EndSnowBall();
                 Debug.Log("On cooldown", this);
@@ -77,14 +83,14 @@ public class PenguinOffensive : BirdAbility
 
         iceMode = true;
         usingSnowBall = true;
-        iceSpawned = false; // New: reset spawn flag every time the ability starts
-        // hitNet = false; // New: reset net flag every time the ability starts
+        iceSpawned = false; // reset spawn flag every time the ability starts
+        // hitNet = false; // reset net flag every time the ability starts
         iceTimer = iceLength;
 
         // The ball has already been spiked by BallInteract; attach the snowball trail now.
         CreateSnowballTrackEffect();
 
-        // New: stop any old coroutine before starting a new one
+        // stop any old coroutine before starting a new one
         if (spawnIceCoroutine != null)
         {
             StopCoroutine(spawnIceCoroutine);
@@ -98,9 +104,9 @@ public class PenguinOffensive : BirdAbility
         // Christofort: swap the dodgeball's material to the snowball material
         ApplySnowballMaterial();
 
-        // Do not permanently consume the cooldown yet.
-        // The cooldown will begin only if the enemy actually bumps the snowball
-        // and the ice successfully spawns.
+        // Don't start the cooldown yet.
+        // It only starts if the enemy bumps the snowball
+        // and the ice spawns.
         return true;
     }
 
@@ -119,12 +125,20 @@ public class PenguinOffensive : BirdAbility
         if (ballObj == null)
             return;
 
-        snowballTrackInstance = Instantiate(snowballTrackPrefab, ballObj.transform.position, Quaternion.identity);
-        snowballTrackInstance.transform.SetParent(ballObj.transform, true);
+        snowballTrackInstance = NetworkFx.Instantiate(snowballTrackPrefab, ballObj.transform.position, Quaternion.identity, ballObj.transform);
+    }
+
+    // Sent to clients: the ball's material isn't something that gets synced on its own
+    public override void OnNetworkEvent(int eventId, Vector3 argument)
+    {
+        if (eventId == snowballMaterialEvent) ApplySnowballMaterial();
+        else if (eventId == normalMaterialEvent) RestoreNormalBallMaterial();
     }
 
     void ApplySnowballMaterial()
     {
+        NetworkFx.AbilityEvent(this, snowballMaterialEvent);
+
         // Always refresh renderers before swapping materials
         dodgeBallRenderers = BallManager.Instance.gameObject.GetComponentsInChildren<Renderer>();
 
@@ -193,6 +207,8 @@ public class PenguinOffensive : BirdAbility
 
     void RestoreNormalBallMaterial()
     {
+        NetworkFx.AbilityEvent(this, normalMaterialEvent);
+
         // Always refresh renderers before restoring materials
         dodgeBallRenderers = BallManager.Instance.gameObject.GetComponentsInChildren<Renderer>();
 
@@ -288,7 +304,7 @@ public class PenguinOffensive : BirdAbility
         Vector3 hitterPos = opponent.transform.position;
         Vector3 iceSpawnPos = new Vector3(hitterPos.x, 0, hitterPos.z);
 
-        iceInstance = Instantiate(tempIce, iceSpawnPos, Quaternion.identity);
+        iceInstance = NetworkFx.Instantiate(tempIce, iceSpawnPos, Quaternion.identity);
         PrepareIceForFade(iceInstance);
         StartCoroutine(FadeInIce(iceInstance, iceSpawnFadeTime));
         iceSpawned = true;
@@ -307,7 +323,7 @@ public class PenguinOffensive : BirdAbility
                 iceMaskCoroutine = null;
             }
 
-            iceMaskInstance = Instantiate(iceCircularMaskPrefab, iceInstance.transform);
+            iceMaskInstance = NetworkFx.Instantiate(iceCircularMaskPrefab, iceInstance.transform);
             iceMaskInstance.transform.localPosition = Vector3.zero;
             iceMaskInstance.transform.localRotation = Quaternion.identity;
             iceMaskInstance.transform.localScale = Vector3.zero;
@@ -316,6 +332,11 @@ public class PenguinOffensive : BirdAbility
         }
 
         iceCollider = iceInstance.GetComponent<BoxCollider>();
+
+        // The ball is in the scene, so the prefab can't have it assigned. Without it the
+        // ball could land on the ice instead of the court, which isn't a scoring surface.
+        if (ballCollider == null && BallManager.Instance != null)
+            ballCollider = BallManager.Instance.GetComponentInChildren<Collider>();
 
         if (ballCollider != null && iceCollider != null)
             Physics.IgnoreCollision(ballCollider, iceCollider, true);
@@ -333,11 +354,11 @@ public class PenguinOffensive : BirdAbility
         // play a ground particle effect attached to the ice while it exists
         if (iceSpawnBurstPrefab != null)
         {
-            GameObject burstInstance = Instantiate(iceSpawnBurstPrefab, iceInstance.transform);
+            GameObject burstInstance = NetworkFx.Instantiate(iceSpawnBurstPrefab, iceInstance.transform);
             burstInstance.transform.localPosition = Vector3.zero;
         }
 
-        // The ability has successfully triggered, so NOW start its cooldown.
+        // The ability triggered, so start its cooldown now.
         StartCooldown(_cooldownTime);
 
         int playerID = GetComponent<BallInteract>().playerID;
@@ -349,6 +370,16 @@ public class PenguinOffensive : BirdAbility
                 _cooldownTime
             );
         }
+    }
+
+    // If the penguin gets switched off while its snowball is in the air (Phoenix turning it into a chicken), the
+    // coroutine watching the ball stops, and the ability could never be used again
+    void OnDisable()
+    {
+        if (!usingSnowBall || iceInstance != null) return;
+
+        if (BallManager.Instance != null && gameObject.scene.isLoaded) CancelSnowballAndRefund();
+        else usingSnowBall = false;
     }
 
     void CancelSnowballAndRefund()
@@ -394,7 +425,7 @@ public class PenguinOffensive : BirdAbility
 
         RestoreNormalBallMaterial();
 
-        // Explicitly refund the ability.
+        // Refund the ability.
         _cooldownRemaining = 0f;
     }
 
@@ -655,7 +686,7 @@ public class PenguinOffensive : BirdAbility
     }
 
     // COMMENTED OUT BC IT DOES NOT ADD ANYTHING LOGICALLY TO THE SCRIPT
-    // // New: optional net catch in case the ball hits the net first
+    // // optional net catch in case the ball hits the net first
     // void checkNetCollision(Collision colInfo)
     // {
     //     if (!usingSnowBall || colInfo == null)

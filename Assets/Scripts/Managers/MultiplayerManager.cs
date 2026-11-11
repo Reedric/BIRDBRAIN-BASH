@@ -6,8 +6,29 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using UnityEngine.InputSystem.Users;
+using Unity.Netcode.Components;
+using Unity.Netcode;
 
-public class MultiplayerManager : MonoBehaviour
+/// <summary>
+/// What clients need to know about each bird in an online match.
+/// </summary>
+public struct OnlineRosterEntry : INetworkSerializable
+{
+    public NetworkObjectReference bird;
+    public BirdType birdType;
+    public bool onLeft;
+    public bool isAI;
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref bird);
+        serializer.SerializeValue(ref birdType);
+        serializer.SerializeValue(ref onLeft);
+        serializer.SerializeValue(ref isAI);
+    }
+}
+
+public class MultiplayerManager : NetworkBehaviour
 {
     [Header("Player Transforms")]
     public Transform[] playerSpawnpoints; // Spawnpoints that the players and AI will use
@@ -24,7 +45,7 @@ public class MultiplayerManager : MonoBehaviour
     private List<BirdType> selectedBirds; // List of birds each player selected
 
     // True when the match was launched from the main menu Demo button (0 human players).
-    // Detected by an empty isKBMInput list — all 4 slots are Hard AI, but player 1's
+    // Detected by an empty isKBMInput list. All 4 slots are Hard AI, but player 1's
     // gamepad can still open the pause menu so the demo can be exited.
     private bool isDemoMode = false;
 
@@ -34,6 +55,12 @@ public class MultiplayerManager : MonoBehaviour
     // HUDManager.Instance is null during Awake() because script execution order isn't guaranteed.
     // We store pending AI registrations here and flush them in Start() once HUDManager exists.
     private List<(int playerIndex, BirdType birdType)> pendingAIRegistrations = new();
+
+    // Online: how long to wait for clients to load the match scene before starting without them
+    private const float clientLoadTimeout = 120f;
+
+    // Online: the bird in each player slot, sent to clients once they have all been spawned
+    private readonly OnlineRosterEntry[] onlineRoster = new OnlineRosterEntry[4];
 
     void Awake()
     {
@@ -49,26 +76,34 @@ public class MultiplayerManager : MonoBehaviour
             // DontDestroyOnLoad(gameObject);
         }
 
+        // Debug.Log("Getting character manager...");
         cManager = GetComponent<CharacterManager>();
-        instance.isKBMInput = DataTransferManager.isKBMInput;
-        instance.selectedBirds = DataTransferManager.selectedBirds;
-
-        // An empty isKBMInput list means the demo button was pressed — no human players
-        isDemoMode = (isKBMInput == null || isKBMInput.Count == 0);
 
         // Subscribe to device changes to handle disconnects and reconnects
         InputSystem.onDeviceChange += OnDeviceChange;
-
-        InitializePlayers();
     }
 
     void Start()
     {
-        // Hide player ready indicators
-        foreach (RawImage indicator in playerIndicators)
+        // Online matches get their players from the lobby, and only the host sets them up
+        if (!DataTransferManager.isLocal)
         {
-            indicator.enabled = false;
+            HidePlayerIndicators();
+            if (NetworkSession.IsServer) StartCoroutine(InitializeOnlinePlayers());
+            return;
         }
+
+        instance.isKBMInput = DataTransferManager.isKBMInput;
+        instance.selectedBirds = DataTransferManager.selectedBirds;
+
+        // An empty isKBMInput list means the demo button was pressed (no human players)
+        isDemoMode = (isKBMInput == null || isKBMInput.Count == 0);
+
+        // Initialize the players
+        InitializePlayers();
+
+        // Hide player ready indicators
+        HidePlayerIndicators();
 
         // Flush deferred AI card registrations now that HUDManager.Instance is guaranteed to exist.
         // MakeAI() stores registrations here instead of calling HUDManager directly during Awake(),
@@ -85,12 +120,17 @@ public class MultiplayerManager : MonoBehaviour
         // In demo mode there are no PlayerInput instances, so the normal input pipeline won't
         // route any button presses. Poll player 1's gamepad directly here so they can still
         // open the pause menu to exit the demo without quitting the whole application.
-        if (!isDemoMode) return;
+        if (!isDemoMode)
+        {
+            if (DataTransferManager.isLocal) SyncPlayerDevices();
+            return;
+        }
 
-        Gamepad pad = Gamepad.all.Count > 0 ? Gamepad.all[0] : null;
-        if (pad == null) return;
+        // Any controller's start button or the keyboard's escape, so there's always a way out of the demo.
+        bool pausePressed = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            || Gamepad.all.Any(pad => pad.startButton.wasPressedThisFrame);
 
-        if (pad.startButton.wasPressedThisFrame)
+        if (pausePressed)
         {
             // Player 1's gamepad (Gamepad.all[0]) always owns the pause menu in demo mode
             PauseMenu.Instance.pausedPlayerID = 0;
@@ -101,10 +141,186 @@ public class MultiplayerManager : MonoBehaviour
         }
     }
 
-    void OnDestroy()
+    // Gives each local player's bird exactly the devices LocalPlayerDevices says are theirs, so they can switch
+    // between keyboard and controller (or pick up a new controller) at any point in the match, including while
+    // paused. Checked every frame, since Phoenix's chickens and birds coming back from being one get new PlayerInputs.
+    private static void SyncPlayerDevices()
+    {
+        foreach (PlayerInput input in PlayerInput.all)
+        {
+            if (!input.user.valid || !input.TryGetComponent(out BallInteract ballInteract)) continue;
+
+            int slot = ballInteract.playerID;
+            if (slot < 0 || slot >= 4) continue;
+
+            List<InputDevice> wanted = LocalPlayerDevices.DevicesFor(slot);
+
+            foreach (InputDevice device in input.user.pairedDevices.ToArray())
+            {
+                if (!wanted.Contains(device)) input.user.UnpairDevice(device);
+            }
+
+            foreach (InputDevice device in wanted)
+            {
+                if (!input.user.pairedDevices.Contains(device)) InputUser.PerformPairingWithDevice(device, input.user);
+            }
+
+            // A control scheme only lets through the bindings for its own devices (keyboard or gamepad), which would
+            // stop the other one working. Only the player's paired devices can reach their actions anyway.
+            if (input.actions != null && input.actions.bindingMask.HasValue) input.actions.bindingMask = null;
+        }
+    }
+
+    public override void OnDestroy()
     {
         // Always unsubscribe to avoid stale callbacks after scene unload
         InputSystem.onDeviceChange -= OnDeviceChange;
+        base.OnDestroy();
+    }
+
+    private void HidePlayerIndicators()
+    {
+        foreach (RawImage indicator in playerIndicators)
+        {
+            indicator.enabled = false;
+        }
+    }
+
+    // Online players
+
+    // Host only. Waits for everyone to load, then spawns a bird for each player in the lobby and AI for
+    // the rest of the slots. Spawning them through NGO is what makes them exist on the clients.
+    private IEnumerator InitializeOnlinePlayers()
+    {
+        float elapsed = 0f;
+        while (!NetworkSession.MatchSceneLoaded && elapsed < clientLoadTimeout)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        List<LobbyPlayer> lobbyPlayers = DataTransferManager.onlineRoster ?? new List<LobbyPlayer>();
+
+        // Everyone online counts as a controller player for AI difficulty purposes
+        isKBMInput = new List<bool>();
+        selectedBirds = new List<BirdType>();
+        foreach (LobbyPlayer lobbyPlayer in lobbyPlayers)
+        {
+            isKBMInput.Add(false);
+            selectedBirds.Add(lobbyPlayer.bird);
+        }
+
+        ScoreManager.Instance.readiedUp = new bool[4];
+
+        for (int playerIndex = 0; playerIndex < 4; ++playerIndex)
+        {
+            if (playerIndex < lobbyPlayers.Count) SpawnOnlinePlayer(playerIndex, lobbyPlayers[playerIndex].clientId);
+            else MakeAI(playerIndex);
+        }
+
+        ApplyRosterRpc(onlineRoster, GameSettings.EnsureInstance().CurrentTeamArrangement);
+        NetworkFx.StartCountdownEverywhere();
+    }
+
+    private void SpawnOnlinePlayer(int playerIndex, ulong clientId)
+    {
+        BirdType type = selectedBirds[playerIndex];
+        if (type == BirdType.OTHER)
+        {
+            type = (BirdType)UnityEngine.Random.Range(0, (int)BirdType.OTHER);
+            selectedBirds[playerIndex] = type;
+        }
+
+        GameObject bird = Instantiate(GetBirdModel(type, true, false));
+        int spawnSlot = GetSpawnSlot(playerIndex);
+
+        // Place the bird before spawning it so clients don't see it slide over from somewhere else
+        bird.transform.SetPositionAndRotation(playerSpawnpoints[spawnSlot].position, playerSpawnpoints[spawnSlot].rotation);
+
+        // If this player leaves, keep their bird on the court so the match can continue
+        NetworkObject netObj = bird.GetComponent<NetworkObject>();
+        netObj.DontDestroyWithOwner = true;
+        netObj.SpawnAsPlayerObject(clientId, true);
+
+        MakePlayer(bird, playerIndex);
+
+        onlineRoster[playerIndex] = new OnlineRosterEntry
+        {
+            bird = netObj,
+            birdType = type,
+            onLeft = spawnSlot < 2,
+            isAI = false
+        };
+    }
+
+    // Everything about the birds that clients need but can't work out on their own. Also used by the
+    // host, since it fills in the HUD the same way.
+    [Rpc(SendTo.ClientsAndHost)]
+    private void ApplyRosterRpc(OnlineRosterEntry[] roster, GameSettings.TeamArrangement teamArrangement)
+    {
+        GameSettings.EnsureInstance().CurrentTeamArrangement = teamArrangement;
+        StartCoroutine(ApplyRoster(roster));
+    }
+
+    private IEnumerator ApplyRoster(OnlineRosterEntry[] roster)
+    {
+        // The birds were spawned just before this message was sent, but wait for them to exist to be safe
+        NetworkObject[] birds = new NetworkObject[roster.Length];
+        float elapsed = 0f;
+        while (elapsed < clientLoadTimeout)
+        {
+            bool allFound = true;
+            for (int i = 0; i < roster.Length; ++i)
+                allFound &= roster[i].bird.TryGet(out birds[i]);
+
+            if (allFound) break;
+
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        // HUDManager.RefreshPlayerCard reads this list for every card in an online match
+        DataTransferManager.selectedBirds = new List<BirdType>();
+        foreach (OnlineRosterEntry entry in roster)
+            DataTransferManager.selectedBirds.Add(entry.birdType);
+
+        for (int playerIndex = 0; playerIndex < roster.Length; ++playerIndex)
+        {
+            OnlineRosterEntry entry = roster[playerIndex];
+            HUDManager.Instance?.RegisterAICard(playerIndex, entry.birdType);
+
+            NetworkObject bird = birds[playerIndex];
+            if (IsServer || bird == null) continue;
+
+            bird.name = entry.isAI ? $"AI {playerIndex + 1}" : $"Player {playerIndex + 1}";
+
+            if (bird.TryGetComponent(out BallInteract ballInteract))
+            {
+                ballInteract.playerID = playerIndex;
+                ballInteract.onLeft = entry.onLeft;
+            }
+
+            if (bird.TryGetComponent(out AIBehavior aiBehavior))
+                aiBehavior.SetIdentity(entry.onLeft, playerIndex);
+
+            FollowObject follower = GetFollowObjectForPlayerIndex(playerIndex);
+            if (follower != null) follower.target = bird.transform;
+        }
+
+        HUDManager.Instance?.UpdateTeamCardBackgrounds();
+    }
+
+    // Lights up a player's ready indicator on the end screen for clients.
+    public static void ShowReadyIndicatorOnClients(int playerIndex)
+    {
+        if (NetworkSession.IsServer && instance != null) instance.ShowReadyIndicatorRpc(playerIndex);
+    }
+
+    [Rpc(SendTo.NotServer)]
+    private void ShowReadyIndicatorRpc(int playerIndex)
+    {
+        if (playerIndex >= 0 && playerIndex < playerIndicators.Length)
+            playerIndicators[playerIndex].enabled = true;
     }
 
     // Handles controller disconnect and reconnect events
@@ -120,8 +336,8 @@ public class MultiplayerManager : MonoBehaviour
                 break;
 
             case InputDeviceChange.Reconnected:
+                // LocalPlayerDevices hands it back to its player the first time it's used, and SyncPlayerDevices pairs it
                 Debug.Log($"[MultiplayerManager] Gamepad reconnected: {gamepad.displayName}");
-                TryRepairGamepad(gamepad);
                 break;
         }
     }
@@ -144,6 +360,12 @@ public class MultiplayerManager : MonoBehaviour
     void InitializePlayers()
     {
         int playerCount = 0;
+
+        // One entry for each slot. MakeAI marks the AI slots as already ready.
+        ScoreManager.Instance.readiedUp = new bool[4];
+
+        // Keeps the controllers players had in character select
+        if (!isDemoMode) LocalPlayerDevices.Configure(isKBMInput);
 
         // In demo mode isKBMInput is empty, so this loop is skipped entirely and
         // all four slots fall through to the MakeAI loop below.
@@ -173,11 +395,11 @@ public class MultiplayerManager : MonoBehaviour
             }
             else
             {
-                // Controller init can fail if no pad is connected yet — handle gracefully
+                // Controller init can fail if no pad is connected yet
                 player = InitializeControllerPlayer(birdPrefab, playerCount);
             }
 
-            // Guard: if player failed to initialize (e.g. no controller found), skip safely
+            // If the player failed to initialize (e.g. no controller found), skip them
             if (player == null)
             {
                 Debug.LogError($"[MultiplayerManager] Failed to initialize player {playerCount + 1} — skipping.");
@@ -196,11 +418,8 @@ public class MultiplayerManager : MonoBehaviour
             // Increment player count
             playerCount++;
 
-            // Debug.Log("Made player");
+            Debug.Log("Made player");
         }
-
-        // Instantiate readied up for score manager
-        ScoreManager.Instance.readiedUp = new bool[playerCount];
 
         // Now add AI players, if necessary.
         // In demo mode playerCount starts at 0, so all four slots are filled with AI here.
@@ -228,18 +447,20 @@ public class MultiplayerManager : MonoBehaviour
         );
     }
 
-    // Now takes playerCount for logging, and starts a retry coroutine if no pad is found
+    // Takes playerCount for logging, and starts a retry coroutine if no pad is found
     PlayerInput InitializeControllerPlayer(GameObject prefab, int playerCount)
     {
-        // Get an available gamepad if possible
-        Gamepad controller = AvailableGamepad();
+        // The controller this player had in character select, if any
+        // (Not just any free one: Configure already handed those out, so a free one here would be another player's)
+        Gamepad controller = LocalPlayerDevices.GetGamepad(playerCount);
 
-        // If there is no available gamepad, start a wait coroutine instead of hard erroring
+        // With no controller, the bird is still made straight away, and the player gets the next controller anyone
+        // presses (see LocalPlayerDevices). Waiting for one would leave the match a player short, which it can't
+        // start without.
         if (controller == null)
         {
-            Debug.LogWarning($"[MultiplayerManager] No available gamepad for Player {playerCount + 1}. Starting wait coroutine.");
-            StartCoroutine(WaitForControllerAndInitialize(prefab, playerCount));
-            return null;
+            Debug.LogWarning($"[MultiplayerManager] No controller for Player {playerCount + 1} yet. Press any button on one to take control.");
+            return PlayerInput.Instantiate(prefab, playerIndex: playerCount);
         }
 
         // Initialize the controller player
@@ -385,17 +606,21 @@ public class MultiplayerManager : MonoBehaviour
     {
         GameManager gameManager = GameManager.Instance;
 
-        // --------------------------------------------------------
-        // DETERMINE PHYSICAL SPAWN SLOT
-        // --------------------------------------------------------
+        // Local or online multiplayer components
+        if (GameManager.Instance.isLocal)
+        {
+            // Not every prefab has these. The KBM birds never go online, for example.
+            if (player.TryGetComponent(out NetworkTransform networkTransform)) networkTransform.enabled = false;
+            if (player.TryGetComponent(out PlayerNetworkController networkController)) networkController.enabled = false;
+        }
+
+        // Determine physical spawn slot
 
         int spawnSlot = GetSpawnSlot(playerIndex);
 
         bool onLeft = spawnSlot < 2;
 
-        // --------------------------------------------------------
-        // BALL INTERACTION
-        // --------------------------------------------------------
+        // Ball interaction
 
         BallInteract ballInteract = player.GetComponent<BallInteract>();
 
@@ -404,14 +629,12 @@ public class MultiplayerManager : MonoBehaviour
             // Player ID remains their actual player number.
             ballInteract.playerID = playerIndex;
 
-            // Court side is based on the TEAM ARRANGEMENT,
+            // Court side is based on the team arrangement,
             // not simply whether playerIndex < 2.
             ballInteract.onLeft = onLeft;
         }
 
-        // --------------------------------------------------------
-        // SPAWN
-        // --------------------------------------------------------
+        // Spawn
 
         if (spawnSlot < 0 || spawnSlot >= playerSpawnpoints.Length)
         {
@@ -432,9 +655,7 @@ public class MultiplayerManager : MonoBehaviour
         player.transform.name =
             $"Player {playerIndex + 1}";
 
-        // --------------------------------------------------------
-        // FOLLOW OBJECT
-        // --------------------------------------------------------
+        // Follow object
 
         // Followers are keyed to the player's own number (color-coded per
         // player), not to the physical spawn slot, so they stay correct
@@ -453,9 +674,7 @@ public class MultiplayerManager : MonoBehaviour
 
         fo.target = player.transform;
 
-        // --------------------------------------------------------
-        // GAME MANAGER TEAM ASSIGNMENT
-        // --------------------------------------------------------
+        // Game manager team assignment
 
         if (onLeft)
         {
@@ -478,9 +697,7 @@ public class MultiplayerManager : MonoBehaviour
                 gameManager.rightPlayer2 = player.gameObject;
         }
 
-        // --------------------------------------------------------
-        // READY INDICATOR
-        // --------------------------------------------------------
+        // Ready indicator
 
         EndScreen endScreen = player.GetComponent<EndScreen>();
 
@@ -495,9 +712,7 @@ public class MultiplayerManager : MonoBehaviour
 
     void MakeAI(int playerIndex)
     {
-        // --------------------------------------------------------
-        // RANDOM BIRD
-        // --------------------------------------------------------
+        // Random bird
 
         BirdType birdType =
             (BirdType)(int)(UnityEngine.Random.value * 11);
@@ -507,11 +722,12 @@ public class MultiplayerManager : MonoBehaviour
 
         // Fallback if AI model does not exist.
         if (aiModel == null)
+        {
             aiModel = cManager.PenguinAI;
+            birdType = BirdType.PENGUIN;
+        }
 
-        // --------------------------------------------------------
-        // CREATE AI
-        // --------------------------------------------------------
+        // Create AI
 
         GameObject ai = Instantiate(aiModel);
 
@@ -531,9 +747,7 @@ public class MultiplayerManager : MonoBehaviour
             return;
         }
 
-        // --------------------------------------------------------
-        // DETERMINE PHYSICAL SPAWN SLOT
-        // --------------------------------------------------------
+        // Determine physical spawn slot
 
         int spawnSlot = GetSpawnSlot(playerIndex);
 
@@ -542,9 +756,7 @@ public class MultiplayerManager : MonoBehaviour
         aiBehavior.onLeft = onLeft;
         aiBehavior.playerID = playerIndex;
 
-    // --------------------------------------------------------
-    // DIFFICULTY
-    // --------------------------------------------------------
+    // Difficulty
 
     int humanCount =
         isKBMInput.Count(kbm => !kbm);
@@ -572,9 +784,7 @@ public class MultiplayerManager : MonoBehaviour
 
     aiBehavior.SetAIDifficulty(difficulty);
 
-        // --------------------------------------------------------
-        // SPAWN
-        // --------------------------------------------------------
+        // Spawn
 
         if (spawnSlot < 0 ||
             spawnSlot >= playerSpawnpoints.Length)
@@ -597,9 +807,29 @@ public class MultiplayerManager : MonoBehaviour
         ai.transform.name =
             $"AI {playerIndex + 1}";
 
-        // --------------------------------------------------------
-        // FOLLOW OBJECT
-        // --------------------------------------------------------
+        // AI never needs to ready up on the end screen
+        ScoreManager.Instance.readiedUp[spawnSlot] = true;
+
+        if (DataTransferManager.isLocal)
+        {
+            if (ai.TryGetComponent(out NetworkTransform networkTransform)) networkTransform.enabled = false;
+        }
+        else
+        {
+            // Must happen before GameManager is told about this bird, since it stores the network id
+            NetworkObject netObj = ai.GetComponent<NetworkObject>();
+            netObj.Spawn(true);
+
+            onlineRoster[playerIndex] = new OnlineRosterEntry
+            {
+                bird = netObj,
+                birdType = birdType,
+                onLeft = onLeft,
+                isAI = true
+            };
+        }
+
+        // Follow object
 
         // Followers are keyed to the player's own number (color-coded per
         // player), not to the physical spawn slot, so they stay correct
@@ -610,9 +840,7 @@ public class MultiplayerManager : MonoBehaviour
         if (fo != null)
             fo.target = ai.transform;
 
-        // --------------------------------------------------------
-        // GAME MANAGER TEAM ASSIGNMENT
-        // --------------------------------------------------------
+        // Game manager team assignment
 
         GameManager gameManager =
             GameManager.Instance;
@@ -632,18 +860,18 @@ public class MultiplayerManager : MonoBehaviour
                 gameManager.rightPlayer2 = ai;
         }
 
-        // --------------------------------------------------------
-        // HUD REGISTRATION
-        // --------------------------------------------------------
+        // HUD registration
 
-        pendingAIRegistrations.Add(
-            (playerIndex, birdType)
-        );
+        // Online, the roster fills in every card instead
+        if (DataTransferManager.isLocal)
+        {
+            pendingAIRegistrations.Add(
+                (playerIndex, birdType)
+            );
+        }
     }
 
-    // ============================================================
-    // TEAM ARRANGEMENT / SPAWN MAPPING
-    // ============================================================
+    // Team arrangement / spawn mapping
 
     /// <summary>
     /// Returns the physical spawnpoint that a player should use
@@ -667,9 +895,7 @@ public class MultiplayerManager : MonoBehaviour
 
         switch (settings.CurrentTeamArrangement)
         {
-            // ----------------------------------------------------
             // P1 P2 vs P3 P4
-            // ----------------------------------------------------
             case GameSettings.TeamArrangement.P1P2_vs_P3P4:
 
                 switch (playerIndex)
@@ -682,9 +908,7 @@ public class MultiplayerManager : MonoBehaviour
 
                 break;
 
-            // ----------------------------------------------------
             // P1 P3 vs P2 P4
-            // ----------------------------------------------------
             case GameSettings.TeamArrangement.P1P3_vs_P2P4:
 
                 switch (playerIndex)
@@ -697,9 +921,7 @@ public class MultiplayerManager : MonoBehaviour
 
                 break;
 
-            // ----------------------------------------------------
             // P1 P4 vs P2 P3
-            // ----------------------------------------------------
             case GameSettings.TeamArrangement.P1P4_vs_P2P3:
 
                 switch (playerIndex)
@@ -713,7 +935,7 @@ public class MultiplayerManager : MonoBehaviour
                 break;
         }
 
-        // Safety fallback
+        // Fallback
         return Mathf.Clamp(playerIndex, 0, 3);
     }
 

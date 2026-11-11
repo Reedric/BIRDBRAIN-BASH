@@ -51,8 +51,7 @@ public class AIBehavior : MonoBehaviour
     private bool movementDisabled = false;
     private bool abilitiesDisabled = false;
 
-    // Separate flag for silence — does NOT affect CanAct() so the AI can still
-    // move and hit the ball while silenced (abilities only).
+    // Silence is separate from CanAct(), so a silenced AI can still move and hit the ball
     private bool abilitiesSilenced = false;
 
     public enum AIDifficulty
@@ -106,6 +105,53 @@ public class AIBehavior : MonoBehaviour
         {
             return GameManager.Instance.rightPlayer1.Equals(gameObject) ? 2 : 3;
         }
+    }
+
+    // The stats this AI spawned with, so they can be put back at the start of each point (see CharacterMovement.ResetStats)
+    private float baseMaxGroundSpeed;
+    private float baseMaxAirSpeed;
+    private float baseJumpForce;
+
+    void Awake()
+    {
+        baseMaxGroundSpeed = maxGroundSpeed;
+        baseMaxAirSpeed = maxAirSpeed;
+        baseJumpForce = jumpForce;
+    }
+
+    public void ResetStats()
+    {
+        statModifiers.Clear();
+        ApplyStatModifiers();
+    }
+
+    // Stat changes from abilities (see BirdStats). The stats are always worked out from the base ones.
+    private readonly StatModifierStack statModifiers = new StatModifierStack();
+
+    // For birds that are given their stats after spawning, like 31RD's mini 31RD
+    public void SetBaseStats(float groundSpeed, float airSpeed, float jump)
+    {
+        baseMaxGroundSpeed = groundSpeed;
+        baseMaxAirSpeed = airSpeed;
+        baseJumpForce = jump;
+        ApplyStatModifiers();
+    }
+
+    public void SetStatModifier(object key, StatModifier modifier)
+    {
+        statModifiers.Set(key, modifier);
+        ApplyStatModifiers();
+    }
+
+    public void RemoveStatModifier(object key)
+    {
+        if (statModifiers.Remove(key)) ApplyStatModifiers();
+    }
+
+    private void ApplyStatModifiers()
+    {
+        statModifiers.Evaluate(baseMaxGroundSpeed, baseMaxAirSpeed, baseJumpForce,
+            out maxGroundSpeed, out maxAirSpeed, out jumpForce);
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -235,7 +281,7 @@ public class AIBehavior : MonoBehaviour
                     // If the AI is near the ball and the ball is on its way down, bump the ball
                     if (IsAINearBall() && ballRb.linearVelocity.y < 0)
                     {
-                        // Roll ONLY ONCE per hit opportunity
+                        // Only roll once per hit opportunity
                         if (!attemptedHitThisVolley)
                         {
                             attemptedHitThisVolley = true;
@@ -263,7 +309,7 @@ public class AIBehavior : MonoBehaviour
                     // If the AI is near the ball and the ball is on its way down, set the ball
                     if (IsAINearBall() && ballRb.linearVelocity.y < 0)
                     {
-                        // Roll ONLY ONCE per hit opportunity
+                        // Only roll once per hit opportunity
                         if (!attemptedHitThisVolley)
                         {
                             attemptedHitThisVolley = true;
@@ -308,7 +354,7 @@ public class AIBehavior : MonoBehaviour
                         }
                         else if (IsAINearBall()) // Else if the AI is under the ball, not grounded, and is close to the ball, spike it
                         {
-                            // Roll ONLY ONCE per spike opportunity
+                            // Only roll once per spike opportunity
                             if (!attemptedHitThisVolley)
                             {
                                 attemptedHitThisVolley = true;
@@ -362,7 +408,7 @@ public class AIBehavior : MonoBehaviour
             }
         }
 
-        // Reposition for defense ONLY IF the ball is not about to be served AND the AI cannot hit it
+        // Reposition for defense if the ball isn't about to be served and the AI can't hit it
         else if (!GameManager.Instance.gameState.Equals(GameManager.GameState.PointStart))
         {
             MoveAI(false);
@@ -372,8 +418,8 @@ public class AIBehavior : MonoBehaviour
     // Check if the AI is legally able to hit the ball
     private bool CanHit()
     {
-        // During a serve, the server and ball are intentionally on the same side —
-        // skip the court-side check so the server AI can actually serve.
+        // During a serve, the server and ball are on the same side on purpose,
+        // so skip the court-side check or the AI could never serve.
         if (GameManager.Instance.gameState == GameManager.GameState.PointStart
             && GameManager.Instance.server == gameObject)
             return true;
@@ -627,7 +673,7 @@ public class AIBehavior : MonoBehaviour
         if (animator != null)
         {
             // Debug.Log("Setting Bump trigger!");
-            animator.SetTrigger("Bump");
+            animator.SetTriggerSynced("Bump");
         }
     }
 
@@ -688,7 +734,7 @@ public class AIBehavior : MonoBehaviour
         // Trigger set animation
         if (animator != null)
         {
-            animator.SetTrigger("Set");
+            animator.SetTriggerSynced("Set");
         }
     }
 
@@ -750,7 +796,7 @@ public class AIBehavior : MonoBehaviour
         // Trigger spike animation
         if (animator != null)
         {
-            animator.SetTrigger("Spike");
+            animator.SetTriggerSynced("Spike");
         }
     }
 
@@ -811,7 +857,7 @@ public class AIBehavior : MonoBehaviour
         // Trigger serve animation
         if (animator != null)
         {
-            animator.SetTrigger("Spike");
+            animator.SetTriggerSynced("Spike");
         }
         
         // Reset timer for serve
@@ -874,21 +920,12 @@ public class AIBehavior : MonoBehaviour
 
     public IEnumerator BuffTimer(int increase, int time)
     {
-        // Debug.Log("BUFFING...");
-        // Debug.Log("ORIGINAL = " + maxGroundSpeed);
-        
-        float originalMaxGroundSpeed = maxGroundSpeed;
-        float originalMaxAirSpeed = maxAirSpeed;
-
-        maxGroundSpeed += increase;
-        maxAirSpeed += increase;
-
-        // Debug.Log("NEW = "+ maxGroundSpeed);
+        object key = new object();
+        SetStatModifier(key, StatModifier.Speed(increase));
 
         yield return new WaitForSeconds(time);
 
-        maxGroundSpeed = originalMaxGroundSpeed;
-        maxAirSpeed = originalMaxAirSpeed;
+        RemoveStatModifier(key);
     }
 
     // Calls whenever the character collides with another collider or rigidbody
@@ -940,7 +977,7 @@ public class AIBehavior : MonoBehaviour
         abilitiesDisabled = disabled;
     }
 
-    // Silence: only prevents special abilities — movement and ball hitting are unaffected
+    // Silence: only prevents special abilities, movement and ball hitting still work
     public void SilenceAbilities(bool silenced)
     {
         abilitiesSilenced = silenced;

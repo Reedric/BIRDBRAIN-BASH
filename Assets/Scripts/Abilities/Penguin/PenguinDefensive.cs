@@ -62,7 +62,7 @@ public class PenguinDefensive : BirdAbility
         // Trigger dash animation if animator exists
         if (cM.animator != null)
         {
-            cM.animator.SetTrigger("Dash");
+            cM.animator.SetTriggerSynced("Dash");
         }
 
         // Override CharacterMovement rotation to do belly slide
@@ -79,6 +79,19 @@ public class PenguinDefensive : BirdAbility
 
         // End the dash
         EndDash();
+    }
+
+    // If the penguin gets switched off mid-slide (Phoenix turning it into a chicken), the slide never finishes, which
+    // leaves it lying on its belly and unable to turn
+    void OnDisable()
+    {
+        if (cM == null || (!isDashing && !isReturningUpright)) return;
+
+        isDashing = false;
+        isReturningUpright = false;
+        cM.controlMovement(true, true);
+        cM.targetRotation = Quaternion.Euler(0, transform.eulerAngles.y, 0);
+        cM.overrideRotation = false;
     }
 
     void EndDash()
