@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
@@ -26,15 +27,21 @@ public class PauseMenu : MonoBehaviour
     public static PauseMenu Instance; // Private instance of the GameManager that other classes cannot reference
 
     private OptionsMenuUI optionsMenu;
-    private Gamepad optionsGamepad;
     private GameObject optionsReturnSelection;
     private PauseMenuCursor cursor;
     private InputActionAsset onlineMenuActions;
+    private InputActionAsset mouseActions;
+
+    // Whether the menu is being used with the mouse, in which case the cursor follows it instead of the selection
+    public bool MouseInUse { get; private set; }
 
     void Awake()
     {
         Instance = this;
         AddButtonSounds(gameObject);
+
+        // Clicking on empty space would clear the selection, which the stick and the cursor both go by
+        if (inputModule != null) inputModule.deselectOnBackgroundClick = false;
     }
 
     private void AddButtonSounds(GameObject root)
@@ -49,8 +56,104 @@ public class PauseMenu : MonoBehaviour
 
     void Start()
     {
-        // Checks the Input List and Maps the Pause Action to pauseAction
-        
+        // Nothing in a match uses the mouse, so it stays locked away until the menu needs it
+        MenuMouse.Lock();
+    }
+
+    void Update()
+    {
+        if (!GameIsPaused) return;
+
+        UpdateMouse();
+        SubmitWithKeyboard();
+    }
+
+    // The mouse works in the menu for whoever it belongs to. While it's being used it moves freely and the cursor
+    // follows it. Using a controller locks it away again, so a pointer left on a button doesn't keep it highlighted.
+    private void UpdateMouse()
+    {
+        bool canUseMouse = Mouse.current != null && PausedPlayerOwnsKeyboardAndMouse();
+
+        InputActionMap mouseMap = mouseActions != null ? mouseActions.actionMaps[0] : null;
+        if (mouseMap != null && mouseMap.enabled != canUseMouse)
+        {
+            if (canUseMouse) mouseMap.Enable();
+            else mouseMap.Disable();
+        }
+
+        if (canUseMouse && MenuMouse.UsedThisFrame())
+        {
+            if (!MouseInUse) MenuMouse.Release();
+            MouseInUse = true;
+        }
+        else if (MouseInUse && (!canUseMouse || MenuControllerUsedThisFrame()))
+        {
+            MenuMouse.Lock();
+            MouseInUse = false;
+        }
+        else if (MouseInUse && Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame)
+        {
+            MouseInUse = false;
+        }
+    }
+
+    private bool MenuControllerUsedThisFrame()
+    {
+        if (NetworkSession.IsOnline) return Gamepad.all.Any(LocalPlayerDevices.WasUsedThisFrame);
+        return LocalPlayerDevices.WasUsedThisFrame(FindPausedPlayerGamepad());
+    }
+
+    // Stops using the mouse in the menu, for when the menu closes
+    private void PutAwayMouse()
+    {
+        MouseInUse = false;
+        MenuMouse.Lock();
+        if (mouseActions != null) mouseActions.Disable();
+    }
+
+    // The menu reads the mouse through actions of its own. Going through a player's actions, it only worked if the
+    // mouse was paired with that player under a control scheme that lets it through, and a bird set up for a
+    // controller doesn't let it through. UpdateMouse still only turns these on for whoever the mouse belongs to.
+    private void UseOwnMouseActions()
+    {
+        if (inputModule == null) return;
+
+        if (mouseActions == null)
+        {
+            mouseActions = ScriptableObject.CreateInstance<InputActionAsset>();
+            InputActionMap map = mouseActions.AddActionMap("Pause Menu Mouse");
+            map.AddAction("Point", InputActionType.PassThrough, "<Mouse>/position", expectedControlLayout: "Vector2");
+            map.AddAction("Click", InputActionType.PassThrough, "<Mouse>/leftButton", expectedControlLayout: "Button");
+        }
+
+        inputModule.point = InputActionReference.Create(mouseActions["Point"]);
+        inputModule.leftClick = InputActionReference.Create(mouseActions["Click"]);
+    }
+
+    // The UI actions only submit with a controller's A button, so a keyboard player could move around the menu but
+    // never press anything (including Main Menu). Handled here rather than in the shared input actions so the
+    // menus elsewhere don't change.
+    private void SubmitWithKeyboard()
+    {
+        if (EventSystem.current == null) return;
+
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null) return;
+        if (!keyboard.enterKey.wasPressedThisFrame && !keyboard.numpadEnterKey.wasPressedThisFrame && !keyboard.spaceKey.wasPressedThisFrame) return;
+
+        if (!PausedPlayerOwnsKeyboardAndMouse()) return;
+
+        GameObject selected = EventSystem.current.currentSelectedGameObject;
+        if (selected == null || !selected.activeInHierarchy) return;
+
+        ExecuteEvents.Execute(selected, new BaseEventData(EventSystem.current), ExecuteEvents.submitHandler);
+    }
+
+    // Online, this machine only has the one player. Locally, only the player who paused gets to use the menu, so the
+    // keyboard and mouse only work in it if they're that player's. Demo mode has no players, so anyone can use it there.
+    private bool PausedPlayerOwnsKeyboardAndMouse()
+    {
+        return NetworkSession.IsOnline || FindPausedPlayerInput() == null || LocalPlayerDevices.OwnsKeyboard(pausedPlayerID);
     }
     
     // Opens or closes the pause menu for an online player. The match can't be frozen for everyone else,
@@ -66,12 +169,14 @@ public class PauseMenu : MonoBehaviour
         if (GameIsPaused)
         {
             AudioManager.PlayPauseTrack();
+            UseOwnMouseActions();
             ShowCursor(GetOnlinePlayerIndex());
         }
         else
         {
             AudioManager.PlayDefaultBackground();
             HideCursor();
+            PutAwayMouse();
         }
     }
 
@@ -84,10 +189,6 @@ public class PauseMenu : MonoBehaviour
         {
             onlineMenuActions = Instantiate(inputModule.actionsAsset);
             inputModule.actionsAsset = onlineMenuActions;
-
-            // There's no mouse in the menus, but clicking on a window to focus it would still clear the selection,
-            // which is what both navigating and the cursor go by
-            inputModule.deselectOnBackgroundClick = false;
         }
 
         // Only while it's open, so that playing the match doesn't also move around the menu
@@ -99,12 +200,21 @@ public class PauseMenu : MonoBehaviour
     void OnDestroy()
     {
         if (onlineMenuActions != null) Destroy(onlineMenuActions);
+        if (mouseActions != null)
+        {
+            mouseActions.Disable();
+            Destroy(mouseActions);
+        }
     }
 
     // Shows the cursor of the player using this menu. Each player has their own art for it, in Resources.
     private void ShowCursor(int playerIndex)
     {
         HideCursor();
+
+        // The menu goes in front of everything else on its canvas. The scenes have a full-screen fade image after
+        // it, which is invisible during a match but would still catch every click and stop the mouse reaching the menu.
+        pauseMenuUI.transform.SetAsLastSibling();
 
         // The cursor follows the selection, so make sure that the pause menu has one
         GameObject selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
@@ -144,20 +254,31 @@ public class PauseMenu : MonoBehaviour
         GameIsPaused = false;
         pausedPlayerID = -1;
         HideCursor();
+        PutAwayMouse();
 
-        // Enable UI for all players — guarded against null because AI birds have no PlayerInput
+        // Give everyone their controls back. AI birds have no PlayerInput, so they aren't in this list
         // (demo mode spawns 4 AIs, none of which carry a PlayerInput component)
-        PlayerInput pi1 = GameManager.Instance.leftPlayer1?.GetComponent<PlayerInput>();
-        PlayerInput pi2 = GameManager.Instance.leftPlayer2?.GetComponent<PlayerInput>();
-        PlayerInput pi3 = GameManager.Instance.rightPlayer1?.GetComponent<PlayerInput>();
-        PlayerInput pi4 = GameManager.Instance.rightPlayer2?.GetComponent<PlayerInput>();
-
-        if (pi1 != null) pi1.actions.FindActionMap("UI").Enable();
-        if (pi2 != null) pi2.actions.FindActionMap("UI").Enable();
-        if (pi3 != null) pi3.actions.FindActionMap("UI").Enable();
-        if (pi4 != null) pi4.actions.FindActionMap("UI").Enable();
+        foreach (PlayerInput playerInput in PlayerInput.all.ToArray())
+        {
+            // Pause() turns off everyone else's gameplay controls, so they have to be turned back on here
+            playerInput.ActivateInput();
+            playerInput.actions.FindActionMap("UI")?.Enable();
+        }
 
         AudioManager.PlayDefaultBackground();
+    }
+
+    // The PlayerInput of whoever paused a local match, or null if that's nobody's (demo mode).
+    // Looks through every active PlayerInput, since Phoenix's chicken stands in for a bird while its own is deactivated.
+    private PlayerInput FindPausedPlayerInput()
+    {
+        foreach (PlayerInput playerInput in PlayerInput.all)
+        {
+            if (playerInput.TryGetComponent(out BallInteract ballInteract) && ballInteract.playerID == pausedPlayerID)
+                return playerInput;
+        }
+
+        return null;
     }
 
     // Pauses Gameplay
@@ -168,59 +289,30 @@ public class PauseMenu : MonoBehaviour
         pauseMenuUI.SetActive(true);
         Time.timeScale = 0f;
         GameIsPaused = true;
+        MouseInUse = false;
         ShowCursor(pausedPlayerID);
 
-        // Enable UI for the player that paused it — guarded against null because AI birds have no
-        // PlayerInput (demo mode spawns 4 AIs, none of which carry a PlayerInput component).
-        // If no PlayerInput exists on any slot the pause UI still shows, the game still freezes,
-        // but we simply skip the input-routing logic that would crash.
-        BallInteract lp1 = GameManager.Instance.leftPlayer1.GetComponent<BallInteract>();
-        BallInteract lp2 = GameManager.Instance.leftPlayer2.GetComponent<BallInteract>();
-        BallInteract rp1 = GameManager.Instance.rightPlayer1.GetComponent<BallInteract>();
-        BallInteract rp2 = GameManager.Instance.rightPlayer2.GetComponent<BallInteract>();
+        // Only the player that paused can use the menu, so everyone else's controls go quiet until Resume().
+        // AI birds have no PlayerInput, and none of the birds in demo mode do.
+        PlayerInput pausedPlayer = FindPausedPlayerInput();
+        if (pausedPlayer != null)
+        {
+            foreach (PlayerInput playerInput in PlayerInput.all.ToArray())
+            {
+                if (playerInput == pausedPlayer) playerInput.ActivateInput();
+                else playerInput.DeactivateInput();
+            }
 
-        PlayerInput pi1 = GameManager.Instance.leftPlayer1.GetComponent<PlayerInput>();
-        PlayerInput pi2 = GameManager.Instance.leftPlayer2.GetComponent<PlayerInput>();
-        PlayerInput pi3 = GameManager.Instance.rightPlayer1.GetComponent<PlayerInput>();
-        PlayerInput pi4 = GameManager.Instance.rightPlayer2.GetComponent<PlayerInput>();
+            AssignUIActions(pausedPlayer);
+        }
 
-        if (lp1.playerID == pausedPlayerID)
-        {
-            if (pi1 != null) pi1.ActivateInput();
-            if (pi2 != null) pi2.DeactivateInput();
-            if (pi3 != null) pi3.DeactivateInput();
-            if (pi4 != null) pi4.DeactivateInput();
-            if (pi1 != null) AssignUIActions(pi1);
-        }
-        else if (lp2 != null && lp2.playerID == pausedPlayerID) // Assume that if player 2, player 1 exists
-        {
-            if (pi1 != null) pi1.DeactivateInput();
-            if (pi2 != null) pi2.ActivateInput();
-            if (pi3 != null) pi3.DeactivateInput();
-            if (pi4 != null) pi4.DeactivateInput();
-            if (pi2 != null) AssignUIActions(pi2);
-        }
-        else if (rp1 != null && rp1.playerID == pausedPlayerID) // Assume that if player 3, player 1 and 2 exists
-        {
-            if (pi1 != null) pi1.DeactivateInput();
-            if (pi2 != null) pi2.DeactivateInput();
-            if (pi3 != null) pi3.ActivateInput();
-            if (pi4 != null) pi4.DeactivateInput();
-            if (pi3 != null) AssignUIActions(pi3);
-        }
-        else if (rp2 != null && rp2.playerID == pausedPlayerID) // Assume that if player 4, player 1, 2, and 3 exists
-        {
-            if (pi1 != null) pi1.DeactivateInput();
-            if (pi2 != null) pi2.DeactivateInput();
-            if (pi3 != null) pi3.DeactivateInput();
-            if (pi4 != null) pi4.ActivateInput();
-            if (pi4 != null) AssignUIActions(pi4);
-        }
+        UseOwnMouseActions();
     }
 
     private void AssignUIActions(PlayerInput pausedPlayer)
     {
-        // Assign input module actions to specifically disallow the mouse from working
+        // The menu listens to the paused player's actions, which only have their own devices, so nobody else's
+        // controller can use it. The mouse gets replaced by UseOwnMouseActions.
         Instance.inputModule.point = InputActionReference.Create(pausedPlayer.actions["UI/Point"]);
         Instance.inputModule.leftClick = InputActionReference.Create(pausedPlayer.actions["UI/Click"]);
         Instance.inputModule.rightClick = InputActionReference.Create(pausedPlayer.actions["UI/RightClick"]);
@@ -241,11 +333,11 @@ public class PauseMenu : MonoBehaviour
 
             optionsMenu = gameObject.AddComponent<OptionsMenuUI>();
             optionsMenu.Build(pauseMenuUI.GetComponentInParent<Canvas>(true), fontSource != null ? fontSource.font : null,
-                () => NetworkSession.IsOnline ? Gamepad.current : optionsGamepad, true, () => CloseOptions());
+                // Looked up each time, so it follows the player who paused if they switch controllers
+                () => NetworkSession.IsOnline ? Gamepad.current : FindPausedPlayerGamepad(), true, () => CloseOptions());
             AddButtonSounds(optionsMenu.Panel);
         }
 
-        optionsGamepad = FindPausedPlayerGamepad();
         optionsReturnSelection = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
 
         pauseMenuUI.SetActive(false);
@@ -278,22 +370,14 @@ public class PauseMenu : MonoBehaviour
     // That's nobody's controller if they're on keyboard. Demo mode has no players, so it's whichever was used last.
     private Gamepad FindPausedPlayerGamepad()
     {
-        GameManager manager = GameManager.Instance;
-        GameObject[] birds = { manager.leftPlayer1, manager.leftPlayer2, manager.rightPlayer1, manager.rightPlayer2 };
+        PlayerInput pausedPlayer = FindPausedPlayerInput();
+        if (pausedPlayer == null) return Gamepad.current;
 
-        foreach (GameObject bird in birds)
+        foreach (InputDevice device in pausedPlayer.devices)
         {
-            if (bird == null || !bird.TryGetComponent(out PlayerInput playerInput)) continue;
-            if (!bird.TryGetComponent(out BallInteract ballInteract) || ballInteract.playerID != pausedPlayerID) continue;
-
-            foreach (InputDevice device in playerInput.devices)
-            {
-                if (device is Gamepad gamepad) return gamepad;
-            }
-            return null;
+            if (device is Gamepad gamepad) return gamepad;
         }
-
-        return Gamepad.current;
+        return null;
     }
 
     public void MainMenu()
@@ -332,7 +416,14 @@ public class PauseMenuButtonAudio : MonoBehaviour, IPointerEnterHandler, ISelect
 {
     private int lastPlayedFrame = -1;
 
-    public void OnPointerEnter(PointerEventData eventData) => PlayHoverSound();
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        PlayHoverSound();
+
+        // Pointing at a button selects it, so the keys or stick carry on from there
+        if (EventSystem.current != null && PauseMenu.Instance != null && PauseMenu.Instance.MouseInUse)
+            EventSystem.current.SetSelectedGameObject(gameObject);
+    }
 
     public void OnSelect(BaseEventData eventData) => PlayHoverSound();
 

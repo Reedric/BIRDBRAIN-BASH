@@ -50,10 +50,26 @@ public class PukekoDefensive : BirdAbility
         HUDManager.Instance.TriggerDefensiveCooldown(playerID, _cooldownTime);
     }
 
+    // If the pukeko gets switched off mid-dash (Phoenix turning it into a chicken), the dash never finishes, so from
+    // then on it would block the ball every time it touches it
+    private void OnDisable()
+    {
+        if (!isDashing) return;
+
+        isDashing = false;
+        if (characterMovement != null) characterMovement.controlMovement(true, true);
+    }
+
     // Detect collision with the ball during the dash
     private void OnCollisionEnter(Collision collision)
     {
-        if (isDashing && collision.gameObject == BallManager.Instance.gameObject)
+        if (!isDashing || BallManager.Instance == null || collision.gameObject != BallManager.Instance.gameObject)
+            return;
+
+        // Only an incoming attack can be blocked, and only when it's this team's turn, the same as a normal block.
+        // Otherwise running into the ball would block anything, like a teammate's set or the ball on the other side.
+        GameManager.GameState state = GameManager.Instance.gameState;
+        if ((state == GameManager.GameState.Spiked || state == GameManager.GameState.Blocked) && ballInteract.CanHit())
             ballInteract.BlockBall();
     }
 }

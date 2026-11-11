@@ -29,6 +29,7 @@ public struct LobbyPlayer : INetworkSerializable, IEquatable<LobbyPlayer>
 public class StartNetworkedLobbyForNumPlayers : NetworkBehaviour
 {
     private const string characterSelectSceneName = "CharSelect";
+    private const string tutorialSceneName = "HowToPlay";
 
     [Range(1, 4)]
     public int numHumanPlayers = 4; // Number of networked players that can join the lobby
@@ -171,6 +172,7 @@ public class StartNetworkedLobbyForNumPlayers : NetworkBehaviour
 
     /// <summary>
     /// Starts the match on a random enabled map. Any empty slots are filled with AI by MultiplayerManager.
+    /// If the host has the tutorial on in Match Settings, everyone goes through that first.
     /// </summary>
     public void StartMatch()
     {
@@ -184,29 +186,11 @@ public class StartNetworkedLobbyForNumPlayers : NetworkBehaviour
         DataTransferManager.onlineRoster = roster;
 
         NetworkSession.MatchStarted = true;
-        NetworkSession.MatchSceneLoaded = false;
 
-        NetworkManager.SceneManager.OnLoadEventCompleted += OnMatchSceneLoaded;
-        NetworkManager.SceneManager.LoadScene(PickMapScene(), UnityEngine.SceneManagement.LoadSceneMode.Single);
-    }
-
-    private static void OnMatchSceneLoaded(string sceneName, UnityEngine.SceneManagement.LoadSceneMode mode,
-        List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
-    {
-        NetworkManager.Singleton.SceneManager.OnLoadEventCompleted -= OnMatchSceneLoaded;
-        NetworkSession.MatchSceneLoaded = true;
-    }
-
-    private static string PickMapScene()
-    {
-        GameSettings settings = GameSettings.EnsureInstance();
-
-        List<string> scenes = new();
-        if (settings.BeachEnabled) scenes.Add("Game_Beach");
-        if (settings.ParkEnabled) scenes.Add("Game_Forest");
-        if (settings.IcebergEnabled) scenes.Add("Game_Iceberg");
-        if (settings.VolcanoEnabled) scenes.Add("Game_Volcano");
-
-        return scenes.Count > 0 ? scenes[UnityEngine.Random.Range(0, scenes.Count)] : "Game_Beach";
+        // TutorialMenu loads the map once everyone has finished or skipped the tutorial
+        if (GameSettings.EnsureInstance().ShowTutorial)
+            NetworkManager.SceneManager.LoadScene(tutorialSceneName, UnityEngine.SceneManagement.LoadSceneMode.Single);
+        else
+            NetworkSession.LoadMatchScene();
     }
 }

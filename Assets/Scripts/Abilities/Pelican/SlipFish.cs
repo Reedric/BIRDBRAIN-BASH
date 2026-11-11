@@ -14,12 +14,21 @@ public class SlipFish : MonoBehaviour
     private float slipDuration = 3f;
     private readonly HashSet<GameObject> affectedPlayers = new();
 
+    // Gone when the point ends, whether or not the pelican is still around to remove it
+    void Update()
+    {
+        if (GameManager.Instance != null && GameManager.Instance.gameState == GameManager.GameState.PointEnd)
+            Destroy(gameObject);
+    }
+
     void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Player") && ValidSlipper(collision.gameObject))
+        // Found by component rather than the "Player" tag, which some birds' prefabs don't have
+        GameObject bird = BirdLookup.FindBird(collision.collider != null ? collision.collider.gameObject : collision.gameObject);
+        if (bird != null && ValidSlipper(bird))
         {
             // Run on the persistent singleton so fish destruction can't kill the coroutine
-            BuffsDebuffs.Instance.StartCoroutine(SlipEffect(collision.gameObject));
+            BuffsDebuffs.Instance.StartCoroutine(SlipEffect(bird));
         }
     }
 
@@ -31,7 +40,6 @@ public class SlipFish : MonoBehaviour
         // Determine if the other is an enemy of the pelican
         GameManager gameManager = GameManager.Instance;
 
-        // Fixed: original checked leftPlayer1 twice instead of leftPlayer1 || leftPlayer2
         if (pelican == gameManager.leftPlayer1 || pelican == gameManager.leftPlayer2)
         {
             return other == gameManager.rightPlayer1 || other == gameManager.rightPlayer2;

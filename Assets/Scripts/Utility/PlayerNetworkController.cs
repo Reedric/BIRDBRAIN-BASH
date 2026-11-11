@@ -52,6 +52,10 @@ public class PlayerNetworkController : NetworkBehaviour
     private PlayerInputData lastSentInput;
     private float nextSendTime;
 
+    // A client can own two of these at once (its hidden bird and Phoenix's chicken standing in for it),
+    // and both see the same press of pause. Without this they'd open and then close the menu in one frame.
+    private static int lastPauseToggleFrame = -1;
+
     public override void OnNetworkSpawn()
     {
         characterMovement = GetComponent<CharacterMovement>();
@@ -91,8 +95,11 @@ public class PlayerNetworkController : NetworkBehaviour
         // If not the owner of this networked object, don't do anything
         if (!IsOwner || actions == null) return;
 
-        if (actions["Pause"].WasPressedThisFrame() && PauseMenu.Instance != null)
+        if (actions["Pause"].WasPressedThisFrame() && PauseMenu.Instance != null && lastPauseToggleFrame != Time.frameCount)
+        {
+            lastPauseToggleFrame = Time.frameCount;
             PauseMenu.Instance.ToggleOnlinePause();
+        }
 
         // Pausing online only opens the menu for this player, so the bird has to stop moving
         bool paused = PauseMenu.Instance != null && PauseMenu.Instance.GameIsPaused;
@@ -120,18 +127,27 @@ public class PlayerNetworkController : NetworkBehaviour
         if (!gameObject.activeInHierarchy) return;
 
         // Character movement
-        characterMovement.SetInput(inputData.move);
-        characterMovement.SetJumpHeld(inputData.jumpHeld);
+        if (characterMovement != null)
+        {
+            characterMovement.SetInput(inputData.move);
+            characterMovement.SetJumpHeld(inputData.jumpHeld);
+        }
 
         // Character interaction
-        if (inputData.defActionPressed) ballInteract.DefActionPressed();
-        if (inputData.offActionPressed) ballInteract.OffActionPressed();
-        if (inputData.blockPressed) ballInteract.BlockPressed();
-        ballInteract.SetDirection(inputData.interactionDirection);
+        if (ballInteract != null)
+        {
+            if (inputData.defActionPressed) ballInteract.DefActionPressed();
+            if (inputData.offActionPressed) ballInteract.OffActionPressed();
+            if (inputData.blockPressed) ballInteract.BlockPressed();
+            ballInteract.SetDirection(inputData.interactionDirection);
+        }
 
-        // Ability interaction
-        if (inputData.defAbilityPressed) birdAbilityInput.ActivateDefensive();
-        if (inputData.offAbilityPressed) birdAbilityInput.ActivateOffensive();
+        // Ability interaction. Phoenix's chicken has no abilities, so it has no BirdAbilityInput either
+        if (birdAbilityInput != null)
+        {
+            if (inputData.defAbilityPressed) birdAbilityInput.ActivateDefensive();
+            if (inputData.offAbilityPressed) birdAbilityInput.ActivateOffensive();
+        }
 
         // End of game ready up
         if (inputData.offActionPressed && endScreen != null

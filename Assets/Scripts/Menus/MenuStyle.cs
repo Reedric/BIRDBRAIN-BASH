@@ -32,6 +32,13 @@ public static class MenuStyle
         };
     }
 
+    // Rounded images don't catch the mouse, since most are only decoration. This makes one that's part of a
+    // button, row or text field catch it, so that the mouse can point at and click that control.
+    public static void MakeClickable(Image image)
+    {
+        image.raycastTarget = true;
+    }
+
     // Rounds the corners of an image. Passing its height gives it full semicircles for ends.
     public static void MakeRounded(Image image, float cornerDiameter)
     {
@@ -116,6 +123,7 @@ public static class MenuStyle
 
         Button button = edge.gameObject.AddComponent<Button>();
         button.targetGraphic = fill;
+        MakeClickable(edge);
 
         // Dimmed until it's selected, since tinting can only ever make a color darker
         ColorBlock colors = button.colors;

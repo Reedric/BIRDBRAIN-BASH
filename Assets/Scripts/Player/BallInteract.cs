@@ -140,8 +140,16 @@ public class BallInteract : NetworkBehaviour
     // Check the game state in relation to the player
     private void CheckState()
     {
+        // Some birds that hit the ball have no PlayerInput of their own, like 31RD's mini 31RD (it's an AI).
+        // Treat them as never pressing anything.
+        bool hasLocalInput = !GameManager.Instance.isLocal || playerInput != null;
+
+        // Pausing a local match freezes time, but Update still runs, so a stray trigger press while using
+        // the menu could otherwise serve or hit the ball. Online, pausing only stops that player's own input.
+        bool localPaused = GameManager.Instance.isLocal && PauseMenu.Instance != null && PauseMenu.Instance.GameIsPaused;
+
         // If the player can hit the ball
-        if (CanHit())
+        if (hasLocalInput && !localPaused && CanHit())
         {
             // Get the inputs based on local or online multiplayer
             bool defPressed = GameManager.Instance.isLocal ? playerInput.actions["Defensive Action"].WasPressedThisFrame() : defActionPressed;
@@ -273,7 +281,7 @@ public class BallInteract : NetworkBehaviour
         }
 
         // Check if the player is trying to pause or resume the game
-        if (GameManager.Instance.isLocal)
+        if (GameManager.Instance.isLocal && playerInput != null && PauseMenu.Instance != null)
         {
             if (!PauseMenu.Instance.GameIsPaused && playerInput.actions.FindAction("Pause").WasPressedThisFrame())
             {
@@ -294,7 +302,11 @@ public class BallInteract : NetworkBehaviour
     {
         // If either of the two managers used in this method are not instantiated, return false
         if (GameManager.Instance == null || BallManager.Instance == null) return false;
-        
+
+        // The ball is switched off while a pelican has it in its mouth. Other birds shouldn't be able to "hit" it then,
+        // since that would change whose turn it is without the ball going anywhere.
+        if (!BallManager.Instance.gameObject.activeInHierarchy) return false;
+
         // During a serve, the server and ball are intentionally on the same side.
         if (GameManager.Instance.gameState == GameManager.GameState.PointStart
             && GameManager.Instance.server == gameObject)

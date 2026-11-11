@@ -381,6 +381,7 @@ public class ConnectUI : MonoBehaviour
         Image fieldImage = fieldObject.GetComponent<Image>();
         fieldImage.color = MenuStyle.CreamColor;
         MenuStyle.MakeRounded(fieldImage, size.y);
+        MenuStyle.MakeClickable(fieldImage);
 
         addressField = fieldObject.GetComponent<TMP_InputField>();
         addressField.pointSize = 40f;
@@ -428,6 +429,7 @@ public class ConnectUI : MonoBehaviour
 
             Image image = rowObject.GetComponent<Image>();
             MenuStyle.MakeRounded(image, rowHeight);
+            MenuStyle.MakeClickable(image);
 
             Button button = rowObject.GetComponent<Button>();
             button.targetGraphic = image;

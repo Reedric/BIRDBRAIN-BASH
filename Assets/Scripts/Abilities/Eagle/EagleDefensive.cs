@@ -84,6 +84,11 @@ public class EagleDefensive : BirdAbility
 		if (ballInteract == null)
 			return;
 
+		// Same rules as a normal bump. Otherwise the star would bump anything that touched it, including a teammate's
+		// bump or set, giving the team as many touches as it has stars.
+		if (!GameManager.PointInProgress() || !ballInteract.CanHit())
+			return;
+
 		PerformAutomaticBump(ballInteract);
 
 		activeStars.Remove(star.SpawnedStar);

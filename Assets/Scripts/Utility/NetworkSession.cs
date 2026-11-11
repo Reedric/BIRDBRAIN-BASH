@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -47,6 +48,21 @@ public static class NetworkSession
         return obj != null && obj.TryGetComponent(out NetworkObject netObj) && netObj.IsSpawned
             ? netObj.NetworkObjectId
             : 0;
+    }
+
+    // Host only. Takes everyone to a random map from the rotation, and sets MatchSceneLoaded once they've all loaded it.
+    public static void LoadMatchScene()
+    {
+        NetworkSceneManager sceneManager = NetworkManager.Singleton.SceneManager;
+        MatchSceneLoaded = false;
+        sceneManager.OnLoadEventCompleted += OnMatchSceneLoaded;
+        sceneManager.LoadScene(GameSettings.EnsureInstance().PickMapScene(), LoadSceneMode.Single);
+    }
+
+    private static void OnMatchSceneLoaded(string sceneName, LoadSceneMode mode, List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
+    {
+        NetworkManager.Singleton.SceneManager.OnLoadEventCompleted -= OnMatchSceneLoaded;
+        MatchSceneLoaded = true;
     }
 
     // Moves an object instantly. Online, this stops clients from interpolating across the court.

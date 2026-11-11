@@ -7,8 +7,9 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 /// <summary>
-/// The options screen: volume and display settings. It's made for a controller, so the stick moves up and down
-/// between rows the same as any other menu, left and right changes the selected row, and nothing needs a mouse.
+/// The options screen: volume and display settings. The stick moves up and down between rows the same as any other
+/// menu, and left and right change the selected row. With the mouse, the arrows can be clicked, and so can the volume
+/// bars (or dragged along).
 /// It's built in code and pretty bare bones for now, so it can get swapped out for a proper designed screen later.
 /// </summary>
 public class OptionsMenuUI : MonoBehaviour
@@ -190,12 +191,23 @@ public class OptionsMenuUI : MonoBehaviour
         heldDirection = direction;
         nextRepeatTime = Time.unscaledTime + (isHeld ? holdRepeat : holdDelay);
 
+        Change(row, direction);
+    }
+
+    private void Change(Row row, int direction)
+    {
         row.change(direction);
         Refresh(row);
         FlashArrow(direction > 0 ? row.rightArrow : row.leftArrow);
 
         // Also lets the player hear what the sound effects are set to
         AudioManager.PlayButtonHoverSound();
+    }
+
+    // For the mouse, which can change a row without it being selected first
+    private void Select(Row row)
+    {
+        if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(row.button.gameObject);
     }
 
     private void FlashArrow(Image arrow)
@@ -300,6 +312,17 @@ public class OptionsMenuUI : MonoBehaviour
         row.valueText = AddText(row.button.transform, string.Empty, 44f, new Vector2(1192f, 0f), new Vector2(110f, 84f), new Vector2(0f, 0.5f), TextAlignmentOptions.Right);
         row.barFill = AddVolumeBar(row.button.transform);
 
+        // Clicking or dragging along the bar sets the volume to that point
+        OptionsBarPointer bar = row.barFill.parent.gameObject.AddComponent<OptionsBarPointer>();
+        bar.onPoint = amount =>
+        {
+            Select(row);
+            float before = getVolume();
+            setVolume(amount);
+            Refresh(row);
+            if (getVolume() != before) AudioManager.PlayButtonHoverSound();
+        };
+
         Refresh(row);
     }
 
@@ -336,6 +359,7 @@ public class OptionsMenuUI : MonoBehaviour
         Button button = rowObject.GetComponent<Button>();
         button.targetGraphic = rowObject.GetComponent<Image>();
         MenuStyle.MakeRounded(rowObject.GetComponent<Image>(), rect.sizeDelta.y);
+        MenuStyle.MakeClickable(rowObject.GetComponent<Image>());
 
         ColorBlock colors = button.colors;
         colors.normalColor = new Color(1f, 1f, 1f, 0.35f);
@@ -347,15 +371,15 @@ public class OptionsMenuUI : MonoBehaviour
         AddText(rowObject.transform, label, 44f, new Vector2(90f, 0f), new Vector2(570f, 84f), new Vector2(0f, 0.5f), TextAlignmentOptions.Left);
 
         Row row = new() { button = button };
-        row.leftArrow = AddArrow(rowObject.transform, "<", 680f);
-        row.rightArrow = AddArrow(rowObject.transform, ">", 1134f);
+        row.leftArrow = AddArrow(rowObject.transform, "<", 680f, () => { Select(row); Change(row, -1); });
+        row.rightArrow = AddArrow(rowObject.transform, ">", 1134f, () => { Select(row); Change(row, 1); });
         rows.Add(row);
         return row;
     }
 
-    // These show what left and right do, and press in when they get used. They aren't selectable, since there's no
-    // mouse to click them with, and stopping on them would get in the way of moving up and down between rows.
-    private Image AddArrow(Transform parent, string symbol, float x)
+    // These show what left and right do, and press in when they get used. The mouse can click them, but they aren't
+    // selectable, since stopping on them would get in the way of moving up and down between rows.
+    private Image AddArrow(Transform parent, string symbol, float x, Action onClick)
     {
         GameObject arrow = new(symbol == "<" ? "Left Arrow" : "Right Arrow", typeof(RectTransform), typeof(Image));
         arrow.transform.SetParent(parent, false);
@@ -369,6 +393,8 @@ public class OptionsMenuUI : MonoBehaviour
         Image image = arrow.GetComponent<Image>();
         image.color = accentColor;
         MenuStyle.MakeRounded(image, arrowSize);
+        MenuStyle.MakeClickable(image);
+        arrow.AddComponent<OptionsArrowPointer>().onClick = onClick;
 
         TMP_Text text = AddText(arrow.transform, symbol, 44f, Vector2.zero, rect.sizeDelta, new Vector2(0.5f, 0.5f), TextAlignmentOptions.Center);
         text.color = Color.white;
@@ -383,6 +409,7 @@ public class OptionsMenuUI : MonoBehaviour
         bar.transform.SetParent(parent, false);
         bar.GetComponent<Image>().color = new Color(textColor.r, textColor.g, textColor.b, 0.3f);
         MenuStyle.MakeRounded(bar.GetComponent<Image>(), barHeight);
+        MenuStyle.MakeClickable(bar.GetComponent<Image>());
 
         // Fits between the row's two arrows
         RectTransform barRect = bar.GetComponent<RectTransform>();
@@ -417,5 +444,44 @@ public class OptionsMenuUI : MonoBehaviour
     private TMP_Text AddText(Transform parent, string message, float fontSize, Vector2 position, Vector2 size, Vector2 anchor, TextAlignmentOptions alignment)
     {
         return MenuStyle.AddText(parent, font, message, fontSize, position, size, anchor, alignment);
+    }
+}
+
+// Lets the mouse click one of the arrows on an options row
+public class OptionsArrowPointer : MonoBehaviour, IPointerDownHandler, IPointerClickHandler
+{
+    public Action onClick;
+
+    // Taking the press keeps the row underneath from getting the click too
+    public void OnPointerDown(PointerEventData eventData) { }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (eventData.button == PointerEventData.InputButton.Left) onClick?.Invoke();
+    }
+}
+
+// Lets the mouse set a volume by clicking or dragging along its bar. onPoint gets how far along the bar that is, from 0 to 1.
+public class OptionsBarPointer : MonoBehaviour, IPointerDownHandler, IInitializePotentialDragHandler, IDragHandler, IPointerClickHandler
+{
+    public Action<float> onPoint;
+
+    public void OnPointerDown(PointerEventData eventData) => Point(eventData);
+
+    // Follows the mouse from the moment it's pressed, rather than once it has moved a few pixels
+    public void OnInitializePotentialDrag(PointerEventData eventData) => eventData.useDragThreshold = false;
+
+    public void OnDrag(PointerEventData eventData) => Point(eventData);
+
+    // Taking the click keeps the row underneath from getting it too
+    public void OnPointerClick(PointerEventData eventData) { }
+
+    private void Point(PointerEventData eventData)
+    {
+        if (eventData.button != PointerEventData.InputButton.Left) return;
+
+        RectTransform rect = (RectTransform)transform;
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(rect, eventData.position, eventData.pressEventCamera, out Vector2 local))
+            onPoint?.Invoke(Mathf.InverseLerp(rect.rect.xMin, rect.rect.xMax, local.x));
     }
 }

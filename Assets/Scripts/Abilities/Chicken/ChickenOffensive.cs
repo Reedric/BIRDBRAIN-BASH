@@ -24,7 +24,8 @@ public class ChickenOffensive : BirdAbility
 
     private void FindCanvas()
     {
-        if (mainCanvas == null) mainCanvas = GameObject.Find("Canvas").GetComponent<Canvas>();
+        // A scene might have no object called "Canvas". Activate already copes with a missing canvas
+        if (mainCanvas == null) mainCanvas = GameObject.Find("Canvas")?.GetComponent<Canvas>();
     }
 
     protected override bool Activate()
@@ -67,6 +68,7 @@ public class ChickenOffensive : BirdAbility
     public override void OnNetworkEvent(int eventId, Vector3 argument)
     {
         FindCanvas();
+        if (mainCanvas == null || eggSplashPrefab == null) return;
         ShowSplash(new Vector2(argument.x, argument.y), argument.z);
     }
 
@@ -158,7 +160,7 @@ public class ChickenOffensive : BirdAbility
                 Mathf.Lerp(startY, endY, smoothT)
             );
 
-            // Fade the ACTUAL graphic
+            // Fade the graphic itself
             Color color = originalColor;
             color.a = Mathf.Lerp(1f, 0f, smoothT);
             graphic.color = color;

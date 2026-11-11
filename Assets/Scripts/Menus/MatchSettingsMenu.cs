@@ -8,29 +8,15 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 
 /// <summary>
-/// Match Settings overlay for the Character Select screen.
-///
-/// This is an OVERLAY, not a separate scene/menu.
-///
-/// Features:
-/// - Number of Sets cycles circularly through configurable values.
-/// - Each Sets value has its own stylized RawImage texture.
-/// - Bot Difficulty cycles Easy -> Medium -> Hard.
-/// - Each difficulty has its own stylized RawImage texture.
-/// - Maps can be individually enabled/disabled.
-/// - At least one map is always enabled.
-/// - The player who opens the menu becomes the only player allowed
-///   to control it.
-/// - Only that player's cursor is visible.
-/// - Unity UI beneath the overlay is blocked while the menu is open.
-/// - Pressing the Match Settings button again closes the overlay.
-/// - Settings are saved when the overlay closes.
+/// Match Settings overlay for the Character Select screen (an overlay, not a separate scene/menu).
+/// Cycles the number of sets and bot difficulty, and toggles which maps are in rotation (at least one stays on)
+/// and whether the tutorial plays before the match.
+/// Whoever opens it is the only player who can control it, and only their cursor shows. The UI underneath is
+/// blocked while it's open. Pressing the Match Settings button again closes it and saves the settings.
 /// </summary>
 public class MatchSettingsMenu : MonoBehaviour
 {
-    // ============================================================
-    // MENU OVERLAY
-    // ============================================================
+    // Menu overlay
 
     [Header("Menu Overlay")]
 
@@ -42,12 +28,10 @@ public class MatchSettingsMenu : MonoBehaviour
         "Used to block UI underneath the overlay."
     )]
     [SerializeField] private CanvasGroup settingsCanvasGroup;
-    // Persistent match settings singleton — same one TeamArrangementToggle reads from.
+    // Persistent match settings singleton, same one TeamArrangementToggle reads from.
     private GameSettings gameSettings;
 
-    // ============================================================
-    // NUMBER OF SETS
-    // ============================================================
+    // Number of sets
 
     [Header("Number of Sets")]
 
@@ -70,9 +54,7 @@ public class MatchSettingsMenu : MonoBehaviour
     )]
     [SerializeField] private Texture2D[] setsTextures;
 
-    // ============================================================
-    // BOT DIFFICULTY
-    // ============================================================
+    // Bot difficulty
 
     [Header("Bot Difficulty")]
 
@@ -87,9 +69,7 @@ public class MatchSettingsMenu : MonoBehaviour
     [SerializeField] private Texture2D mediumTexture;
     [SerializeField] private Texture2D hardTexture;
 
-    // ============================================================
-    // MAPS
-    // ============================================================
+    // Maps
 
     [Header("Maps In Rotation")]
 
@@ -98,9 +78,14 @@ public class MatchSettingsMenu : MonoBehaviour
     [SerializeField] private Toggle icebergToggle;
     [SerializeField] private Toggle volcanoToggle;
 
-    // ============================================================
-    // MATCH SETTINGS BUTTON
-    // ============================================================
+    // Tutorial
+
+    [Header("Tutorial")]
+
+    [Tooltip("Ticked to play the tutorial before a match")]
+    [SerializeField] private Toggle tutorialToggle;
+
+    // Match settings button
 
     [Header("Match Settings Toggle Button")]
 
@@ -111,18 +96,14 @@ public class MatchSettingsMenu : MonoBehaviour
     )]
     [SerializeField] private Button matchSettingsButton;
 
-    // ============================================================
-    // PLAYER CURSORS
-    // ============================================================
+    // Player cursors
 
     [Header("Player Cursors")]
 
     // Dynamic cursors created at runtime by CharacterSelectManager; index-aligned with player index.
     private List<Transform> runtimePlayerCursors;
 
-    // ============================================================
-    // EVENT SYSTEM
-    // ============================================================
+    // Event system
 
     [Header("UI Focus")]
 
@@ -132,9 +113,7 @@ public class MatchSettingsMenu : MonoBehaviour
     )]
     [SerializeField] private Selectable firstSelectedControl;
 
-    // ============================================================
-    // STATE
-    // ============================================================
+    // State
 
     private int currentSetsIndex;
     private BotDifficulty currentDifficulty;
@@ -145,9 +124,7 @@ public class MatchSettingsMenu : MonoBehaviour
 
     private InputSystemUIInputModule uiInputModule;
 
-    // ============================================================
-    // BOT DIFFICULTY
-    // ============================================================
+    // Bot difficulty
 
     public enum BotDifficulty
     {
@@ -156,9 +133,7 @@ public class MatchSettingsMenu : MonoBehaviour
         Hard = 2
     }
 
-    // ============================================================
-    // PUBLIC ACCESSORS
-    // ============================================================
+    // Public accessors
 
     public int NumberOfSets
     {
@@ -189,9 +164,7 @@ public class MatchSettingsMenu : MonoBehaviour
     public Button MatchSettingsButtonRef =>
         matchSettingsButton;
 
-    // ============================================================
-    // UNITY
-    // ============================================================
+    // Unity
 
     private void Awake()
     {
@@ -324,31 +297,23 @@ public class MatchSettingsMenu : MonoBehaviour
         return toggle;
     }
 
-    // ============================================================
-    // INITIALIZATION
-    // ============================================================
+    // Initialization
 
     private void InitializeDefaults()
     {
         if (gameSettings == null)
             gameSettings = GameSettings.EnsureInstance();
 
-        // --------------------------------------------------------
-        // SETS — read from GameSettings so this reflects whatever was
+        // Sets: read from GameSettings so this shows whatever was
         // last saved, instead of always resetting to 3.
-        // --------------------------------------------------------
 
         currentSetsIndex = FindSetsIndex(gameSettings.BestOfSets);
 
-        // --------------------------------------------------------
-        // DIFFICULTY
-        // --------------------------------------------------------
+        // Difficulty
 
         currentDifficulty = (BotDifficulty)(int)gameSettings.CurrentBotDifficulty;
 
-        // --------------------------------------------------------
-        // MAPS
-        // --------------------------------------------------------
+        // Maps
 
         if (beachToggle != null)
             beachToggle.SetIsOnWithoutNotify(gameSettings.BeachEnabled);
@@ -361,13 +326,16 @@ public class MatchSettingsMenu : MonoBehaviour
 
         if (volcanoToggle != null)
             volcanoToggle.SetIsOnWithoutNotify(gameSettings.VolcanoEnabled);
+
+        // Tutorial
+
+        if (tutorialToggle != null)
+            tutorialToggle.SetIsOnWithoutNotify(gameSettings.ShowTutorial);
     }
 
     private void RegisterListeners()
     {
-        // ========================================================
-        // SETS
-        // ========================================================
+        // Sets
 
         if (setsLeftButton != null)
             setsLeftButton.onClick.AddListener(PreviousSets);
@@ -375,9 +343,7 @@ public class MatchSettingsMenu : MonoBehaviour
         if (setsRightButton != null)
             setsRightButton.onClick.AddListener(NextSets);
 
-        // ========================================================
-        // DIFFICULTY
-        // ========================================================
+        // Difficulty
 
         if (difficultyLeftButton != null)
             difficultyLeftButton.onClick.AddListener(PreviousDifficulty);
@@ -385,9 +351,7 @@ public class MatchSettingsMenu : MonoBehaviour
         if (difficultyRightButton != null)
             difficultyRightButton.onClick.AddListener(NextDifficulty);
 
-        // ========================================================
-        // MATCH SETTINGS BUTTON
-        // ========================================================
+        // Match settings button
 
         if (matchSettingsButton != null &&
             matchSettingsButton.onClick.GetPersistentEventCount() == 0)
@@ -397,9 +361,7 @@ public class MatchSettingsMenu : MonoBehaviour
             );
         }
 
-        // ========================================================
-        // MAP TOGGLES
-        // ========================================================
+        // Map toggles
         if (beachToggle != null)
         {
             beachToggle.onValueChanged.AddListener(
@@ -427,11 +389,28 @@ public class MatchSettingsMenu : MonoBehaviour
                 value => ValidateMapSelection(volcanoToggle, value)
             );
         }
+
+        // Tutorial
+        if (tutorialToggle != null)
+        {
+            tutorialToggle.onValueChanged.AddListener(value =>
+            {
+                if (menuOpen) PushTutorialToGameSettings();
+            });
+        }
     }
 
-    // ============================================================
-    // OPEN / CLOSE TOGGLE
-    // ============================================================
+    private void PushTutorialToGameSettings()
+    {
+        if (tutorialToggle == null) return;
+
+        if (gameSettings == null)
+            gameSettings = GameSettings.EnsureInstance();
+
+        gameSettings.ShowTutorial = tutorialToggle.isOn;
+    }
+
+    // Open / close toggle
 
     /// <summary>
     /// Toggles the menu using whichever player is already controlling
@@ -452,9 +431,7 @@ public class MatchSettingsMenu : MonoBehaviour
         OpenForPlayer(controllingPlayer >= 0 ? controllingPlayer : 0);
     }
 
-    // ============================================================
-    // OPEN FOR PLAYER
-    // ============================================================
+    // Open for player
 
     /// <summary>
     /// Opens the settings overlay for the specified player (0 = Player 1, etc.),
@@ -498,9 +475,7 @@ public class MatchSettingsMenu : MonoBehaviour
         StartCoroutine(FocusMenuNextFrame());
     }
 
-    // ============================================================
-    // PLAYER-SPECIFIC TOGGLE
-    // ============================================================
+    // Player-specific toggle
 
     /// <summary>
     /// Toggles the menu for a specific player. Assign this directly to a
@@ -522,9 +497,7 @@ public class MatchSettingsMenu : MonoBehaviour
         OpenForPlayer(playerIndex);
     }
 
-    // ============================================================
-    // CLOSE
-    // ============================================================
+    // Close
 
     /// <summary>
     /// Closes the overlay and saves the current settings.
@@ -561,9 +534,7 @@ public class MatchSettingsMenu : MonoBehaviour
         controllingPlayer = -1;
     }
 
-    // ============================================================
-    // SETS
-    // ============================================================
+    // Sets
 
     private void PreviousSets()
     {
@@ -611,7 +582,7 @@ public class MatchSettingsMenu : MonoBehaviour
         PushSetsToGameSettings();
     }
 
-    // Writes Number of Sets straight to GameSettings — same live-update
+    // Writes Number of Sets straight to GameSettings, same live-update
     // pattern as TeamArrangementToggle.OnTogglePressed().
     private void PushSetsToGameSettings()
     {
@@ -690,9 +661,7 @@ public class MatchSettingsMenu : MonoBehaviour
         return 0;
     }
 
-    // ============================================================
-    // DIFFICULTY
-    // ============================================================
+    // Difficulty
 
     private void PreviousDifficulty()
     {
@@ -779,9 +748,7 @@ public class MatchSettingsMenu : MonoBehaviour
         gameSettings.CurrentBotDifficulty = (GameSettings.BotDifficulty)(int)currentDifficulty;
     }
 
-    // ============================================================
-    // MAPS
-    // ============================================================
+    // Maps
 
     private void ValidateMapSelection(Toggle changedToggle, bool newValue)
     {
@@ -802,7 +769,7 @@ public class MatchSettingsMenu : MonoBehaviour
             return;
         }
 
-        // The player attempted to turn off the final map. Restore THAT SAME map.
+        // The player tried to turn off the last map, so turn it back on.
         if (changedToggle != null)
             changedToggle.SetIsOnWithoutNotify(true);
         else
@@ -884,31 +851,29 @@ public class MatchSettingsMenu : MonoBehaviour
         }
     }
 
-    // ============================================================
-    // SAVE
-    // ============================================================
+    // Save
 
     private void SaveSettings()
     {
-        // Make absolutely sure there is a map.
+        // Make sure there is a map.
         if (GetSelectedMapCount() <= 0)
             RestoreAnyMap();
 
         PushSetsToGameSettings();
         PushDifficultyToGameSettings();
         PushMapsToGameSettings();
+        PushTutorialToGameSettings();
 
         Debug.Log(
             $"Match Settings Saved | " +
             $"Sets: {NumberOfSets} | " +
             $"Difficulty: {currentDifficulty} | " +
-            $"Maps: {GetSelectedMapCount()}"
+            $"Maps: {GetSelectedMapCount()} | " +
+            $"Tutorial: {gameSettings.ShowTutorial}"
         );
     }
 
-    // ============================================================
-    // CURSOR CONTROL
-    // ============================================================
+    // Cursor control
 
     // Update cursor visibility for runtime cursors
     private void ShowOnlyCursor(int activePlayerIndex)
@@ -949,9 +914,7 @@ public class MatchSettingsMenu : MonoBehaviour
         }
     }
 
-    // ============================================================
-    // UI FOCUS / INPUT BLOCKING
-    // ============================================================
+    // UI focus / input blocking
 
     /// <summary>
     /// Configures the CanvasGroup so the settings overlay blocks
@@ -979,9 +942,7 @@ public class MatchSettingsMenu : MonoBehaviour
         {
             settingsCanvasGroup.alpha = 1f;
 
-            // THIS is important.
-            //
-            // It makes the overlay consume UI raycasts so
+            // Makes the overlay consume UI raycasts so
             // buttons underneath the menu cannot be clicked.
             settingsCanvasGroup.blocksRaycasts = true;
 
@@ -1020,14 +981,12 @@ public class MatchSettingsMenu : MonoBehaviour
             eventSystem.SetSelectedGameObject(target.gameObject);
     }
 
-    // ============================================================
-    // EXTERNAL CONTROL API
-    // ============================================================
+    // External control API
 
     /// <summary>
     /// Returns true if this player currently owns the menu.
     ///
-    /// Your player cursor script can use this to prevent itself
+    /// The player cursor script can use this to keep itself
     /// from interacting with Character Select while the settings
     /// menu is open.
     /// </summary>

@@ -109,7 +109,7 @@ public class MainMenu : MonoBehaviour
     {
         DataTransferManager.isLocal = true;
 
-        // Empty list = 0 human players — MultiplayerManager uses this as the demo mode signal
+        // Empty list = 0 human players, which MultiplayerManager takes as the demo mode signal
         DataTransferManager.isKBMInput = new List<bool>();
         DataTransferManager.selectedBirds = new List<BirdType>();
 
@@ -160,9 +160,9 @@ public class MainMenu : MonoBehaviour
         if (optionsMenu == null)
         {
             optionsMenu = gameObject.AddComponent<OptionsMenuUI>();
-            // Player 1's controller is the only one that can use the main menu (see MainMenuCursor)
+            // Whichever controller is being used, the same as MainMenuCursor
             optionsMenu.Build(GetComponentInParent<Canvas>(), creditsText.font,
-                () => Gamepad.all.Count > 0 ? Gamepad.all[0] : null, false, CloseOptions);
+                () => LocalPlayerDevices.LastUsedGamepad ?? (Gamepad.all.Count > 0 ? Gamepad.all[0] : null), false, CloseOptions);
         }
 
         if (mainMenuPanel != null) mainMenuPanel.SetActive(false);

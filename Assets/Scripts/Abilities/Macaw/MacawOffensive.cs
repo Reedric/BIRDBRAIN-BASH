@@ -62,22 +62,12 @@ public class MacawOffensive : BirdAbility
             // Can already be gone when this runs from OnDestroy while the scene is unloading
             if (opponent == null) continue;
 
-            // Online input comes through PlayerNetworkController, not this PlayerInput
-            if (NetworkSession.IsOnline)
-            {
-                if (opponent.TryGetComponent(out CharacterMovement characterMovement))
-                    characterMovement.SetInputInverted(shouldFlip);
-                continue;
-            }
-
-            var movement = opponent.actions["Move"];
-            for (int i = 0; i < movement.bindings.Count; i++)
-            {
-                if (shouldFlip)
-                    movement.ApplyBindingOverride(i, new InputBinding { overrideProcessors = "invertVector2(invertX=true, invertY=true)" });
-                else
-                    movement.RemoveBindingOverride(i);
-            }
+            // CharacterMovement flips the input itself, for local and online players alike. Overriding the Move action's
+            // bindings doesn't work for this: they include the keyboard's WASD parts (single
+            // keys, not Vector2s, so the invert processor doesn't fit them), and an override doesn't follow a player who switches
+            // between keyboard and controller partway through.
+            if (opponent.TryGetComponent(out CharacterMovement characterMovement))
+                characterMovement.SetInputInverted(shouldFlip);
         }
     }
 
@@ -124,6 +114,18 @@ public class MacawOffensive : BirdAbility
         }
 
         activeVfx.Clear();
+    }
+
+    // If the macaw gets switched off mid-flip (Phoenix turning it into a chicken), the timer stops with it, and the
+    // opponents' controls would stay flipped until the macaw next used the ability.
+    private void OnDisable()
+    {
+        if (flipCoroutine == null) return;
+
+        StopCoroutine(flipCoroutine);
+        flipCoroutine = null;
+        FlipControls(false);
+        ClearFlipVfx();
     }
 
     private void OnDestroy()

@@ -6,7 +6,7 @@ using TMPro;
 
 public class HUDManager : MonoBehaviour
 {
-    // Ability Icon UI — replaces the plain RawImage references for abilities
+    // Ability Icon UI, replaces the plain RawImage references for abilities
 
     [System.Serializable]
     public class AbilityIconUI
@@ -300,10 +300,10 @@ public class HUDManager : MonoBehaviour
 
         PlayerCardUI[] cards = GetOrderedCards();
 
-        // Only loop through human player slots — AI slots are handled exclusively
+        // Only loop through human player slots. AI slots are handled
         // by RegisterAICard() which runs in MultiplayerManager.Awake(). Looping
-        // through all 4 cards here was calling SetActive(false) on AI cards AFTER
-        // RegisterAICard() had already set them up, wiping them out.
+        // through all 4 cards here would call SetActive(false) on AI cards after
+        // RegisterAICard() has already set them up.
         for (int i = 0; i < selectedBirds.Count; i++)
         {
             PlayerCardUI card = cards[i];
@@ -362,7 +362,7 @@ public class HUDManager : MonoBehaviour
         }
     }
 
-    // Public Cooldown API — call these from bird ability scripts
+    // Cooldown functions, call these from bird ability scripts
 
     /// <summary>
     /// Triggers the offensive ability cooldown animation for a given player.

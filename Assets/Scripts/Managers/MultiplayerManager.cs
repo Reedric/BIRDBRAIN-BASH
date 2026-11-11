@@ -45,7 +45,7 @@ public class MultiplayerManager : NetworkBehaviour
     private List<BirdType> selectedBirds; // List of birds each player selected
 
     // True when the match was launched from the main menu Demo button (0 human players).
-    // Detected by an empty isKBMInput list — all 4 slots are Hard AI, but player 1's
+    // Detected by an empty isKBMInput list. All 4 slots are Hard AI, but player 1's
     // gamepad can still open the pause menu so the demo can be exited.
     private bool isDemoMode = false;
 
@@ -96,7 +96,7 @@ public class MultiplayerManager : NetworkBehaviour
         instance.isKBMInput = DataTransferManager.isKBMInput;
         instance.selectedBirds = DataTransferManager.selectedBirds;
 
-        // An empty isKBMInput list means the demo button was pressed — no human players
+        // An empty isKBMInput list means the demo button was pressed (no human players)
         isDemoMode = (isKBMInput == null || isKBMInput.Count == 0);
 
         // Initialize the players
@@ -120,12 +120,17 @@ public class MultiplayerManager : NetworkBehaviour
         // In demo mode there are no PlayerInput instances, so the normal input pipeline won't
         // route any button presses. Poll player 1's gamepad directly here so they can still
         // open the pause menu to exit the demo without quitting the whole application.
-        if (!isDemoMode) return;
+        if (!isDemoMode)
+        {
+            if (DataTransferManager.isLocal) SyncPlayerDevices();
+            return;
+        }
 
-        Gamepad pad = Gamepad.all.Count > 0 ? Gamepad.all[0] : null;
-        if (pad == null) return;
+        // Any controller's start button or the keyboard's escape, so there's always a way out of the demo.
+        bool pausePressed = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            || Gamepad.all.Any(pad => pad.startButton.wasPressedThisFrame);
 
-        if (pad.startButton.wasPressedThisFrame)
+        if (pausePressed)
         {
             // Player 1's gamepad (Gamepad.all[0]) always owns the pause menu in demo mode
             PauseMenu.Instance.pausedPlayerID = 0;
@@ -133,6 +138,36 @@ public class MultiplayerManager : NetworkBehaviour
                 PauseMenu.Instance.Resume();
             else
                 PauseMenu.Instance.Pause();
+        }
+    }
+
+    // Gives each local player's bird exactly the devices LocalPlayerDevices says are theirs, so they can switch
+    // between keyboard and controller (or pick up a new controller) at any point in the match, including while
+    // paused. Checked every frame, since Phoenix's chickens and birds coming back from being one get new PlayerInputs.
+    private static void SyncPlayerDevices()
+    {
+        foreach (PlayerInput input in PlayerInput.all)
+        {
+            if (!input.user.valid || !input.TryGetComponent(out BallInteract ballInteract)) continue;
+
+            int slot = ballInteract.playerID;
+            if (slot < 0 || slot >= 4) continue;
+
+            List<InputDevice> wanted = LocalPlayerDevices.DevicesFor(slot);
+
+            foreach (InputDevice device in input.user.pairedDevices.ToArray())
+            {
+                if (!wanted.Contains(device)) input.user.UnpairDevice(device);
+            }
+
+            foreach (InputDevice device in wanted)
+            {
+                if (!input.user.pairedDevices.Contains(device)) InputUser.PerformPairingWithDevice(device, input.user);
+            }
+
+            // A control scheme only lets through the bindings for its own devices (keyboard or gamepad), which would
+            // stop the other one working. Only the player's paired devices can reach their actions anyway.
+            if (input.actions != null && input.actions.bindingMask.HasValue) input.actions.bindingMask = null;
         }
     }
 
@@ -151,9 +186,7 @@ public class MultiplayerManager : NetworkBehaviour
         }
     }
 
-    // ============================================================
-    // ONLINE PLAYERS
-    // ============================================================
+    // Online players
 
     // Host only. Waits for everyone to load, then spawns a bird for each player in the lobby and AI for
     // the rest of the slots. Spawning them through NGO is what makes them exist on the clients.
@@ -303,8 +336,8 @@ public class MultiplayerManager : NetworkBehaviour
                 break;
 
             case InputDeviceChange.Reconnected:
+                // LocalPlayerDevices hands it back to its player the first time it's used, and SyncPlayerDevices pairs it
                 Debug.Log($"[MultiplayerManager] Gamepad reconnected: {gamepad.displayName}");
-                TryRepairGamepad(gamepad);
                 break;
         }
     }
@@ -330,6 +363,9 @@ public class MultiplayerManager : NetworkBehaviour
 
         // One entry for each slot. MakeAI marks the AI slots as already ready.
         ScoreManager.Instance.readiedUp = new bool[4];
+
+        // Keeps the controllers players had in character select
+        if (!isDemoMode) LocalPlayerDevices.Configure(isKBMInput);
 
         // In demo mode isKBMInput is empty, so this loop is skipped entirely and
         // all four slots fall through to the MakeAI loop below.
@@ -359,11 +395,11 @@ public class MultiplayerManager : NetworkBehaviour
             }
             else
             {
-                // Controller init can fail if no pad is connected yet — handle gracefully
+                // Controller init can fail if no pad is connected yet
                 player = InitializeControllerPlayer(birdPrefab, playerCount);
             }
 
-            // Guard: if player failed to initialize (e.g. no controller found), skip safely
+            // If the player failed to initialize (e.g. no controller found), skip them
             if (player == null)
             {
                 Debug.LogError($"[MultiplayerManager] Failed to initialize player {playerCount + 1} — skipping.");
@@ -411,18 +447,20 @@ public class MultiplayerManager : NetworkBehaviour
         );
     }
 
-    // Now takes playerCount for logging, and starts a retry coroutine if no pad is found
+    // Takes playerCount for logging, and starts a retry coroutine if no pad is found
     PlayerInput InitializeControllerPlayer(GameObject prefab, int playerCount)
     {
-        // Get an available gamepad if possible
-        Gamepad controller = AvailableGamepad();
+        // The controller this player had in character select, if any
+        // (Not just any free one: Configure already handed those out, so a free one here would be another player's)
+        Gamepad controller = LocalPlayerDevices.GetGamepad(playerCount);
 
-        // If there is no available gamepad, start a wait coroutine instead of hard erroring
+        // With no controller, the bird is still made straight away, and the player gets the next controller anyone
+        // presses (see LocalPlayerDevices). Waiting for one would leave the match a player short, which it can't
+        // start without.
         if (controller == null)
         {
-            Debug.LogWarning($"[MultiplayerManager] No available gamepad for Player {playerCount + 1}. Starting wait coroutine.");
-            StartCoroutine(WaitForControllerAndInitialize(prefab, playerCount));
-            return null;
+            Debug.LogWarning($"[MultiplayerManager] No controller for Player {playerCount + 1} yet. Press any button on one to take control.");
+            return PlayerInput.Instantiate(prefab, playerIndex: playerCount);
         }
 
         // Initialize the controller player
@@ -568,9 +606,7 @@ public class MultiplayerManager : NetworkBehaviour
     {
         GameManager gameManager = GameManager.Instance;
 
-        // --------------------------------------------------------
-        // LOCAL OR ONLINE MULTIPLAYER COMPONENTS
-        // --------------------------------------------------------
+        // Local or online multiplayer components
         if (GameManager.Instance.isLocal)
         {
             // Not every prefab has these. The KBM birds never go online, for example.
@@ -578,17 +614,13 @@ public class MultiplayerManager : NetworkBehaviour
             if (player.TryGetComponent(out PlayerNetworkController networkController)) networkController.enabled = false;
         }
 
-        // --------------------------------------------------------
-        // DETERMINE PHYSICAL SPAWN SLOT
-        // --------------------------------------------------------
+        // Determine physical spawn slot
 
         int spawnSlot = GetSpawnSlot(playerIndex);
 
         bool onLeft = spawnSlot < 2;
 
-        // --------------------------------------------------------
-        // BALL INTERACTION
-        // --------------------------------------------------------
+        // Ball interaction
 
         BallInteract ballInteract = player.GetComponent<BallInteract>();
 
@@ -597,14 +629,12 @@ public class MultiplayerManager : NetworkBehaviour
             // Player ID remains their actual player number.
             ballInteract.playerID = playerIndex;
 
-            // Court side is based on the TEAM ARRANGEMENT,
+            // Court side is based on the team arrangement,
             // not simply whether playerIndex < 2.
             ballInteract.onLeft = onLeft;
         }
 
-        // --------------------------------------------------------
-        // SPAWN
-        // --------------------------------------------------------
+        // Spawn
 
         if (spawnSlot < 0 || spawnSlot >= playerSpawnpoints.Length)
         {
@@ -625,9 +655,7 @@ public class MultiplayerManager : NetworkBehaviour
         player.transform.name =
             $"Player {playerIndex + 1}";
 
-        // --------------------------------------------------------
-        // FOLLOW OBJECT
-        // --------------------------------------------------------
+        // Follow object
 
         // Followers are keyed to the player's own number (color-coded per
         // player), not to the physical spawn slot, so they stay correct
@@ -646,9 +674,7 @@ public class MultiplayerManager : NetworkBehaviour
 
         fo.target = player.transform;
 
-        // --------------------------------------------------------
-        // GAME MANAGER TEAM ASSIGNMENT
-        // --------------------------------------------------------
+        // Game manager team assignment
 
         if (onLeft)
         {
@@ -671,9 +697,7 @@ public class MultiplayerManager : NetworkBehaviour
                 gameManager.rightPlayer2 = player.gameObject;
         }
 
-        // --------------------------------------------------------
-        // READY INDICATOR
-        // --------------------------------------------------------
+        // Ready indicator
 
         EndScreen endScreen = player.GetComponent<EndScreen>();
 
@@ -688,9 +712,7 @@ public class MultiplayerManager : NetworkBehaviour
 
     void MakeAI(int playerIndex)
     {
-        // --------------------------------------------------------
-        // RANDOM BIRD
-        // --------------------------------------------------------
+        // Random bird
 
         BirdType birdType =
             (BirdType)(int)(UnityEngine.Random.value * 11);
@@ -705,9 +727,7 @@ public class MultiplayerManager : NetworkBehaviour
             birdType = BirdType.PENGUIN;
         }
 
-        // --------------------------------------------------------
-        // CREATE AI
-        // --------------------------------------------------------
+        // Create AI
 
         GameObject ai = Instantiate(aiModel);
 
@@ -727,9 +747,7 @@ public class MultiplayerManager : NetworkBehaviour
             return;
         }
 
-        // --------------------------------------------------------
-        // DETERMINE PHYSICAL SPAWN SLOT
-        // --------------------------------------------------------
+        // Determine physical spawn slot
 
         int spawnSlot = GetSpawnSlot(playerIndex);
 
@@ -738,9 +756,7 @@ public class MultiplayerManager : NetworkBehaviour
         aiBehavior.onLeft = onLeft;
         aiBehavior.playerID = playerIndex;
 
-    // --------------------------------------------------------
-    // DIFFICULTY
-    // --------------------------------------------------------
+    // Difficulty
 
     int humanCount =
         isKBMInput.Count(kbm => !kbm);
@@ -768,9 +784,7 @@ public class MultiplayerManager : NetworkBehaviour
 
     aiBehavior.SetAIDifficulty(difficulty);
 
-        // --------------------------------------------------------
-        // SPAWN
-        // --------------------------------------------------------
+        // Spawn
 
         if (spawnSlot < 0 ||
             spawnSlot >= playerSpawnpoints.Length)
@@ -815,9 +829,7 @@ public class MultiplayerManager : NetworkBehaviour
             };
         }
 
-        // --------------------------------------------------------
-        // FOLLOW OBJECT
-        // --------------------------------------------------------
+        // Follow object
 
         // Followers are keyed to the player's own number (color-coded per
         // player), not to the physical spawn slot, so they stay correct
@@ -828,9 +840,7 @@ public class MultiplayerManager : NetworkBehaviour
         if (fo != null)
             fo.target = ai.transform;
 
-        // --------------------------------------------------------
-        // GAME MANAGER TEAM ASSIGNMENT
-        // --------------------------------------------------------
+        // Game manager team assignment
 
         GameManager gameManager =
             GameManager.Instance;
@@ -850,9 +860,7 @@ public class MultiplayerManager : NetworkBehaviour
                 gameManager.rightPlayer2 = ai;
         }
 
-        // --------------------------------------------------------
-        // HUD REGISTRATION
-        // --------------------------------------------------------
+        // HUD registration
 
         // Online, the roster fills in every card instead
         if (DataTransferManager.isLocal)
@@ -863,9 +871,7 @@ public class MultiplayerManager : NetworkBehaviour
         }
     }
 
-    // ============================================================
-    // TEAM ARRANGEMENT / SPAWN MAPPING
-    // ============================================================
+    // Team arrangement / spawn mapping
 
     /// <summary>
     /// Returns the physical spawnpoint that a player should use
@@ -889,9 +895,7 @@ public class MultiplayerManager : NetworkBehaviour
 
         switch (settings.CurrentTeamArrangement)
         {
-            // ----------------------------------------------------
             // P1 P2 vs P3 P4
-            // ----------------------------------------------------
             case GameSettings.TeamArrangement.P1P2_vs_P3P4:
 
                 switch (playerIndex)
@@ -904,9 +908,7 @@ public class MultiplayerManager : NetworkBehaviour
 
                 break;
 
-            // ----------------------------------------------------
             // P1 P3 vs P2 P4
-            // ----------------------------------------------------
             case GameSettings.TeamArrangement.P1P3_vs_P2P4:
 
                 switch (playerIndex)
@@ -919,9 +921,7 @@ public class MultiplayerManager : NetworkBehaviour
 
                 break;
 
-            // ----------------------------------------------------
             // P1 P4 vs P2 P3
-            // ----------------------------------------------------
             case GameSettings.TeamArrangement.P1P4_vs_P2P3:
 
                 switch (playerIndex)
@@ -935,7 +935,7 @@ public class MultiplayerManager : NetworkBehaviour
                 break;
         }
 
-        // Safety fallback
+        // Fallback
         return Mathf.Clamp(playerIndex, 0, 3);
     }
 

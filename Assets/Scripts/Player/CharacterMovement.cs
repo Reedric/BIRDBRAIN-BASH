@@ -20,8 +20,6 @@ public class CharacterMovement : NetworkBehaviour
 
     private float directionChangeWeight = 15f; // How quickly the character can change direction
     private Coroutine buffCoroutine; // Reference to the currently active buff coroutine
-    private float originalMaxGroundSpeed = 1.0f; // Original max ground speed before buff
-    private float originalMaxAirSpeed = 1.0f; // Original max air speed before buff
 
     private PlayerInput playerInput; // Input of the player for local multiplayer functionality
     private bool networkedJumpHeld; // If the player is holding jump, set by the input RPC for online multiplayer
@@ -50,6 +48,46 @@ public class CharacterMovement : NetworkBehaviour
     // Which side of the net this character started on.
     // -1 = left side, +1 = right side.
     private float netSide;
+
+    // The stats this bird spawned with, so they can be put back at the start of each point
+    private float baseMaxGroundSpeed;
+    private float baseMaxAirSpeed;
+    private float baseJumpForce;
+
+    void Awake()
+    {
+        baseMaxGroundSpeed = maxGroundSpeed;
+        baseMaxAirSpeed = maxAirSpeed;
+        baseJumpForce = jumpForce;
+    }
+
+    // Abilities put back the speeds they change when they wear off, but when two overlap (a buff ending during a stun,
+    // or a bird turned into a chicken mid-boost) one can put back the wrong value and leave the bird stuck that way.
+    public void ResetStats()
+    {
+        statModifiers.Clear();
+        ApplyStatModifiers();
+    }
+
+    // Stat changes from abilities (see BirdStats). The stats are always worked out from the ones the bird spawned with.
+    private readonly StatModifierStack statModifiers = new StatModifierStack();
+
+    public void SetStatModifier(object key, StatModifier modifier)
+    {
+        statModifiers.Set(key, modifier);
+        ApplyStatModifiers();
+    }
+
+    public void RemoveStatModifier(object key)
+    {
+        if (statModifiers.Remove(key)) ApplyStatModifiers();
+    }
+
+    private void ApplyStatModifiers()
+    {
+        statModifiers.Evaluate(baseMaxGroundSpeed, baseMaxAirSpeed, baseJumpForce,
+            out maxGroundSpeed, out maxAirSpeed, out jumpForce);
+    }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     IEnumerator Start()
@@ -83,16 +121,13 @@ public class CharacterMovement : NetworkBehaviour
             }
         }
 
-        // Determine which side of the net this character belongs to.
-        if (enforceNetBoundary)
-        {
-            netSide = Mathf.Sign(transform.position.x);
+        // Determine which side of the net this character belongs to. (Always, since every bird gets the basic guard)
+        netSide = Mathf.Sign(transform.position.x);
 
-            // Safety fallback if the character starts directly on the net.
-            if (Mathf.Approximately(netSide, 0f))
-            {
-                netSide = 1f;
-            }
+        // Safety fallback if the character starts directly on the net.
+        if (Mathf.Approximately(netSide, 0f))
+        {
+            netSide = 1f;
         }
     }
 
@@ -116,16 +151,22 @@ public class CharacterMovement : NetworkBehaviour
     /// </summary>
     private void EnforceNetBoundary()
     {
-        if (!enforceNetBoundary || rb == null)
+        if (rb == null || netSide == 0f)
+            return;
+
+        // The end screen lines every bird up on one side
+        if (GameManager.Instance == null || GameManager.Instance.gameState == GameManager.GameState.GameOver)
             return;
 
         Vector3 position = rb.position;
         Vector3 velocity = rb.linearVelocity;
 
-        Collider col = GetComponent<Collider>();
-
+        // Every bird is kept from getting its middle over the net, even without enforceNetBoundary. Fast dashes
+        // (Hummingbird's is 30 units a second) could otherwise go straight through the net's collider in a single
+        // physics step and leave the bird on the other team's court. enforceNetBoundary keeps the whole body back.
         float halfWidth = 0f;
 
+        Collider col = enforceNetBoundary ? GetComponent<Collider>() : null;
         if (col != null)
         {
             halfWidth = col.bounds.extents.x;
@@ -210,16 +251,13 @@ public class CharacterMovement : NetworkBehaviour
             buffCoroutine = null;
         }
 
-        maxGroundSpeed = originalMaxGroundSpeed;
-        maxAirSpeed = originalMaxAirSpeed;
-        // originalJumpForce = jumpForce;
+        RemoveStatModifier(buffStatsKey);
     }
+
+    private readonly object buffStatsKey = new object();
 
     public IEnumerator BuffTimer(int increase, int time)
     {
-        Debug.Log("BUFFING...");
-        Debug.Log("ORIGINAL = " + maxGroundSpeed);
-
         BuffsDebuffs.Instance.ApplyEffect(
             BuffsDebuffs.EffectType.Buff,
             gameObject,
@@ -227,25 +265,11 @@ public class CharacterMovement : NetworkBehaviour
             true
         );
 
-        originalMaxGroundSpeed = maxGroundSpeed;
-        originalMaxAirSpeed = maxAirSpeed;
-        // originalJumpForce = jumpForce;
-
-        maxGroundSpeed += increase;
-        maxAirSpeed += increase;
-
-        // Clamp it so that the stat cannot go below 1
-        maxGroundSpeed = Mathf.Max(maxGroundSpeed, 1f);
-        maxAirSpeed = Mathf.Max(maxAirSpeed, 1f);
-        // jumpForce += increase;
-
-        Debug.Log("NEW = " + maxGroundSpeed);
+        SetStatModifier(buffStatsKey, StatModifier.Speed(increase));
 
         yield return new WaitForSeconds(time);
 
-        maxGroundSpeed = originalMaxGroundSpeed;
-        maxAirSpeed = originalMaxAirSpeed;
-        // jumpForce = originalJumpForce;
+        RemoveStatModifier(buffStatsKey);
     }
 
     /// <summary>
@@ -256,7 +280,11 @@ public class CharacterMovement : NetworkBehaviour
         if (!NetworkSession.HasAuthority) return;
 
         // Get the input for local if necessary
-        if (GameManager.Instance.isLocal) movementInput = playerInput.actions["Move"].ReadValue<Vector2>();
+        if (GameManager.Instance.isLocal && playerInput != null)
+        {
+            movementInput = playerInput.actions["Move"].ReadValue<Vector2>();
+            if (inputInverted) movementInput = -movementInput; // Macaw's Flip Flap
+        }
 
         // Update the current direction and speed of the character based on player input
         // christofort: added check for canMove to be true

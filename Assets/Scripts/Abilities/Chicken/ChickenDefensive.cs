@@ -30,6 +30,8 @@ public class ChickenDefensive : PassiveAbility
 
     private void FixedUpdate()
     {
+        if (GameManager.Instance == null) return;
+
         // CharacterMovement knows about jump for both local and online input
         bool wasHeld = _jumpHeld;
         _jumpHeld = characterMovement.JumpHeld;
@@ -52,7 +54,7 @@ public class ChickenDefensive : PassiveAbility
 
         float velY = rb.linearVelocity.y;
 
-        // Detect the apex — near-zero upward velocity after a jump
+        // Detect the apex (near-zero upward velocity after a jump)
         if (!_apexReached && !_slowFalling && Mathf.Abs(velY) < apexVelocityThreshold && velY <= 0)
         {
             _apexReached = true;

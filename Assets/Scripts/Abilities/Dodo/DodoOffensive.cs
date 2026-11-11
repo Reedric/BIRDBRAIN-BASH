@@ -123,6 +123,17 @@ public class DodoOffensive : BirdAbility
 		Destroy(vfx, 5f);
 	}
 
+	// If the dodo gets switched off (Phoenix turning it into a chicken), the timer stops with it. The companions would
+	// stay on the court for good, and the ability could never be used again.
+	private void OnDisable()
+	{
+		if (lifetimeCoroutine == null) return;
+
+		StopCoroutine(lifetimeCoroutine);
+		lifetimeCoroutine = null;
+		if (gameObject.scene.isLoaded) ClearDodos();
+	}
+
 	private void OnDestroy()
 	{
 		if (lifetimeCoroutine != null)

@@ -18,7 +18,7 @@ public class PelicanOffensive : BirdAbility
 
     override protected bool Activate()
     {
-        if (!GameManager.PointInProgress())
+        if (!GameManager.PointInProgress() || fishPrefab == null)
             return false;
 
         StartCoroutine(SlipFish());
@@ -41,11 +41,16 @@ public class PelicanOffensive : BirdAbility
         Vector3 mouthPos = transform.position + transform.forward * mouthForwardOffset + transform.up * mouthUpOffset;
         GameObject fish = NetworkFx.Instantiate(fishPrefab, mouthPos, transform.rotation);
 
+        // Also on a timer of its own (and SlipFish removes itself when the point ends). If the pelican gets switched
+        // off (Phoenix turning it into a chicken) this coroutine stops, and the fish would stay for the whole match.
+        Destroy(fish, fishLifetime);
+
         // Let the fish know who the pelican is (to ignore self-collision)
         // and which side the pelican is on (so SlipFish can pass the correct
         // opponentIsOnLeft value to BuffsDebuffs.ApplyEffect when it stuns on collision)
         SlipFish slipFish = fish.GetComponent<SlipFish>();
         slipFish.pelican = gameObject;
+        slipFish.pelicanIsOnLeft = myBallInteract != null && myBallInteract.onLeft; // Without this every slip shows the left team's effect
 
         // Account for rotation offset
         Vector3 forward = Quaternion.Euler(-GetComponent<CharacterMovement>().rotationOffsetEuler) * transform.forward;

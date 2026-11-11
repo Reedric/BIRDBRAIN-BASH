@@ -74,7 +74,17 @@ public class RobopigeonOffensive : BirdAbility
 		GameObject region = NetworkFx.Instantiate(strikeRegionPrefab, position, Quaternion.identity);
 		float diameter = strikeRadius * 2f;
 		region.transform.localScale = new Vector3(diameter, region.transform.localScale.y, diameter);
+
+		// Removed on a timer of its own too, in case 31RD gets switched off before the strike lands
+		Destroy(region, Mathf.Max(regionLifetime, strikeDelay));
 		return region;
+	}
+
+	// The coroutines stop if 31RD gets switched off (Phoenix turning it into a chicken), which would leave the
+	// target markers stuck on the opponents
+	private void OnDisable()
+	{
+		ClearHitmarkers();
 	}
 
 	private IEnumerator ResolveStrike(Vector3 strikePosition, GameObject region)

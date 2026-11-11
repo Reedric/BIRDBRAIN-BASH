@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem; // Using New Input System
@@ -7,7 +8,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
 
-// Main Menu Cursor - Controller Only
+// The main menu's cursor. It follows the mouse while that's being used, and moves between buttons with a controller or the keys.
 public class MainMenuCursor : MonoBehaviour
 {
     public Transform cursor1Prefab;
@@ -78,10 +79,8 @@ public class MainMenuCursor : MonoBehaviour
 
     private void Start()
     {
-        // 1. HIDE THE SYSTEM MOUSE
-        // This stops the OS cursor from showing up and locks it to the center
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
+        // The mouse is free to move until a controller gets used
+        MenuMouse.Release();
 
         CreatePlayerCursor();
 
@@ -99,15 +98,13 @@ public class MainMenuCursor : MonoBehaviour
 
     private void Update()
     {
-        // Ensure the hardware mouse stays hidden (in case of alt-tabbing)
+        // The system cursor can come back after alt-tabbing, and the one drawn here stands in for it
         if (Cursor.visible) Cursor.visible = false;
 
-        // Only read from Gamepad.all[0] so that Player 1 is always the first connected
-        // controller — this matches how CharacterSelectManager assigns players via
-        // Gamepad.all[index], preventing ordering mismatches between scenes and
-        // ensuring controllers 2/3/4 cannot move or click the main menu cursor.
-        if (Gamepad.all.Count == 0) return;
-        Gamepad pad = Gamepad.all[0];
+        // Whichever controller was used last, plus the keyboard and mouse, so the main menu works from any device.
+        // Character select works out who is player 1 by itself.
+        Gamepad pad = LocalPlayerDevices.LastUsedGamepad ?? (Gamepad.all.Count > 0 ? Gamepad.all[0] : null);
+        Keyboard keyboard = Keyboard.current;
 
         MenuType activeMenu = GetActiveMenuType();
 
@@ -134,16 +131,137 @@ public class MainMenuCursor : MonoBehaviour
         }
 
         // On the NumPlayers panel, B confirms and proceeds to CharSelect.
-        if (lastMenuActive == MenuType.NumPlayers && pad.bButton.wasPressedThisFrame)
+        if (lastMenuActive == MenuType.NumPlayers && pad != null && pad.bButton.wasPressedThisFrame)
         {
             AudioManager.PlayButtonSelectSound();
             NavigateToPlay();
             return;
         }
 
-        KeepEventSystemOnTarget();
-        UpdateControllerInput(pad);
+        bool typing = IsTyping();
+        bool usedMouse = UpdateMouseInput(typing);
+        if (!usedMouse && !typing) KeepEventSystemOnTarget();
+
+        // The stick and d-pad, or the arrow keys and WASD, all move between buttons the same way
+        Vector2 move = Vector2.zero;
+        bool submit = false;
+        if (pad != null)
+        {
+            move = pad.leftStick.ReadValue();
+            if (move.sqrMagnitude < 0.01f) move = pad.dpad.ReadValue();
+            submit = pad.aButton.wasPressedThisFrame;
+        }
+        if (keyboard != null && !typing)
+        {
+            Vector2 keys = new Vector2(
+                (keyboard.rightArrowKey.isPressed || keyboard.dKey.isPressed ? 1f : 0f) - (keyboard.leftArrowKey.isPressed || keyboard.aKey.isPressed ? 1f : 0f),
+                (keyboard.upArrowKey.isPressed || keyboard.wKey.isPressed ? 1f : 0f) - (keyboard.downArrowKey.isPressed || keyboard.sKey.isPressed ? 1f : 0f));
+            if (keys != Vector2.zero) move = keys;
+            submit |= keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame || keyboard.spaceKey.wasPressedThisFrame;
+        }
+
+        UpdateControllerInput(move, submit);
         UpdateCursorPosition();
+    }
+
+    private bool mouseActive;
+
+    // Lets the mouse point at and click buttons the same as it would anywhere else. Returns whether the mouse is
+    // what's being used right now.
+    private bool UpdateMouseInput(bool typing)
+    {
+        Mouse mouse = Mouse.current;
+        if (mouse == null) return false;
+
+        if (MenuMouse.UsedThisFrame())
+        {
+            if (!mouseActive) MenuMouse.Release();
+            mouseActive = true;
+        }
+        else if (Gamepad.all.Any(LocalPlayerDevices.WasUsedThisFrame))
+        {
+            // Otherwise a pointer left sitting on a button would keep it highlighted while the stick moves elsewhere
+            if (Cursor.lockState != CursorLockMode.Locked) MenuMouse.Lock();
+            mouseActive = false;
+        }
+        else if (Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame)
+        {
+            mouseActive = false;
+        }
+
+        if (!mouseActive) return false;
+
+        Vector2 pointer = mouse.position.ReadValue();
+        cursorPosition = desiredCursorPosition = pointer;
+
+        int hovered = FindTargetUnderPointer(pointer, out bool eventSystemClicksIt);
+
+        // Selecting another button would take the keyboard away from a text field that's being typed in
+        if (hovered >= 0 && hovered != currentTargetIndex && !typing)
+        {
+            currentTargetIndex = hovered;
+            if (EventSystem.current != null && uiSelectables[hovered] != null)
+                EventSystem.current.SetSelectedGameObject(uiSelectables[hovered].gameObject);
+            AudioManager.PlayButtonHoverSound();
+        }
+
+        if (mouse.leftButton.wasPressedThisFrame)
+        {
+            PlayCursorPressAnimation();
+
+            // The EventSystem clicks whatever the pointer is over by itself, so this only fills in when it can't
+            if (hovered >= 0 && !eventSystemClicksIt && Time.time - panelSwitchedTime >= panelSwitchInputBlockDuration
+                && TryActivateTargetAtIndex(hovered))
+            {
+                AudioManager.PlayButtonSelectSound();
+            }
+        }
+
+        return true;
+    }
+
+    // The button under the mouse, or -1 if it isn't over one. eventSystemClicksIt is false for a button with
+    // nothing on it that can be hit by a raycast, which the EventSystem can't click.
+    private int FindTargetUnderPointer(Vector2 pointer, out bool eventSystemClicksIt)
+    {
+        eventSystemClicksIt = false;
+
+        if (EventSystem.current != null)
+        {
+            List<RaycastResult> results = new();
+            EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = pointer }, results);
+
+            // Only the topmost thing counts, the same as for a click
+            if (results.Count > 0)
+            {
+                for (Transform t = results[0].gameObject.transform; t != null; t = t.parent)
+                {
+                    int index = uiSelectables.FindIndex(selectable => selectable != null && selectable.transform == t);
+                    if (index < 0) continue;
+
+                    eventSystemClicksIt = true;
+                    return index;
+                }
+            }
+        }
+
+        Canvas canvas = GetComponentInParent<Canvas>();
+        Camera cam = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
+
+        for (int i = 0; i < uiTargets.Count; ++i)
+        {
+            if (uiTargets[i] != null && RectTransformUtility.RectangleContainsScreenPoint(uiTargets[i], pointer, cam))
+                return i;
+        }
+
+        return -1;
+    }
+
+    // Whether a text field has the keyboard, since the arrow keys, WASD, Enter and Space all type into it
+    private static bool IsTyping()
+    {
+        GameObject selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+        return selected != null && selected.TryGetComponent(out TMP_InputField field) && field.isFocused;
     }
 
     // The EventSystem also clicks its selected button when A is pressed, so it needs to be on the same
@@ -164,16 +282,15 @@ public class MainMenuCursor : MonoBehaviour
         playerCursor = Instantiate(cursor1Prefab, transform.root);
         playerCursor.name = "Cursor_Player1";
         cursorBaseScale = playerCursor.localScale;
+        MenuMouse.MakeClickThrough(playerCursor.gameObject);
 
         RectTransform rt = playerCursor.GetComponent<RectTransform>();
         if (rt != null)
             rt.pivot = new Vector2(0f, 1f); // Top-left pivot for pointer-style cursor accuracy
     }
 
-    private void UpdateControllerInput(Gamepad pad)
+    private void UpdateControllerInput(Vector2 input, bool submit)
     {
-        Vector2 input = pad.leftStick.ReadValue();
-
         if (input.magnitude >= inputDeadzone && Time.time - lastMoveTime >= inputRepeatDelay && uiSelectables.Count > 0)
         {
             Selectable current = (currentTargetIndex >= 0 && currentTargetIndex < uiSelectables.Count)
@@ -227,8 +344,8 @@ public class MainMenuCursor : MonoBehaviour
             }
         }
 
-        // Click / select (A Button)
-        if (pad.aButton.wasPressedThisFrame)
+        // Click / select (A Button, or Enter/Space)
+        if (submit)
         {
             if (Time.time - panelSwitchedTime < panelSwitchInputBlockDuration)
                 return;
@@ -250,12 +367,17 @@ public class MainMenuCursor : MonoBehaviour
     {
         if (playerCursor == null) return;
 
-        // Follows the target every frame, since a new panel's buttons can still be moving as its layout gets built
-        if (currentTargetIndex >= 0 && currentTargetIndex < uiTargets.Count)
-            desiredCursorPosition = GetPreferredScreenPosition(uiTargets[currentTargetIndex]);
+        // While the mouse is being used, the cursor is already right where the mouse is
+        bool snapping = !mouseActive;
+        if (snapping)
+        {
+            // Follows the target every frame, since a new panel's buttons can still be moving as its layout gets built
+            if (currentTargetIndex >= 0 && currentTargetIndex < uiTargets.Count)
+                desiredCursorPosition = GetPreferredScreenPosition(uiTargets[currentTargetIndex]);
 
-        float t = Mathf.Clamp01(Time.deltaTime / Mathf.Max(0.0001f, cursorMoveSmoothTime));
-        cursorPosition = Vector2.Lerp(cursorPosition, desiredCursorPosition, t);
+            float t = Mathf.Clamp01(Time.deltaTime / Mathf.Max(0.0001f, cursorMoveSmoothTime));
+            cursorPosition = Vector2.Lerp(cursorPosition, desiredCursorPosition, t);
+        }
 
         // Convert the screen position to local position for the UI Canvas
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -265,7 +387,7 @@ public class MainMenuCursor : MonoBehaviour
             out Vector2 localPos
         );
 
-        if (currentTargetIndex >= 0 && currentTargetIndex < uiTargets.Count)
+        if (snapping && currentTargetIndex >= 0 && currentTargetIndex < uiTargets.Count)
         {
             float phase = (Time.time * hoverBobFrequency) % 1f;
             float intensity = Mathf.Sin(phase * Mathf.PI * 2f);

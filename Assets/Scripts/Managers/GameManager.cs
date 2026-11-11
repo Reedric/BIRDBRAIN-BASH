@@ -90,6 +90,12 @@ public class GameManager : NetworkBehaviour
         {
             if (isLocal) lastHitLocal = value;
             else lastHitNet.Value = NetworkSession.IdOf(value);
+
+            // A bump, set, spike, etc. is a newer touch than the ball bouncing off someone earlier in the rally.
+            // ScoreManager checks physical touches first when the ball goes out, so an old one would otherwise
+            // decide who the point goes to, even after the other team had spiked it out.
+            if (value != null && ScoreManager.Instance != null)
+                ScoreManager.Instance.lastPhysicalTouch = null;
         }
     }
 
@@ -320,6 +326,12 @@ public class GameManager : NetworkBehaviour
 
             CharacterMovement movement = player.GetComponent<CharacterMovement>();
             if (movement != null) movement.enabled = true;
+
+            // Put back the stats the bird spawned with, in case an ability's change was left behind, then put back the
+            // effects meant to last across points (Ostrich's buff), the only ones still active after ClearAllEffects.
+            if (movement != null) movement.ResetStats();
+            if (player.TryGetComponent(out AIBehavior ai)) ai.ResetStats();
+            if (BuffsDebuffs.Instance != null) BuffsDebuffs.Instance.ReapplyActiveEffects(player);
 
             Rigidbody rb = player.GetComponent<Rigidbody>();
             if (rb != null)

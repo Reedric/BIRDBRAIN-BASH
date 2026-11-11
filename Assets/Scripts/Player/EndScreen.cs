@@ -19,8 +19,8 @@ public class EndScreen : MonoBehaviour
         // Network: wait until the start stuff has happened
         if (GameManager.Instance == null) return;
 
-        // Online, this comes through PlayerNetworkController instead
-        if (!GameManager.Instance.isLocal) return;
+        // Online, this comes through PlayerNetworkController instead. AI birds like the mini 31RD have no PlayerInput
+        if (!GameManager.Instance.isLocal || playerInput == null) return;
 
         // If game has ended and player just pressed trigger
         if (GameManager.Instance.gameState == GameManager.GameState.GameOver

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 // Persistent singleton that holds match settings between scenes.
@@ -5,9 +6,7 @@ public class GameSettings : MonoBehaviour
 {
     public static GameSettings Instance;
 
-    // ============================================================
-    // MATCH SETTINGS
-    // ============================================================
+    // Match settings
 
     public int PointsPerSet = 25;
 
@@ -17,9 +16,7 @@ public class GameSettings : MonoBehaviour
 
     public int FinalSetPoints = 15;
 
-    // ============================================================
-    // BOT DIFFICULTY
-    // ============================================================
+    // Bot difficulty
 
     public enum BotDifficulty
     {
@@ -30,9 +27,7 @@ public class GameSettings : MonoBehaviour
 
     public BotDifficulty CurrentBotDifficulty = BotDifficulty.Hard;
 
-    // ============================================================
-    // TEAM ARRANGEMENT
-    // ============================================================
+    // Team arrangement
 
     public enum TeamArrangement
     {
@@ -44,9 +39,7 @@ public class GameSettings : MonoBehaviour
     // Defaults to classic 1&2 vs 3&4
     public TeamArrangement CurrentTeamArrangement = TeamArrangement.P1P2_vs_P3P4;
 
-    // ============================================================
-    // MAP ROTATION
-    // ============================================================
+    // Map rotation
 
     // These are the maps currently allowed to appear in the
     // match rotation.
@@ -57,9 +50,23 @@ public class GameSettings : MonoBehaviour
     public bool IcebergEnabled = true;
     public bool VolcanoEnabled = true;
 
-    // ============================================================
-    // UNITY
-    // ============================================================
+    // Tutorial
+
+    private const string showTutorialKey = "Settings.ShowTutorial";
+
+    // Whether the tutorial plays before a local match. It's on until someone turns it off in Match Settings, and
+    // that gets remembered between sessions, so players who've already learned the game don't keep seeing it.
+    public bool ShowTutorial
+    {
+        get => PlayerPrefs.GetInt(showTutorialKey, 1) == 1;
+        set
+        {
+            PlayerPrefs.SetInt(showTutorialKey, value ? 1 : 0);
+            PlayerPrefs.Save();
+        }
+    }
+
+    // Unity
 
     private void Awake()
     {
@@ -73,9 +80,7 @@ public class GameSettings : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    // ============================================================
-    // SINGLETON
-    // ============================================================
+    // Singleton
 
     public static GameSettings EnsureInstance()
     {
@@ -91,9 +96,7 @@ public class GameSettings : MonoBehaviour
         return Instance;
     }
 
-    // ============================================================
-    // MAP ROTATION
-    // ============================================================
+    // Map rotation
 
     /// <summary>
     /// Saves which maps are enabled in the match rotation.
@@ -110,8 +113,7 @@ public class GameSettings : MonoBehaviour
         IcebergEnabled = iceberg;
         VolcanoEnabled = volcano;
 
-        // Absolute safety net.
-        // There must always be at least one playable map.
+        // There always has to be at least one playable map.
         if (!BeachEnabled &&
             !ParkEnabled &&
             !IcebergEnabled &&
@@ -119,5 +121,17 @@ public class GameSettings : MonoBehaviour
         {
             BeachEnabled = true;
         }
+    }
+
+    // The scene of a random map out of the ones in the rotation
+    public string PickMapScene()
+    {
+        List<string> scenes = new();
+        if (BeachEnabled) scenes.Add("Game_Beach");
+        if (ParkEnabled) scenes.Add("Game_Forest");
+        if (IcebergEnabled) scenes.Add("Game_Iceberg");
+        if (VolcanoEnabled) scenes.Add("Game_Volcano");
+
+        return scenes.Count > 0 ? scenes[Random.Range(0, scenes.Count)] : "Game_Beach";
     }
 }

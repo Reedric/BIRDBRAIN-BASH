@@ -22,9 +22,6 @@ public class HummingbirdDefensive : BirdAbility
     private Coroutine dashCoroutine;
     private Coroutine speedBoostCoroutine;
 
-    private float originalGroundSpeed;
-    private float originalAirSpeed;
-
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -122,23 +119,15 @@ public class HummingbirdDefensive : BirdAbility
     private void StartSpeedBoost()
     {
         if (speedBoostCoroutine != null)
-        {
             StopCoroutine(speedBoostCoroutine);
-
-            cM.maxGroundSpeed = originalGroundSpeed;
-            cM.maxAirSpeed = originalAirSpeed;
-        }
 
         speedBoostCoroutine = StartCoroutine(SpeedBoost());
     }
 
     private IEnumerator SpeedBoost()
     {
-        originalGroundSpeed = cM.maxGroundSpeed;
-        originalAirSpeed = cM.maxAirSpeed;
-
-        cM.maxGroundSpeed += speedBoost;
-        cM.maxAirSpeed += speedBoost;
+        // Setting it again just replaces this ability's boost, so it can't stack with itself
+        BirdStats.Apply(gameObject, this, StatModifier.Speed(speedBoost));
 
         if (applySpeedBoostEffect && BuffsDebuffs.Instance != null)
         {
@@ -152,8 +141,7 @@ public class HummingbirdDefensive : BirdAbility
 
         yield return new WaitForSeconds(speedBoostDuration);
 
-        cM.maxGroundSpeed = originalGroundSpeed;
-        cM.maxAirSpeed = originalAirSpeed;
+        BirdStats.Remove(gameObject, this);
 
         speedBoostCoroutine = null;
     }
@@ -212,6 +200,10 @@ public class HummingbirdDefensive : BirdAbility
         {
             StopCoroutine(speedBoostCoroutine);
             speedBoostCoroutine = null;
+
+            // Stopping the boost early skips the part that takes it away again,
+            // e.g. when Phoenix turns the hummingbird into a chicken mid-boost
+            BirdStats.Remove(gameObject, this);
         }
 
         if (cM != null)

@@ -153,11 +153,10 @@ public class AviaryManager : MonoBehaviour
     private bool isHoveringTarget;
     // Per-player currently selected Selectable (for navigation)
     private Selectable currentSelectable;
-    private GameObject hoveredUIElement;
     // Preserve the original scale of each cursor instance.
     private Vector3 cursorBaseScale;
 
-    // One coroutine slot per player — stops any in-progress animation before starting a new one
+    // One coroutine slot per player, so any in-progress animation can be stopped before starting a new one
     private Coroutine cursorAnimCoroutine;
 
     // Name of the main menu scene (update as needed)
@@ -360,9 +359,9 @@ public class AviaryManager : MonoBehaviour
         playerCursor = cursor1Prefab;
 
         Transform cursor = Instantiate(cursor1Prefab, birdSelect.transform);
-            cursor.name = $"Cursor_Player1";
+        cursor.name = $"Cursor_Player1";
+        MenuMouse.MakeClickThrough(cursor.gameObject);
 
-        
         RectTransform rt = cursor.GetComponent<RectTransform>();
         if (rt != null)
             rt.pivot = new Vector2(0f, 1f); // Top-left pivot for pointer-style cursor accuracy
@@ -376,13 +375,13 @@ public class AviaryManager : MonoBehaviour
         {
             dev = Gamepad.all[0];
             kbm = false;
-            Cursor.visible = false;
-            Cursor.lockState = CursorLockMode.Locked;
+            MenuMouse.Lock();
         }
         else
         {
             dev = Keyboard.current;
             kbm = true;
+            MenuMouse.Release();
         }
 
         playerInputState = new PlayerInputState(kbm, dev);
@@ -431,15 +430,28 @@ public class AviaryManager : MonoBehaviour
 
         PlayerInputState state = playerInputState;
 
+        // Follow whichever was used last, so the player can swap between mouse and controller at any time.
+        bool wasKBM = state.isKBM;
+        state.isKBM = Mouse.current != null && (LocalPlayerDevices.KeyboardUsedLast || Gamepad.all.Count == 0);
+        state.device = state.isKBM ? Keyboard.current : (LocalPlayerDevices.LastUsedGamepad ?? (Gamepad.all.Count > 0 ? Gamepad.all[0] : null));
+
+        // The mouse moves freely while it's being used, with the cursor drawn here standing in for the system one.
+        // On a controller it's locked away, so a pointer left on a button doesn't keep it highlighted.
+        if (state.isKBM != wasKBM)
+        {
+            if (state.isKBM) MenuMouse.Release();
+            else MenuMouse.Lock();
+        }
+
         if (state.isKBM)
         {
             state.cursorPosition = Mouse.current.position.ReadValue();
-            UpdateMouseHoverSound(state.cursorPosition);
+            UpdateMouseHover(state.cursorPosition);
 
             if (Mouse.current.leftButton.wasPressedThisFrame)
             {
                 PlayCursorPressAnimation();
-                HandlePlayerButtonPress();
+                ClickTargetUnderMouse();
             }
         }
         else
@@ -484,7 +496,7 @@ public class AviaryManager : MonoBehaviour
 
         PlayerInputState state = playerInputState;
 
-        // If this player is using KBM, keep mouse behavior unchanged
+        // On the mouse, the cursor goes exactly where the mouse is
         if (state.isKBM)
         {
             Vector2 screenPos = state.cursorPosition;
@@ -608,7 +620,7 @@ public class AviaryManager : MonoBehaviour
     }
 
     // Cursor press animation
-    // Triggers the shrink → bounce animation for a player's cursor.
+    // Triggers the shrink and bounce animation for a player's cursor.
     private void PlayCursorPressAnimation()
     {
 
@@ -627,7 +639,7 @@ public class AviaryManager : MonoBehaviour
         Vector3 baseScale = cursorBaseScale;
         Vector3 pressedScale = baseScale * cursorPressScale;
 
-        // Phase 1 — shrink down to cursorPressScale * base scale
+        // Phase 1: shrink down to cursorPressScale * base scale
         float elapsed = 0f;
         while (elapsed < cursorShrinkDuration)
         {
@@ -638,7 +650,7 @@ public class AviaryManager : MonoBehaviour
         }
         cursor.localScale = pressedScale;
 
-        // Phase 2 — bounce back, briefly overshooting base scale before settling
+        // Phase 2: bounce back, briefly overshooting base scale before settling
         elapsed = 0f;
         while (elapsed < cursorBounceDuration)
         {
@@ -685,38 +697,68 @@ public class AviaryManager : MonoBehaviour
         }
     }
 
-    private void UpdateMouseHoverSound(Vector2 screenPosition)
+    // Points at whatever target is under the mouse, so a controller carries on from there if the player switches to one
+    private void UpdateMouseHover(Vector2 screenPosition)
     {
-        if (EventSystem.current == null) return;
+        isHoveringTarget = false;
+
+        int hovered = FindTargetUnderPointer(screenPosition);
+        if (hovered == currentTargetIndex) return;
+
+        currentTargetIndex = hovered;
+        currentSelectable = hovered >= 0 ? uiSelectables[hovered] : null;
+        if (hovered < 0) return;
+
+        desiredScreenPosition = GetPreferredScreenPosition(uiTargets[hovered]);
+        if (EventSystem.current != null && currentSelectable != null)
+            EventSystem.current.SetSelectedGameObject(currentSelectable.gameObject);
+        AudioManager.PlayButtonHoverSound();
+    }
+
+    // Presses whatever is under the mouse. The bird buttons work through BirdSelectButton, which the EventSystem
+    // doesn't know about. The screen's artwork (like the waves in front) also covers the buttons, so the EventSystem
+    // usually can't reach them either. It only gets left to click a button that's in front of everything.
+    private void ClickTargetUnderMouse()
+    {
+        if (currentTargetIndex < 0) return;
+
+        BirdSelectButton birdButton = uiTargets[currentTargetIndex].GetComponentInParent<BirdSelectButton>();
+        if (birdButton != null) birdButton.OnPressed();
+        else if (!eventSystemReachesHovered) TryActivateTargetAtIndex(currentTargetIndex);
+
+        AudioManager.PlayButtonSelectSound();
+    }
+
+    // Whether the target under the mouse is the topmost thing there, in which case the EventSystem clicks it by itself
+    private bool eventSystemReachesHovered;
+
+    // The uiTargets index of what's under a screen position, or -1 if there's nothing there. Looks through everything
+    // under the mouse rather than only the topmost thing, since the screen's artwork is drawn over the buttons.
+    private int FindTargetUnderPointer(Vector2 screenPosition)
+    {
+        eventSystemReachesHovered = false;
+        if (EventSystem.current == null) return -1;
 
         PointerEventData pointerData = new(EventSystem.current) { position = screenPosition };
         List<RaycastResult> results = new();
         EventSystem.current.RaycastAll(pointerData, results);
 
-        GameObject hoveredElement = null;
-        foreach (RaycastResult result in results)
+        for (int hit = 0; hit < results.Count; ++hit)
         {
-            BirdSelectButton birdButton = result.gameObject.GetComponentInParent<BirdSelectButton>();
-            if (birdButton != null)
+            for (Transform t = results[hit].gameObject.transform; t != null; t = t.parent)
             {
-                hoveredElement = birdButton.gameObject;
-                break;
-            }
+                for (int i = 0; i < uiTargets.Count; ++i)
+                {
+                    GameObject identity = uiSelectables[i] != null ? uiSelectables[i].gameObject : uiTargets[i].gameObject;
+                    if (identity != t.gameObject || !identity.activeInHierarchy) continue;
 
-            Button button = result.gameObject.GetComponentInParent<Button>();
-            if (button != null && button.interactable)
-            {
-                hoveredElement = button.gameObject;
-                break;
+                    eventSystemReachesHovered = hit == 0;
+                    return i;
+                }
             }
         }
 
-        if (hoveredElement != hoveredUIElement)
-        {
-            hoveredUIElement = hoveredElement;
-            if (hoveredElement != null)
-                AudioManager.PlayButtonHoverSound();
-        }
+        return -1;
     }
 
     private bool TryActivateTargetAtIndex(int index)

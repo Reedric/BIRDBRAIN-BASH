@@ -18,6 +18,8 @@ public class CrowDefensive : BirdAbility
     
     void Update()
     {
+        if (ScoreManager.Instance == null || GameManager.Instance == null) return;
+
         // Check if coins exist and if score has changed since last round, if so reset coin count
         if (oldScore != (ScoreManager.Instance.side1Score + ScoreManager.Instance.side2Score))
         {
@@ -36,12 +38,15 @@ public class CrowDefensive : BirdAbility
         // If collected all coins, activate ability
         if (coinCount == 3)
         {
-            coinCount = 0;
+            // Also forgets the collected coins. Left in the list, they'd make it look like
+            // coins were still out, and the ability couldn't be used again until somebody scored.
+            ClearCurrCoins();
             CrowDefBuff();
             return true;
         }
 
         // If coins already on the court, do not allow respawning of coins
+        coins.RemoveAll(c => c == null);
         if (coins.Count > 0) return false;
 
         // Clear coins from the court if they exist from a previous ability use
@@ -106,8 +111,9 @@ public class CrowDefensive : BirdAbility
         {
             Destroy(other.gameObject);
             coinCount++;
+
+            // Play sound effect using AudioManager (only for coins, not every trigger the crow touches)
+            AudioManager.PlayBirdSound(BirdType.CROW, SoundType.DEFENSIVE, 1.0f);
         }
-        // Play sound effect using AudioManager
-        AudioManager.PlayBirdSound(BirdType.CROW, SoundType.DEFENSIVE, 1.0f);
     }
 }

@@ -54,6 +54,7 @@ public class OwlOffensive : BirdAbility
     {
         // Create line object and set its position and rotation to be between the start and end points
         GameObject line = new("OwlOffensiveLine") { layer = LayerMask.NameToLayer("Line") };
+        activeLines.Add(line);
         LineRenderer lineRenderer = line.AddComponent<LineRenderer>();
         lineRenderer.material = new(Shader.Find("Sprites/Default"));
         lineRenderer.startColor = lineColor;
@@ -63,13 +64,14 @@ public class OwlOffensive : BirdAbility
         lineRenderer.positionCount = 2;
         lineRenderer.SetPosition(0, start);
         NetworkFx.MirrorLine(line);
-        lineRenderer.SetPosition(1, start); // begin at start — tip will lerp to end
+        lineRenderer.SetPosition(1, start); // begin at start, tip will lerp to end
 
         // Collider is added after the draw animation so it only blocks once fully drawn
         BoxCollider lineCollider = line.AddComponent<BoxCollider>();
         lineCollider.isTrigger = false;
         lineCollider.enabled = false;
-        lineCollider.size = new Vector3(Vector3.Distance(start, end), 20f, 0f);
+        // As thick as the drawn line. A wall with no thickness at all is easy for a moving bird to slip through.
+        lineCollider.size = new Vector3(Vector3.Distance(start, end), 20f, Mathf.Max(lineWidth, 0.1f));
         lineCollider.center = new Vector3(end.x / 2, 10f, 0f); // moves the collider up so its not underground
 
         // Animate the line tip smoothly from start to end
@@ -102,6 +104,20 @@ public class OwlOffensive : BirdAbility
         
         // EJ: For anyone happening to be editing this code make sure the line is destroyed
         // EJ: Its a procedural asset and wont be automatically destroyed creating a memory leak
+        activeLines.Remove(line);
         Destroy(line);
+    }
+
+    private readonly System.Collections.Generic.List<GameObject> activeLines = new();
+
+    // If the owl gets switched off while a line is up (Phoenix turning it into a chicken), the coroutine that removes
+    // the line stops with it, and the wall would stay across the other team's court for the rest of the match.
+    private void OnDisable()
+    {
+        foreach (GameObject line in activeLines)
+        {
+            if (line != null) Destroy(line);
+        }
+        activeLines.Clear();
     }
 }

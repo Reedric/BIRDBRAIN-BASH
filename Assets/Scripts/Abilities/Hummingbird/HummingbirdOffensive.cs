@@ -104,9 +104,18 @@ public class HummingbirdOffensive : BirdAbility
 		return nearest;
 	}
 
+	private GameObject activeTongue;
+
+	// Otherwise the tongue stays on screen for good if the hummingbird gets switched off while it's out
+	private void OnDisable()
+	{
+		if (activeTongue != null) Destroy(activeTongue);
+	}
+
 	private IEnumerator AnimateTongue(Vector3 targetPosition)
 	{
 		GameObject tongueObject = new GameObject("HummingbirdTongue");
+		activeTongue = tongueObject;
 		LineRenderer tongue = tongueObject.AddComponent<LineRenderer>();
 		tongue.material = new Material(Shader.Find("Sprites/Default"));
 		tongue.startColor = tongueColor;

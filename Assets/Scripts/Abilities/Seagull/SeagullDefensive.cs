@@ -13,6 +13,8 @@ public class SeagullDefensive : BirdAbility
     public float shoveRadius = 1.5f; //radius to shove objects around
     private Rigidbody rb;
     private BallInteract ballInteraction;
+    private RigidbodyConstraints constraintsBeforeDash;
+    private bool isDashing;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -40,8 +42,10 @@ public class SeagullDefensive : BirdAbility
         var myBallInteract = GetComponent<BallInteract>();
         
         float fixedY = 0.5f;
-        
+
         //Freeze Y so the dash stays level
+        if (!isDashing) constraintsBeforeDash = rb.constraints;
+        isDashing = true;
         rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionY;
 
         // Save current game state to check if it touched the ground or if teammate got it
@@ -118,7 +122,23 @@ public class SeagullDefensive : BirdAbility
         }
 
         //Unfreeze Y movments
-        rb.constraints = RigidbodyConstraints.FreezeRotation;
+        EndDash();
+    }
+
+    // Puts back whatever constraints the seagull had before the dash
+    private void EndDash()
+    {
+        if (!isDashing) return;
+        isDashing = false;
+
+        if (rb != null) rb.constraints = constraintsBeforeDash;
+    }
+
+    // If the dash is cut short (e.g. Phoenix turns the seagull into a chicken), the coroutine never gets to unfreeze
+    // its height, which would leave it unable to jump or fall for the rest of the match
+    private void OnDisable()
+    {
+        EndDash();
     }
 
     private void ShoveNearbyObjects()
@@ -129,9 +149,9 @@ public class SeagullDefensive : BirdAbility
         {
             Collider hit = hits[i];
 
-            //Won't shove itself
-            if (hit.gameObject != gameObject)
-            {   
+            // Won't shove itself, or the ball it's dashing to
+            if (hit.gameObject != gameObject && hit.GetComponentInParent<BallManager>() == null)
+            {
                 Rigidbody otherRb = hit.GetComponent<Rigidbody>();
                 //pushes shoveable objects only (things with rigidbodies)
                 if (otherRb != null && !otherRb.isKinematic)

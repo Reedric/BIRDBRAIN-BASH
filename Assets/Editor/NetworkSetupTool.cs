@@ -127,8 +127,9 @@ public static class NetworkSetupTool
             }
 
             // Humans send their input through this. An AI or companion is driven by the host instead.
-            bool isHumanBird = root.GetComponent<AIBehavior>() == null
-                && root.GetComponent<CharacterMovement>() != null
+            // Phoenix's chicken has an AIBehavior too, but it stands in for humans as well, and it's the only
+            // prefab with both. PhoenixOffensive turns this off on the chickens that AI birds get.
+            bool isHumanBird = root.GetComponent<CharacterMovement>() != null
                 && root.GetComponent<BallInteract>() != null;
             if (isHumanBird) AddIfMissing<PlayerNetworkController>(root);
 

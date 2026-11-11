@@ -77,9 +77,7 @@ public class ImageWobble : MonoBehaviour
     [Range(0f, Mathf.PI * 2f)]
     public float rotationPhaseShift = 0f;
 
-    // ─────────────────────────────────────────────────────────────────────────
     //  Scale Wobble
-    // ─────────────────────────────────────────────────────────────────────────
 
     [Header("─── Scale Wobble ────────────────────────────────────")]
     public bool scaleEnabled = false;
@@ -184,7 +182,7 @@ public class ImageWobble : MonoBehaviour
             Vector3 scale;
             if (squishMode)
             {
-                // X and Y oscillate out of phase — cartoony squish & stretch
+                // X and Y oscillate out of phase for a cartoony squish & stretch
                 float sinScaleY = Mathf.Sin(time * scaleSpeed * Mathf.PI * 2f
                                             + scalePhaseShift + squishPhaseOffset);
                 scale = new Vector3(

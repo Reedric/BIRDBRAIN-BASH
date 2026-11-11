@@ -112,6 +112,7 @@ public class ScoreManager : NetworkBehaviour
     private bool inPlay;
     private bool outCheckPending; // guard against multiple outCheck coroutines
     private bool pointIntercepted;
+    private float lastInterceptTime = -10f; // When a defensive ability last saved a landing
 
     private GameObject lastPhysicalTouchLocal;
     private NetworkVariable<ulong> lastPhysicalTouchNet = new();
@@ -227,10 +228,12 @@ public class ScoreManager : NetworkBehaviour
             if (ballRb == null)
                 Debug.LogWarning("ScoreManager: could not resolve ball Rigidbody for Side1 collision.");
 
-            // Give any subscribed defensive ability a chance to save the point first
+            // Give any subscribed defensive ability a chance to save the point first. pointIntercepted only matters
+            // to an out check already waiting on this landing: set any other time, it would stay set and make the next
+            // time the ball goes out in the rally score nothing, leaving the point stuck.
             if (RaiseInterceptPoint(true, ballRb, collision.GetContact(0).point, false))
             {
-                pointIntercepted = true;
+                lastInterceptTime = Time.time;
                 return;
             }
 
@@ -256,7 +259,7 @@ public class ScoreManager : NetworkBehaviour
 
             if (RaiseInterceptPoint(false, ballRb, collision.GetContact(0).point, false))
             {
-                pointIntercepted = true;
+                lastInterceptTime = Time.time;
                 return;
             }
 
@@ -278,8 +281,8 @@ public class ScoreManager : NetworkBehaviour
     }
 
     // Invokes InterceptPoint by hand instead of calling the multicast delegate directly, so that if
-    // more than one ability is ever subscribed, each one gets checked — calling a non-void multicast
-    // delegate directly only returns the LAST subscriber's result, silently ignoring the others.
+    // more than one ability is ever subscribed, each one gets checked. Calling a non-void multicast
+    // delegate directly only returns the last subscriber's result and ignores the others.
     private bool RaiseInterceptPoint(bool leftConceding, Rigidbody ballRb, Vector3 contactPoint, bool isOut)
     {
         if (InterceptPoint == null)
@@ -301,7 +304,8 @@ public class ScoreManager : NetworkBehaviour
         // before the actual court collision.
         yield return new WaitForSeconds(.2f);
 
-        if (pointIntercepted)
+        // A save in the last moment (either just before or just after the ball touched out) covers this out too
+        if (pointIntercepted || Time.time - lastInterceptTime < 0.5f)
         {
             pointIntercepted = false;
             outCheckPending = false;
@@ -324,76 +328,98 @@ public class ScoreManager : NetworkBehaviour
                 Debug.LogWarning("ScoreManager: could not resolve ball Rigidbody during Out check.");
             }
 
-            // Give defensive abilities such as Phoenix one last chance
-            // to save the point before the Out collision awards it.
-            //
-            // We determine which side is conceding from the player who
-            // last physically touched the ball.
-            bool leftConceding = false;
-            bool validTouchSource = false;
+            // Whoever touched the ball last sent it out, so their side concedes the point.
+            // That can also be a bird that isn't one of the four players, like Phoenix's chickens or
+            // 31RD's mini 31RD, which still need to count for a side or the point never gets scored.
+            // If there's no telling who touched it, it goes against the team that last played it, since leaving
+            // the point unscored would leave the match stuck.
+            if (!TryGetSide(touchSource, out bool touchedByLeft))
+                touchedByLeft = gameManager.leftAttack;
 
-            if (touchSource == gameManager.rightPlayer1 ||
-                touchSource == gameManager.rightPlayer2)
-            {
-                // Right player touched it last.
-                // Therefore the ball is going against the LEFT side.
-                leftConceding = true;
-                validTouchSource = true;
-            }
-            else if (touchSource == gameManager.leftPlayer1 ||
-                     touchSource == gameManager.leftPlayer2)
-            {
-                // Left player touched it last.
-                // Therefore the ball is going against the RIGHT side.
-                leftConceding = false;
-                validTouchSource = true;
-            }
-
-            if (validTouchSource)
             {
                 Vector3 contactPoint = ballRb != null
                     ? ballRb.position
                     : transform.position;
 
-                // Out
-                if (RaiseInterceptPoint(leftConceding, ballRb, contactPoint, true))
+                // Give defensive abilities such as Phoenix one last chance to save the point
+                if (RaiseInterceptPoint(touchedByLeft, ballRb, contactPoint, true))
                 {
-                    // Phoenix saved the point.
-                    // DO NOT award a score.
+                    // Phoenix saved the point, so don't award a score.
                     lastPhysicalTouch = null;
                     outCheckPending = false;
                     yield break;
                 }
-            }
 
-            // No defensive ability saved the point.
-            // Continue with the normal Out scoring behavior.
-            if (touchSource == gameManager.rightPlayer1 ||
-                touchSource == gameManager.rightPlayer2)
-            {
-                side1Score += 1;
-                UpdateScoreDisplay(side1ScoreUI, side1Score);
-                inPlay = false;
-                lastPhysicalTouch = null;
+                if (touchedByLeft)
+                {
+                    side2Score += 1;
+                    UpdateScoreDisplay(side2ScoreUI, side2Score);
+                    inPlay = false;
+                    lastPhysicalTouch = null;
 
-                StartCoroutine(PlaySounds(true));
-                CheckWinSet(true);
-            }
-            else if (touchSource == gameManager.leftPlayer1 ||
-                     touchSource == gameManager.leftPlayer2)
-            {
-                side2Score += 1;
-                UpdateScoreDisplay(side2ScoreUI, side2Score);
-                inPlay = false;
-                lastPhysicalTouch = null;
+                    // Same as a point scored on the court, so score listeners (e.g. Ostrich) hear about it
+                    RightScored.Invoke();
+                    StartCoroutine(PlaySounds(false));
+                    CheckWinSet(false);
+                }
+                else
+                {
+                    side1Score += 1;
+                    UpdateScoreDisplay(side1ScoreUI, side1Score);
+                    inPlay = false;
+                    lastPhysicalTouch = null;
 
-                StartCoroutine(PlaySounds(false));
-                CheckWinSet(false);
+                    LeftScored.Invoke();
+                    StartCoroutine(PlaySounds(true));
+                    CheckWinSet(true);
+                }
             }
         }
 
         // Always reset this so another Out collision can be handled.
         outCheckPending = false;
+    }
+
+    // For a ball that will never land (stuck somewhere, or fallen out of the world): scores it like it went out
+    public void HandleBallLost()
+    {
+        if (!NetworkSession.HasAuthority || !inPlay || outCheckPending) return;
+
+        outCheckPending = true;
+        StartCoroutine(outCheck());
+    }
+
+    // Works out which side of the court a bird that touched the ball plays for.
+    public static bool TryGetSide(GameObject bird, out bool onLeft)
+    {
+        onLeft = false;
+        if (bird == null) return false;
+
+        GameManager gameManager = GameManager.Instance;
+        if (bird == gameManager.leftPlayer1 || bird == gameManager.leftPlayer2)
+        {
+            onLeft = true;
+            return true;
+        }
+        if (bird == gameManager.rightPlayer1 || bird == gameManager.rightPlayer2)
+        {
+            onLeft = false;
+            return true;
+        }
+
+        // Stand-ins for a player, which are set up with the side of the bird they came from
+        if (bird.TryGetComponent(out BallInteract ballInteract))
+        {
+            onLeft = ballInteract.onLeft;
+            return true;
+        }
+        if (bird.TryGetComponent(out AIBehavior aiBehavior))
+        {
+            onLeft = aiBehavior.onLeft;
+            return true;
+        }
+
+        return false;
     }
 
     // After each score, check the win conditions for both sides
