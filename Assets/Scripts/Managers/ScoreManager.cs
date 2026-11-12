@@ -862,11 +862,10 @@ public class ScoreManager : NetworkBehaviour
             StopCoroutine(confettiRoutine);
         }
 
-        // Everyone is ready, go back to main menu
+        // Everyone is ready. Online, everyone goes back to the lobby together, and locally it's the main menu.
         if (NetworkSession.IsServer)
         {
-            ReturnToMenuRpc();
-            StartCoroutine(HostReturnToMenu());
+            NetworkSession.ReturnToLobby();
             return;
         }
 
@@ -908,18 +907,5 @@ public class ScoreManager : NetworkBehaviour
         // Only a point gets the bounce and flourish, not the score going back to 0 for a new set
         if (current > previous) UpdateScoreDisplay(scoreText, current);
         else scoreText.text = current.ToString();
-    }
-
-    [Rpc(SendTo.NotServer)]
-    private void ReturnToMenuRpc()
-    {
-        NetworkSession.LeaveToMainMenu();
-    }
-
-    // The host waits a moment so the message has time to reach the clients before the connection closes
-    private IEnumerator HostReturnToMenu()
-    {
-        yield return new WaitForSecondsRealtime(0.5f);
-        NetworkSession.LeaveToMainMenu();
     }
 }

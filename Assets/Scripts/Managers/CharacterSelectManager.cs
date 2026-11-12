@@ -165,6 +165,7 @@ public class CharacterSelectManager : MonoBehaviour
     private int localOnlineSlot = -1;
     private readonly int[] onlineCardBirds = { -2, -2, -2, -2 }; // What each card is showing. -1 means no pick yet
     private readonly bool[] onlineCardHumans = new bool[4];
+    private readonly string[] onlineCardNames = new string[4];
     private readonly Texture[] defaultIconTextures = new Texture[4];
 
     // Where the other players' cursors last were, as a fraction of the screen
@@ -1641,11 +1642,20 @@ public class CharacterSelectManager : MonoBehaviour
                 remoteCursorKnown[slot] = false;
             }
 
+            string playerName = isHuman ? lobby.DisplayName(slot) : null;
+
             if (birdIndex != onlineCardBirds[slot] || isHuman != onlineCardHumans[slot])
             {
                 onlineCardBirds[slot] = birdIndex;
                 onlineCardHumans[slot] = isHuman;
-                ShowOnlineCard(slot, isHuman, birdIndex);
+                onlineCardNames[slot] = playerName;
+                ShowOnlineCard(slot, isHuman, birdIndex, playerName);
+            }
+            else if (playerName != onlineCardNames[slot])
+            {
+                // A name can arrive after the card is up. It's only shown until the player picks their bird.
+                onlineCardNames[slot] = playerName;
+                if (birdIndex < 0) SetCardName(slot, playerName);
             }
         }
 
@@ -1654,7 +1664,8 @@ public class CharacterSelectManager : MonoBehaviour
         if (goButton != null) goButton.enabled = lobby.CanStartMatch();
     }
 
-    private void ShowOnlineCard(int slot, bool isHuman, int birdIndex)
+    // Until a player picks their bird, their card shows their name (or "AI" for an empty slot)
+    private void ShowOnlineCard(int slot, bool isHuman, int birdIndex, string playerName)
     {
         playerReady[slot] = birdIndex >= 0;
         UpdatePlayerReadyUI(slot);
@@ -1670,6 +1681,11 @@ public class CharacterSelectManager : MonoBehaviour
         RawImage icon = GetPlayerIcon(slot);
         if (icon != null) icon.texture = defaultIconTextures[slot];
 
+        SetCardName(slot, isHuman ? playerName : "AI");
+    }
+
+    private void SetCardName(int slot, string text)
+    {
         TMP_Text nameText = slot switch
         {
             0 => blue1Name,
@@ -1678,7 +1694,7 @@ public class CharacterSelectManager : MonoBehaviour
             3 => pink2Name,
             _ => null
         };
-        if (nameText != null) nameText.text = isHuman ? "???" : "AI";
+        if (nameText != null) nameText.text = text;
     }
 
     private void SetLocalOnlineSlot(int slot)

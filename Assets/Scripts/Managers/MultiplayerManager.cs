@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using UnityEngine.InputSystem.Users;
+using Unity.Collections;
 using Unity.Netcode.Components;
 using Unity.Netcode;
 
@@ -18,6 +19,7 @@ public struct OnlineRosterEntry : INetworkSerializable
     public BirdType birdType;
     public bool onLeft;
     public bool isAI;
+    public FixedString128Bytes playerName; // Empty for AI, or a player whose name never arrived
 
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
     {
@@ -25,6 +27,7 @@ public struct OnlineRosterEntry : INetworkSerializable
         serializer.SerializeValue(ref birdType);
         serializer.SerializeValue(ref onLeft);
         serializer.SerializeValue(ref isAI);
+        serializer.SerializeValue(ref playerName);
     }
 }
 
@@ -214,7 +217,7 @@ public class MultiplayerManager : NetworkBehaviour
 
         for (int playerIndex = 0; playerIndex < 4; ++playerIndex)
         {
-            if (playerIndex < lobbyPlayers.Count) SpawnOnlinePlayer(playerIndex, lobbyPlayers[playerIndex].clientId);
+            if (playerIndex < lobbyPlayers.Count) SpawnOnlinePlayer(playerIndex, lobbyPlayers[playerIndex]);
             else MakeAI(playerIndex);
         }
 
@@ -222,8 +225,9 @@ public class MultiplayerManager : NetworkBehaviour
         NetworkFx.StartCountdownEverywhere();
     }
 
-    private void SpawnOnlinePlayer(int playerIndex, ulong clientId)
+    private void SpawnOnlinePlayer(int playerIndex, LobbyPlayer lobbyPlayer)
     {
+        ulong clientId = lobbyPlayer.clientId;
         BirdType type = selectedBirds[playerIndex];
         if (type == BirdType.OTHER)
         {
@@ -249,7 +253,8 @@ public class MultiplayerManager : NetworkBehaviour
             bird = netObj,
             birdType = type,
             onLeft = spawnSlot < 2,
-            isAI = false
+            isAI = false,
+            playerName = lobbyPlayer.name
         };
     }
 
@@ -288,6 +293,10 @@ public class MultiplayerManager : NetworkBehaviour
         {
             OnlineRosterEntry entry = roster[playerIndex];
             HUDManager.Instance?.RegisterAICard(playerIndex, entry.birdType);
+
+            // Online, a player's card shows their name (see PlayerNames). AI cards keep their bird's name.
+            if (!entry.isAI && entry.playerName.Length > 0)
+                HUDManager.Instance?.SetPlayerName(playerIndex, entry.playerName.ToString());
 
             NetworkObject bird = birds[playerIndex];
             if (IsServer || bird == null) continue;

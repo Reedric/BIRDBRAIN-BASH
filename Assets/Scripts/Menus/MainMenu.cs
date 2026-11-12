@@ -37,11 +37,15 @@ public class MainMenu : MonoBehaviour
     // For the menus that get built in code to match the rest
     public TMP_FontAsset MenuFont => creditsText.font;
 
+    // The canvas that the options screen goes on, which the editor builds into the scene
+    public Canvas MenuCanvas => GetComponentInParent<Canvas>(true);
+
     private bool isShowingCredits = false;
     private Coroutine creditsCoroutine;
     private RectTransform creditsRow;
     private float creditsRowWidth;
     private OptionsMenuUI optionsMenu;
+    private ControlsMenuUI controlsMenu;
 
     void Start()
     {
@@ -58,8 +62,9 @@ public class MainMenu : MonoBehaviour
             creditsCanvas.GetComponent<RawImage>().enabled = false;
         }
 
-        // If an online session ended on its own (like the host leaving), go back to the online menu to say why
-        if (string.IsNullOrEmpty(NetworkSession.LastDisconnectMessage)) return;
+        // Go back to the online menu if an online session ended on its own (like the host leaving), to say why, or
+        // if everyone's back from an online match, which opens it straight onto the lobby
+        if (string.IsNullOrEmpty(NetworkSession.LastDisconnectMessage) && !NetworkSession.IsOnline) return;
 
         ConnectUI connectUI = FindFirstObjectByType<ConnectUI>(FindObjectsInactive.Include);
         if (connectUI == null) return;
@@ -160,9 +165,7 @@ public class MainMenu : MonoBehaviour
         if (optionsMenu == null)
         {
             optionsMenu = gameObject.AddComponent<OptionsMenuUI>();
-            // Whichever controller is being used, the same as MainMenuCursor
-            optionsMenu.Build(GetComponentInParent<Canvas>(), creditsText.font,
-                () => LocalPlayerDevices.LastUsedGamepad ?? (Gamepad.all.Count > 0 ? Gamepad.all[0] : null), false, CloseOptions);
+            optionsMenu.Build(MenuCanvas, MenuFont, MenuGamepad, false, CloseOptions, OpenControls);
         }
 
         if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
@@ -179,6 +182,48 @@ public class MainMenu : MonoBehaviour
             mainMenuPanel.SetActive(true);
             StartCoroutine(SelectFirstButtonNextFrame(mainMenuPanel)); // prevent bleed-through
         }
+    }
+
+    // Whichever controller is being used, the same as MainMenuCursor
+    private static Gamepad MenuGamepad()
+    {
+        return LocalPlayerDevices.LastUsedGamepad ?? (Gamepad.all.Count > 0 ? Gamepad.all[0] : null);
+    }
+
+    // The controls screen, from the button for it on the options screen. Going back from it returns there.
+    private void OpenControls()
+    {
+        if (ControlsMenuUI.ActivePanel != null) return;
+
+        if (controlsMenu == null)
+        {
+            controlsMenu = gameObject.AddComponent<ControlsMenuUI>();
+            controlsMenu.Build(MenuCanvas, MenuFont, CloseControls, false);
+        }
+
+        optionsMenu.Hide();
+        controlsMenu.Show();
+        StartCoroutine(SelectFirstButtonNextFrame(controlsMenu.Panel)); // prevent bleed-through
+    }
+
+    private void CloseControls()
+    {
+        if (ControlsMenuUI.ActivePanel == null) return;
+
+        controlsMenu.Hide();
+        optionsMenu.Show();
+        StartCoroutine(SelectFirstButtonNextFrame(OptionsMenuUI.ActivePanel)); // prevent bleed-through
+    }
+
+    void Update()
+    {
+        // B and Escape go back from the controls screen, the same as they do from the options
+        if (controlsMenu == null || ControlsMenuUI.ActivePanel == null) return;
+
+        Gamepad pad = MenuGamepad();
+        Keyboard keyboard = Keyboard.current;
+        if ((pad != null && pad.bButton.wasPressedThisFrame) || (keyboard != null && keyboard.escapeKey.wasPressedThisFrame))
+            CloseControls();
     }
 
     public void AviaryButton()

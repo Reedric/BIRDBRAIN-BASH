@@ -26,9 +26,36 @@ public class PauseMenu : MonoBehaviour
 
     public static PauseMenu Instance; // Private instance of the GameManager that other classes cannot reference
 
+    // The canvas and font that the options and controls screens go by, which the editor builds into the scene
+    public Canvas MenuCanvas => pauseMenuUI.GetComponentInParent<Canvas>(true);
+
+    // The font of the menu's text. The big buttons' labels have a font of their own, which isn't for anything else.
+    public TMP_FontAsset MenuFont
+    {
+        get
+        {
+            TMP_FontAsset buttonFont = MenuArt.Instance != null ? MenuArt.Instance.buttonFont : null;
+            TMP_Text[] texts = pauseMenuUI.GetComponentsInChildren<TMP_Text>(true);
+
+            foreach (TMP_Text text in texts)
+            {
+                if (text.font != null && text.font != buttonFont) return text.font;
+            }
+            return texts.Length > 0 ? texts[0].font : null;
+        }
+    }
+
     private OptionsMenuUI optionsMenu;
-    private GameObject optionsReturnSelection;
+    private ControlsMenuUI controlsMenu;
+    private GameObject subMenuReturnSelection; // What to select again when the options or controls close
     private PauseMenuCursor cursor;
+
+    // Moving around the menu (see UpdateNavigation)
+    private const float navigateDeadzone = 0.5f;
+    private const float navigateRepeatDelay = 0.35f; // Seconds a direction is held before it starts repeating
+    private const float navigateRepeatRate = 0.12f;
+    private Vector2Int heldDirection;
+    private float nextNavigateTime;
     private InputActionAsset onlineMenuActions;
     private InputActionAsset mouseActions;
 
@@ -38,10 +65,47 @@ public class PauseMenu : MonoBehaviour
     void Awake()
     {
         Instance = this;
+        StyleButtons();
+
+        // The map scenes have the buttons' highlights in them already (see MenuScreenBuilder), so this is only for a
+        // scene that doesn't
+        foreach (Button button in pauseMenuUI.GetComponentsInChildren<Button>(true))
+        {
+            if (button.TryGetComponent(out Image image) && MenuStyle.IsPill(image) && !MenuStyle.HasHighlight(button)) MenuStyle.AddHighlight(button);
+        }
         AddButtonSounds(gameObject);
 
         // Clicking on empty space would clear the selection, which the stick and the cursor both go by
         if (inputModule != null) inputModule.deselectOnBackgroundClick = false;
+    }
+
+    // The buttons match the art of the other menus' buttons. The four map scenes already have them set up that way,
+    // so this only does anything for a scene whose pause menu still has the old plain text buttons (like test scenes).
+    // They keep their labels and stay where they were across, stacked from the top one down.
+    private void StyleButtons()
+    {
+        const float buttonSpacing = 120f;
+        Vector2 buttonSize = new(380f, 100f);
+
+        Button[] buttons = pauseMenuUI.GetComponentsInChildren<Button>(true)
+            .Where(button => button.TryGetComponent(out Image image) && !MenuStyle.IsPill(image))
+            .OrderByDescending(button => ((RectTransform)button.transform).anchoredPosition.y)
+            .ToArray();
+        if (buttons.Length == 0) return;
+
+        float topY = ((RectTransform)buttons[0].transform).anchoredPosition.y;
+        for (int i = 0; i < buttons.Length; ++i)
+        {
+            TMP_Text oldLabel = buttons[i].GetComponentInChildren<TMP_Text>(true);
+            string label = oldLabel != null ? oldLabel.text : buttons[i].name;
+
+            RectTransform rect = (RectTransform)buttons[i].transform;
+            rect.localScale = Vector3.one;
+            rect.sizeDelta = buttonSize;
+            rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, topY - i * buttonSpacing);
+
+            MenuStyle.MakePill(buttons[i], MenuStyle.PillColor.Pink, label, MenuFont, 52f);
+        }
     }
 
     private void AddButtonSounds(GameObject root)
@@ -65,7 +129,108 @@ public class PauseMenu : MonoBehaviour
         if (!GameIsPaused) return;
 
         UpdateMouse();
-        SubmitWithKeyboard();
+        UpdateNavigation();
+    }
+
+    // Moves around whichever screen of the menu is showing with the stick, d-pad or arrow keys, and presses with A,
+    // Enter or Space. B goes back from the controls (the options handle B themselves).
+    // This is done here rather than by the EventSystem, whose navigation is off while paused (see
+    // SetEventSystemNavigation). It went through the paused player's input actions, which in local multiplayer didn't
+    // reliably reach the menu, so the controller couldn't move around it.
+    private void UpdateNavigation()
+    {
+        EventSystem eventSystem = EventSystem.current;
+        if (eventSystem == null) return;
+
+        Gamepad pad = MenuGamepad();
+        Keyboard keyboard = PausedPlayerOwnsKeyboardAndMouse() ? Keyboard.current : null;
+
+        Vector2 move = Vector2.zero;
+        if (pad != null)
+        {
+            move = pad.leftStick.ReadValue();
+            if (move.sqrMagnitude < 0.01f) move = pad.dpad.ReadValue();
+        }
+        if (keyboard != null)
+        {
+            Vector2 keys = new(
+                (keyboard.rightArrowKey.isPressed || keyboard.dKey.isPressed ? 1f : 0f) - (keyboard.leftArrowKey.isPressed || keyboard.aKey.isPressed ? 1f : 0f),
+                (keyboard.upArrowKey.isPressed || keyboard.wKey.isPressed ? 1f : 0f) - (keyboard.downArrowKey.isPressed || keyboard.sKey.isPressed ? 1f : 0f));
+            if (keys != Vector2.zero) move = keys;
+        }
+        Navigate(eventSystem, move);
+
+        bool submit = (pad != null && pad.buttonSouth.wasPressedThisFrame)
+            || (keyboard != null && (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame || keyboard.spaceKey.wasPressedThisFrame));
+        GameObject selected = eventSystem.currentSelectedGameObject;
+        if (submit && selected != null && selected.activeInHierarchy)
+            ExecuteEvents.Execute(selected, new BaseEventData(eventSystem), ExecuteEvents.submitHandler);
+
+        if (pad != null && pad.buttonEast.wasPressedThisFrame && ControlsMenuUI.ActivePanel != null)
+            CloseSubMenu();
+    }
+
+    private void Navigate(EventSystem eventSystem, Vector2 move)
+    {
+        Vector2Int direction = Vector2Int.zero;
+        if (Mathf.Abs(move.y) >= navigateDeadzone && Mathf.Abs(move.y) >= Mathf.Abs(move.x))
+            direction.y = move.y > 0f ? 1 : -1;
+        // Left and right change the selected row on the options screen, which it does itself
+        else if (Mathf.Abs(move.x) >= navigateDeadzone && OptionsMenuUI.ActivePanel == null)
+            direction.x = move.x > 0f ? 1 : -1;
+
+        if (direction == Vector2Int.zero)
+        {
+            heldDirection = direction;
+            return;
+        }
+
+        bool isHeld = direction == heldDirection;
+        if (isHeld && Time.unscaledTime < nextNavigateTime) return;
+
+        heldDirection = direction;
+        nextNavigateTime = Time.unscaledTime + (isHeld ? navigateRepeatRate : navigateRepeatDelay);
+
+        GameObject selected = eventSystem.currentSelectedGameObject;
+        Selectable current = selected != null && selected.activeInHierarchy ? selected.GetComponent<Selectable>() : null;
+        if (current == null)
+        {
+            eventSystem.SetSelectedGameObject(FirstButtonOnScreen());
+            return;
+        }
+
+        Selectable next = direction.y > 0 ? current.FindSelectableOnUp()
+            : direction.y < 0 ? current.FindSelectableOnDown()
+            : direction.x > 0 ? current.FindSelectableOnRight()
+            : current.FindSelectableOnLeft();
+
+        if (next != null) eventSystem.SetSelectedGameObject(next.gameObject);
+    }
+
+    private GameObject FirstButtonOnScreen()
+    {
+        if (ControlsMenuUI.ActivePanel != null) return controlsMenu.FirstButton.gameObject;
+        if (OptionsMenuUI.ActivePanel != null) return optionsMenu.FirstButton.gameObject;
+
+        Button first = pauseMenuUI.GetComponentInChildren<Button>();
+        return first != null ? first.gameObject : null;
+    }
+
+    // The EventSystem's own navigation is off while the menu is open, since UpdateNavigation does it instead.
+    // Leaving both on would move twice for one press.
+    private static void SetEventSystemNavigation(bool on)
+    {
+        if (EventSystem.current != null) EventSystem.current.sendNavigationEvents = on;
+    }
+
+    // The controller that can use the menu: the paused player's own in a local match, or any of them online (where
+    // this machine has the one player) and in demo mode (where there are no players)
+    private Gamepad MenuGamepad()
+    {
+        if (NetworkSession.IsOnline || FindPausedPlayerInput() == null)
+            return LocalPlayerDevices.LastUsedGamepad ?? Gamepad.current;
+
+        return LocalPlayerDevices.GetGamepad(pausedPlayerID) ?? FindPausedPlayerGamepad();
     }
 
     // The mouse works in the menu for whoever it belongs to. While it's being used it moves freely and the cursor
@@ -100,7 +265,7 @@ public class PauseMenu : MonoBehaviour
     private bool MenuControllerUsedThisFrame()
     {
         if (NetworkSession.IsOnline) return Gamepad.all.Any(LocalPlayerDevices.WasUsedThisFrame);
-        return LocalPlayerDevices.WasUsedThisFrame(FindPausedPlayerGamepad());
+        return LocalPlayerDevices.WasUsedThisFrame(MenuGamepad());
     }
 
     // Stops using the mouse in the menu, for when the menu closes
@@ -130,25 +295,6 @@ public class PauseMenu : MonoBehaviour
         inputModule.leftClick = InputActionReference.Create(mouseActions["Click"]);
     }
 
-    // The UI actions only submit with a controller's A button, so a keyboard player could move around the menu but
-    // never press anything (including Main Menu). Handled here rather than in the shared input actions so the
-    // menus elsewhere don't change.
-    private void SubmitWithKeyboard()
-    {
-        if (EventSystem.current == null) return;
-
-        Keyboard keyboard = Keyboard.current;
-        if (keyboard == null) return;
-        if (!keyboard.enterKey.wasPressedThisFrame && !keyboard.numpadEnterKey.wasPressedThisFrame && !keyboard.spaceKey.wasPressedThisFrame) return;
-
-        if (!PausedPlayerOwnsKeyboardAndMouse()) return;
-
-        GameObject selected = EventSystem.current.currentSelectedGameObject;
-        if (selected == null || !selected.activeInHierarchy) return;
-
-        ExecuteEvents.Execute(selected, new BaseEventData(EventSystem.current), ExecuteEvents.submitHandler);
-    }
-
     // Online, this machine only has the one player. Locally, only the player who paused gets to use the menu, so the
     // keyboard and mouse only work in it if they're that player's. Demo mode has no players, so anyone can use it there.
     private bool PausedPlayerOwnsKeyboardAndMouse()
@@ -160,16 +306,18 @@ public class PauseMenu : MonoBehaviour
     // so it keeps going while this player's bird stands still (see PlayerNetworkController).
     public void ToggleOnlinePause()
     {
-        if (CloseOptions()) return;
+        if (CloseSubMenu()) return;
 
         GameIsPaused = !GameIsPaused;
         pauseMenuUI.SetActive(GameIsPaused);
         SetOnlineMenuInput(GameIsPaused);
+        SetEventSystemNavigation(!GameIsPaused);
 
         if (GameIsPaused)
         {
             AudioManager.PlayPauseTrack();
             UseOwnMouseActions();
+            LabelLeaveButton();
             ShowCursor(GetOnlinePlayerIndex());
         }
         else
@@ -177,6 +325,24 @@ public class PauseMenu : MonoBehaviour
             AudioManager.PlayDefaultBackground();
             HideCursor();
             PutAwayMouse();
+        }
+    }
+
+    // Online, the host's leave button takes everyone back to the lobby instead (see MainMenu), so it says so
+    private void LabelLeaveButton()
+    {
+        if (!NetworkSession.IsServer) return;
+
+        foreach (Button button in pauseMenuUI.GetComponentsInChildren<Button>(true))
+        {
+            for (int i = 0; i < button.onClick.GetPersistentEventCount(); ++i)
+            {
+                if (button.onClick.GetPersistentMethodName(i) != nameof(MainMenu)) continue;
+
+                // The label that's showing, rather than a switched off copy (like the old text shadow)
+                TMP_Text label = button.GetComponentsInChildren<TMP_Text>(true).FirstOrDefault(text => text.gameObject.activeSelf);
+                if (label != null) label.text = "Return to Lobby";
+            }
         }
     }
 
@@ -240,8 +406,8 @@ public class PauseMenu : MonoBehaviour
     // Resumes Gameplay
     public void Resume()
     {
-        // The pause button only goes back one screen while the options are open
-        if (CloseOptions()) return;
+        // The pause button only goes back one screen while the options or controls are open
+        if (CloseSubMenu()) return;
 
         if (NetworkSession.IsOnline)
         {
@@ -255,6 +421,7 @@ public class PauseMenu : MonoBehaviour
         pausedPlayerID = -1;
         HideCursor();
         PutAwayMouse();
+        SetEventSystemNavigation(true);
 
         // Give everyone their controls back. AI birds have no PlayerInput, so they aren't in this list
         // (demo mode spawns 4 AIs, none of which carry a PlayerInput component)
@@ -290,6 +457,7 @@ public class PauseMenu : MonoBehaviour
         Time.timeScale = 0f;
         GameIsPaused = true;
         MouseInUse = false;
+        SetEventSystemNavigation(false);
         ShowCursor(pausedPlayerID);
 
         // Only the player that paused can use the menu, so everyone else's controls go quiet until Resume().
@@ -329,30 +497,48 @@ public class PauseMenu : MonoBehaviour
 
         if (optionsMenu == null)
         {
-            TMP_Text fontSource = pauseMenuUI.GetComponentInChildren<TMP_Text>(true);
-
             optionsMenu = gameObject.AddComponent<OptionsMenuUI>();
-            optionsMenu.Build(pauseMenuUI.GetComponentInParent<Canvas>(true), fontSource != null ? fontSource.font : null,
+            optionsMenu.Build(MenuCanvas, MenuFont,
                 // Looked up each time, so it follows the player who paused if they switch controllers
-                () => NetworkSession.IsOnline ? Gamepad.current : FindPausedPlayerGamepad(), true, () => CloseOptions());
+                MenuGamepad, true, () => CloseSubMenu());
             AddButtonSounds(optionsMenu.Panel);
         }
 
-        optionsReturnSelection = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+        subMenuReturnSelection = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
 
         pauseMenuUI.SetActive(false);
         optionsMenu.Show();
         StartCoroutine(SelectNextFrame(optionsMenu.FirstButton.gameObject));
     }
 
-    // Returns whether the options were open
-    private bool CloseOptions()
+    // Opens the controls screen, which has a tab each for keyboard and controller
+    public void LoadControls()
     {
-        if (OptionsMenuUI.ActivePanel == null) return false;
+        if (ControlsMenuUI.ActivePanel != null) return;
 
-        optionsMenu.Hide();
+        if (controlsMenu == null)
+        {
+            controlsMenu = gameObject.AddComponent<ControlsMenuUI>();
+            controlsMenu.Build(MenuCanvas, MenuFont, () => CloseSubMenu());
+            AddButtonSounds(controlsMenu.Panel);
+        }
+
+        subMenuReturnSelection = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+
+        pauseMenuUI.SetActive(false);
+        controlsMenu.Show();
+        StartCoroutine(SelectNextFrame(controlsMenu.FirstButton.gameObject));
+    }
+
+    // Goes back from the options or controls to the pause menu. Returns whether either was open.
+    private bool CloseSubMenu()
+    {
+        if (OptionsMenuUI.ActivePanel != null) optionsMenu.Hide();
+        else if (ControlsMenuUI.ActivePanel != null) controlsMenu.Hide();
+        else return false;
+
         pauseMenuUI.SetActive(true);
-        StartCoroutine(SelectNextFrame(optionsReturnSelection));
+        StartCoroutine(SelectNextFrame(subMenuReturnSelection));
         return true;
     }
 
@@ -380,11 +566,14 @@ public class PauseMenu : MonoBehaviour
         return null;
     }
 
+    // Leaves the match. Online, the host ends it early and takes everyone back to the lobby, the same as when a
+    // match finishes, while a client leaves the session on their own.
     public void MainMenu()
     {
         if (NetworkSession.IsOnline)
         {
-            NetworkSession.LeaveToMainMenu();
+            if (NetworkSession.IsServer) NetworkSession.ReturnToLobby();
+            else NetworkSession.LeaveToMainMenu();
             return;
         }
 

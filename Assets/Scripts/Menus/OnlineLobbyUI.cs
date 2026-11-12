@@ -31,7 +31,6 @@ public class OnlineLobbyUI : MonoBehaviour
     private readonly PlayerCard[] cards = new PlayerCard[playerCount];
 
     private GameObject panel;
-    private TMP_FontAsset font;
     private TMP_Text titleText;
     private GameObject codePill;
     private TMP_Text codeText;
@@ -44,42 +43,97 @@ public class OnlineLobbyUI : MonoBehaviour
 
     private int lastClickFrame = -1;
 
-    // Builds the lobby on the given canvas. Takes the menu font so it doesn't look out of place.
+    public const string PanelName = "Online Lobby Panel";
+
+    private const string titleName = "Title";
+    private const string codePillName = "Join Code";
+    private const string codeTextName = "Code";
+    private const string copyCodeName = "Copy Code";
+    private const string continueName = "Continue to Character Select";
+    private const string waitingName = "Waiting";
+    private const string listingName = "Listing";
+    private const string backButtonName = "Back";
+    private const string cardCursorName = "Cursor";
+    private const string cardTitleName = "Name";
+    private const string cardStatusName = "Status";
+
+    private static string CardName(int index) => $"Player {index + 1} Card";
+
+    // Gets the lobby on the given canvas ready to show. The MainMenu scene has its layout in it already (see
+    // MenuScreenBuilder), so it only gets made here, in the menu font, for a scene that doesn't.
     public void Build(Canvas canvas, TMP_FontAsset fontAsset)
     {
-        font = fontAsset;
+        Transform existing = canvas.transform.Find(PanelName);
+        panel = existing != null ? existing.gameObject : BuildPanel(canvas, fontAsset);
+        Transform root = panel.transform;
 
-        panel = new GameObject("Online Lobby Panel", typeof(RectTransform));
-        panel.transform.SetParent(canvas.transform, false);
-        panel.GetComponent<RectTransform>().sizeDelta = new Vector2(1920f, 1080f);
-
-        Vector2 center = new(0.5f, 0.5f);
-        titleText = MenuStyle.AddText(panel.transform, font, "Online Lobby", 90f, new Vector2(0f, 365f), new Vector2(1400f, 120f), center, TextAlignmentOptions.Center);
+        titleText = root.Find(titleName).GetComponent<TMP_Text>();
 
         for (int i = 0; i < cards.Length; ++i)
-            cards[i] = AddPlayerCard(i);
+        {
+            Transform card = root.Find(CardName(i));
+            cards[i] = new PlayerCard
+            {
+                edge = card.GetComponent<Image>(),
+                cursor = card.Find(cardCursorName).GetComponent<RawImage>(),
+                title = card.Find(cardTitleName).GetComponent<TMP_Text>(),
+                status = card.Find(cardStatusName).GetComponent<TMP_Text>()
+            };
+        }
 
-        Image pill = MenuStyle.AddRoundedImage(panel.transform, "Join Code", MenuStyle.CreamColor, new Vector2(-170f, -115f), new Vector2(640f, 84f), 84f);
-        codePill = pill.gameObject;
+        codePill = root.Find(codePillName).gameObject;
+        codeText = codePill.transform.Find(codeTextName).GetComponent<TMP_Text>();
+        copyCodeButton = root.Find(copyCodeName).GetComponent<Button>();
+        continueButton = root.Find(continueName).GetComponent<Button>();
+        waitingText = root.Find(waitingName).GetComponent<TMP_Text>();
+        listingText = root.Find(listingName).GetComponent<TMP_Text>();
+        backButton = root.Find(backButtonName).GetComponent<Button>();
+
+        // These only show for the host, once the match is set up (see SetConnectionInfo). The texts can have
+        // something in them in the scene, to show where they are.
         codePill.SetActive(false);
-        codeText = MenuStyle.AddText(pill.transform, font, string.Empty, 40f, Vector2.zero, new Vector2(620f, 84f), center, TextAlignmentOptions.Center);
-
-        copyCodeButton = MenuStyle.AddPillButton(panel.transform, font, "Copy Code", MenuStyle.BlueColor, new Vector2(310f, -115f), new Vector2(300f, 84f), 36f);
-        AddClickListener(copyCodeButton, CopyJoinCode);
         copyCodeButton.gameObject.SetActive(false);
-
-        continueButton = MenuStyle.AddPillButton(panel.transform, font, "Continue to Character Select", MenuStyle.AccentColor, new Vector2(0f, -225f), new Vector2(760f, 96f), 42f);
-        AddClickListener(continueButton, OnContinueButton);
         continueButton.gameObject.SetActive(false);
+        waitingText.text = string.Empty;
+        listingText.text = string.Empty;
 
-        waitingText = MenuStyle.AddText(panel.transform, font, string.Empty, 42f, new Vector2(0f, -225f), new Vector2(1200f, 96f), center, TextAlignmentOptions.Center);
-        listingText = MenuStyle.AddText(panel.transform, font, string.Empty, 32f, new Vector2(0f, -300f), new Vector2(1400f, 50f), center, TextAlignmentOptions.Center);
-
-        backButton = Instantiate(Resources.Load<GameObject>(backButtonPath), panel.transform).GetComponent<Button>();
+        AddClickListener(copyCodeButton, CopyJoinCode);
+        AddClickListener(continueButton, OnContinueButton);
         AddClickListener(backButton, () => NetworkSession.LeaveToMainMenu());
 
         LinkNavigation();
         panel.SetActive(false);
+    }
+
+    // Makes the lobby's layout on the given canvas, hidden. Also used in the editor to put it into the MainMenu scene,
+    // where it can be seen and edited (see MenuScreenBuilder). Build finds its parts by name and makes them work, so
+    // they need to keep their names.
+    public static GameObject BuildPanel(Canvas canvas, TMP_FontAsset font)
+    {
+        GameObject panel = new(PanelName, typeof(RectTransform));
+        panel.transform.SetParent(canvas.transform, false);
+        panel.GetComponent<RectTransform>().sizeDelta = new Vector2(1920f, 1080f);
+
+        Vector2 center = new(0.5f, 0.5f);
+        MenuStyle.AddText(panel.transform, font, "Online Lobby", 90f, new Vector2(0f, 365f), new Vector2(1400f, 120f), center, TextAlignmentOptions.Center).name = titleName;
+
+        for (int i = 0; i < playerCount; ++i)
+            BuildPlayerCard(panel.transform, font, i);
+
+        Image pill = MenuStyle.AddRoundedImage(panel.transform, codePillName, MenuStyle.CreamColor, new Vector2(-170f, -115f), new Vector2(640f, 84f), 84f);
+        MenuStyle.AddText(pill.transform, font, "Join code: ABC123", 40f, Vector2.zero, new Vector2(620f, 84f), center, TextAlignmentOptions.Center).name = codeTextName;
+
+        MenuStyle.AddPillButton(panel.transform, font, copyCodeName, MenuStyle.PillColor.Blue, new Vector2(310f, -115f), new Vector2(300f, 84f), 36f);
+        MenuStyle.AddPillButton(panel.transform, font, continueName, MenuStyle.PillColor.Yellow, new Vector2(0f, -225f), new Vector2(760f, 96f), 42f);
+
+        // The waiting message is where the continue button is, since a player only ever sees one of the two
+        MenuStyle.AddText(panel.transform, font, string.Empty, 42f, new Vector2(0f, -225f), new Vector2(1200f, 96f), center, TextAlignmentOptions.Center).name = waitingName;
+        MenuStyle.AddText(panel.transform, font, "This match is public, so anyone can join.", 32f, new Vector2(0f, -300f), new Vector2(1400f, 50f), center, TextAlignmentOptions.Center).name = listingName;
+
+        Instantiate(Resources.Load<GameObject>(backButtonPath), panel.transform).name = backButtonName;
+
+        panel.SetActive(false);
+        return panel;
     }
 
     public void Show()
@@ -88,15 +142,15 @@ public class OnlineLobbyUI : MonoBehaviour
         ActivePanel = panel;
     }
 
-    private PlayerCard AddPlayerCard(int index)
+    private static void BuildPlayerCard(Transform panel, TMP_FontAsset font, int index)
     {
         Vector2 cardSize = new(340f, 300f);
         Vector2 center = new(0.5f, 0.5f);
 
-        Image edge = MenuStyle.AddRoundedImage(panel.transform, $"Player {index + 1} Card", emptyCardColor, new Vector2(-570f + index * 380f, 110f), cardSize, 80f);
+        Image edge = MenuStyle.AddRoundedImage(panel, CardName(index), emptyCardColor, new Vector2(-570f + index * 380f, 110f), cardSize, 80f);
         MenuStyle.AddRoundedImage(edge.transform, "Fill", MenuStyle.CreamColor, Vector2.zero, cardSize - Vector2.one * 20f, 64f);
 
-        GameObject cursorObject = new("Cursor", typeof(RectTransform), typeof(RawImage));
+        GameObject cursorObject = new(cardCursorName, typeof(RectTransform), typeof(RawImage));
         cursorObject.transform.SetParent(edge.transform, false);
         cursorObject.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 50f);
         cursorObject.GetComponent<RectTransform>().sizeDelta = new Vector2(105f, 140f);
@@ -105,13 +159,15 @@ public class OnlineLobbyUI : MonoBehaviour
         cursor.raycastTarget = false;
         cursor.texture = Resources.Load<GameObject>($"{cursorPathPrefix}{index + 1}").GetComponent<RawImage>().texture;
 
-        return new PlayerCard
-        {
-            edge = edge,
-            cursor = cursor,
-            title = MenuStyle.AddText(edge.transform, font, string.Empty, 40f, new Vector2(0f, -55f), new Vector2(320f, 50f), center, TextAlignmentOptions.Center),
-            status = MenuStyle.AddText(edge.transform, font, string.Empty, 34f, new Vector2(0f, -100f), new Vector2(320f, 44f), center, TextAlignmentOptions.Center)
-        };
+        // Shrinks to fit a long Steam name on one line
+        TMP_Text title = MenuStyle.AddText(edge.transform, font, $"Player {index + 1}", 40f, new Vector2(0f, -55f), new Vector2(320f, 50f), center, TextAlignmentOptions.Center);
+        title.name = cardTitleName;
+        title.textWrappingMode = TextWrappingModes.NoWrap;
+        title.enableAutoSizing = true;
+        title.fontSizeMin = 18f;
+        title.fontSizeMax = 40f;
+
+        MenuStyle.AddText(edge.transform, font, "AI", 34f, new Vector2(0f, -100f), new Vector2(320f, 44f), center, TextAlignmentOptions.Center).name = cardStatusName;
     }
 
     // Explicit navigation links, same reason as in ConnectUI
@@ -168,7 +224,10 @@ public class OnlineLobbyUI : MonoBehaviour
     private void CopyJoinCode()
     {
         GUIUtility.systemCopyBuffer = joinCode;
-        copyCodeButton.GetComponentInChildren<TMP_Text>().text = "Copied!";
+
+        // A button with its own artwork (see MenuArt) can have no label to change
+        TMP_Text label = copyCodeButton.GetComponentInChildren<TMP_Text>(true);
+        if (label != null) label.text = "Copied!";
     }
 
     void Update()
@@ -191,10 +250,9 @@ public class OnlineLobbyUI : MonoBehaviour
             if (i < lobby.Players.Count)
             {
                 LobbyPlayer player = lobby.Players[i];
+                string role = player.clientId == NetworkManager.ServerClientId ? "Host" : "Joined";
                 bool isLocalPlayer = player.clientId == manager.LocalClientId;
-                ShowCard(cards[i], MenuStyle.GetPlayerColor(i), 1f,
-                    isLocalPlayer ? $"Player {i + 1} (You)" : $"Player {i + 1}",
-                    player.clientId == NetworkManager.ServerClientId ? "Host" : "Joined");
+                ShowCard(cards[i], MenuStyle.GetPlayerColor(i), 1f, lobby.DisplayName(i), isLocalPlayer ? $"{role} (You)" : role);
             }
             else
             {
