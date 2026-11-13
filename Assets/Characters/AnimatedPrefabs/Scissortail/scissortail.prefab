@@ -186,10 +186,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.5
-  m_Height: 2.4279337
+  m_Radius: 0.7
+  m_Height: 2.79
   m_Direction: 1
-  m_Center: {x: 0, y: 1.3689675, z: 0}
+  m_Center: {x: 0, y: 1.27, z: 0}
 --- !u!114 &5538524614742236189
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -202,13 +202,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6dca93e819a6fc47a03b72b82e10caf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManager: {fileID: 0}
+  birdType: 0
   onLeft: 1
-  ballManager: {fileID: 0}
+  playerID: -1
   interactionRadius: 2
+  animator: {fileID: 0}
   maxGroundSpeed: 4
   maxAirSpeed: 2
   jumpForce: 6
   rotationSpeed: 10
   overrideRotation: 0
   targetRotation: {x: 0, y: 0, z: 0, w: 0}
+  rotationOffsetEuler: {x: 0, y: 0, z: 0}
+  aiDifficulty: 1
+  easyBumpChance: 0.5
+  easySetChance: 0.5
+  easySpikeChance: 0.5
+  mediumBumpChance: 0.75
+  mediumSetChance: 0.75
+  mediumSpikeChance: 0.75
+  hardBumpChance: 0.9
+  hardSetChance: 0.9
+  hardSpikeChance: 0.9

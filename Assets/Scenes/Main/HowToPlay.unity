@@ -205,6 +205,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   masterSpeed: 1
+  useUnscaledTime: 0
   verticalEnabled: 0
   verticalAmplitude: 20
   verticalSpeed: 1
@@ -516,6 +517,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   masterSpeed: 1
+  useUnscaledTime: 0
   verticalEnabled: 0
   verticalAmplitude: 20
   verticalSpeed: 1
@@ -929,11 +931,10 @@ MonoBehaviour:
   - {fileID: 32900000, guid: 588b22aa621a4364594916be28f1b5f7, type: 3}
   - {fileID: 32900000, guid: 3a71c5070d49b5b47a70091df90eaf54, type: 3}
   - {fileID: 32900000, guid: f26636ec2f3a5e04c9762eeed4fdeb50, type: 3}
-  gameSceneNames:
-  - Game_Beach
-  - Game_Forest
-  - Game_Iceberg
-  - Game_Volcano
+  beachSceneName: Game_Beach
+  parkSceneName: Game_Forest
+  icebergSceneName: Game_Iceberg
+  volcanoSceneName: Game_Volcano
 --- !u!1 &945688230
 GameObject:
   m_ObjectHideFlags: 0
@@ -1443,6 +1444,8 @@ MonoBehaviour:
   buffEndSound: {fileID: 0}
   debuffStartSound: {fileID: 0}
   debuffEndSound: {fileID: 0}
+  abilityArmedSound: {fileID: 0}
+  abilityUnarmedSound: {fileID: 0}
   buttonHoverSound: {fileID: 0}
   buttonSelectSound: {fileID: 0}
   stunLoopSound: {fileID: 0}

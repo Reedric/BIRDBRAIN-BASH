@@ -288,6 +288,26 @@ public class HUDManager : MonoBehaviour
         ApplyBirdDataToCard(cards[playerIndex], data);
     }
 
+    // Online, players' cards show their own names instead of their birds'. Kept so a refreshed card keeps it too.
+    private readonly string[] playerNames = new string[4];
+
+    public void SetPlayerName(int playerIndex, string playerName)
+    {
+        if (playerIndex < 0 || playerIndex >= playerNames.Length) return;
+
+        playerNames[playerIndex] = playerName;
+        ApplyPlayerName(playerIndex);
+    }
+
+    private void ApplyPlayerName(int playerIndex)
+    {
+        PlayerCardUI[] cards = GetOrderedCards();
+        if (playerIndex >= cards.Length || cards[playerIndex]?.playerNameText == null) return;
+
+        if (!string.IsNullOrEmpty(playerNames[playerIndex]))
+            cards[playerIndex].playerNameText.text = playerNames[playerIndex];
+    }
+
     private void PopulatePlayerCards()
     {
         List<BirdType> selectedBirds = DataTransferManager.selectedBirds;
@@ -604,6 +624,7 @@ public class HUDManager : MonoBehaviour
         if (playerIndex >= cards.Length || cards[playerIndex] == null) return;
 
         ApplyBirdDataToCard(cards[playerIndex], GetBirdHUDData(DataTransferManager.selectedBirds[playerIndex]));
+        ApplyPlayerName(playerIndex);
     }
 
     private BirdHUDData GetBirdHUDData(BirdType bird)

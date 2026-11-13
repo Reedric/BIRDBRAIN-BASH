@@ -10,7 +10,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// The online play screen: hosting a public or private match, joining one from the list of public matches,
-/// or joining with a code. Its contents get built in code, so the ones in the scene are only there as placeholders.
+/// or joining with a code. Its layout is in the MainMenu scene (put there by MenuScreenBuilder), where it can be edited.
 /// </summary>
 public class ConnectUI : MonoBehaviour
 {
@@ -58,13 +58,30 @@ public class ConnectUI : MonoBehaviour
     {
         backButton.onClick.AddListener(BackToLocalOnlineMenu);
 
-        BuildConnectionUI();
+        MainMenu mainMenu = FindFirstObjectByType<MainMenu>(FindObjectsInactive.Include);
+        font = mainMenu != null ? mainMenu.MenuFont : null;
+
+        // The MainMenu scene has the screen built in already (see MenuScreenBuilder). Building it here is
+        // only for a scene that doesn't.
+        if (!HasBuiltScreen) BuildConnectionUI();
+        HookUpConnectionUI();
 
         if (!string.IsNullOrEmpty(NetworkSession.LastDisconnectMessage))
         {
             ShowStatus(NetworkSession.LastDisconnectMessage);
             NetworkSession.LastDisconnectMessage = null;
         }
+
+        // Everyone comes back here, still connected, when an online match ends (see NetworkSession.ReturnToLobby)
+        if (NetworkSession.IsOnline) ReturnToLobby();
+    }
+
+    private void ReturnToLobby()
+    {
+        isConnecting = true; // Stops the public match list refreshing behind the lobby
+        ShowLobby();
+
+        if (NetworkSession.IsServer) ShowHostInfo(NetworkSession.HostJoinCode, NetworkSession.HostPublicMatchName);
     }
 
     private void Update()
@@ -165,19 +182,26 @@ public class ConnectUI : MonoBehaviour
             return;
         }
 
+        NetworkSession.HostJoinCode = joinCode;
+        NetworkSession.HostPublicMatchName = isPublic ? PublicLobby.CreateMatchName() : null;
+
         ShowLobby();
+        ShowHostInfo(NetworkSession.HostJoinCode, NetworkSession.HostPublicMatchName);
+    }
+
+    // Shows the host how friends can join, and lists the match publicly if it's a public one. The listing goes away
+    // with the main menu scene during a match, so this lists it again when everyone's back in the lobby.
+    private async void ShowHostInfo(string joinCode, string publicMatchName)
+    {
         lobbyUI.SetConnectionInfo(joinCode);
+        if (publicMatchName == null) return;
 
-        if (isPublic)
-        {
-            string matchName = PublicLobby.CreateMatchName();
-            lobbyUI.SetMatchName(matchName);
+        lobbyUI.SetMatchName(publicMatchName);
 
-            // This stays with the lobby screen, since this one is hidden while it's showing
-            PublicLobbyHost listing = lobbyUI.gameObject.AddComponent<PublicLobbyHost>();
-            bool listed = await listing.OpenAsync(matchName, joinCode, maxPlayers);
-            if (lobbyUI != null) lobbyUI.SetListed(listed);
-        }
+        // This stays with the lobby screen, since this one is hidden while it's showing
+        PublicLobbyHost listing = lobbyUI.gameObject.AddComponent<PublicLobbyHost>();
+        bool listed = await listing.OpenAsync(publicMatchName, joinCode, maxPlayers);
+        if (lobbyUI != null) lobbyUI.SetListed(listed);
     }
 
     // Joins with a join code, or directly with an IP address.
@@ -265,8 +289,9 @@ public class ConnectUI : MonoBehaviour
     }
 
     // Runs on the host for each player trying to join. Birds are spawned by MultiplayerManager, so
-    // NGO should not create a player object of its own.
-    private void ApproveConnection(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
+    // NGO should not create a player object of its own. Static, since it stays hooked up to the NetworkManager
+    // after this screen is gone (during a match, and back in the lobby after one).
+    private static void ApproveConnection(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
     {
         response.CreatePlayerObject = false;
 
@@ -328,7 +353,48 @@ public class ConnectUI : MonoBehaviour
     }
 
     // Fills in the host-join panel, and hides the parts from the scene that this replaces.
-    private void BuildConnectionUI()
+    // Whether the screen's contents are already in the scene
+    public bool HasBuiltScreen => hostJoinPanel != null && hostJoinPanel.transform.Find(hostPublicName) != null;
+
+    // For the editor, which builds the other screens of this menu onto the same canvas in the same font
+    public Canvas ScreenCanvas => hostJoinPanel != null ? hostJoinPanel.GetComponentInParent<Canvas>(true) : null;
+
+    private const string hostPublicName = "Host Public Match";
+    private const string hostPrivateName = "Host Private Match";
+    private const string joinCodeName = "Join With Code";
+    private const string addressFieldName = "Host Address";
+    private const string matchRowName = "Public Match";
+    private const string matchListTextName = "Match List Message";
+    private const string statusTextName = "Status";
+    private const string titleName = "Online Play Title";
+    private const string matchListName = "Public Matches";
+    private const string matchListTitleName = "Public Matches Title";
+
+    // Everything BuildConnectionUI adds to the panel
+    private static readonly string[] builtNames =
+    {
+        titleName, hostPublicName, hostPrivateName, addressFieldName, joinCodeName,
+        matchListName, matchListTitleName, matchListTextName, matchRowName, statusTextName
+    };
+
+    // Takes the built contents back out of the panel, so that they can be built again from scratch
+    public void ClearBuiltScreen()
+    {
+        if (hostJoinPanel == null) return;
+
+        for (int i = hostJoinPanel.transform.childCount - 1; i >= 0; --i)
+        {
+            GameObject child = hostJoinPanel.transform.GetChild(i).gameObject;
+            if (Array.IndexOf(builtNames, child.name) < 0) continue;
+
+            if (Application.isPlaying) Destroy(child);
+            else DestroyImmediate(child);
+        }
+    }
+
+    // Builds the screen's contents into the panel. Also used in the editor to put them into the scene, where they can
+    // be edited (see MenuScreenBuilder). Only the layout gets made here; HookUpConnectionUI makes it work.
+    public void BuildConnectionUI()
     {
         if (hostJoinPanel == null) return;
 
@@ -348,22 +414,52 @@ public class ConnectUI : MonoBehaviour
         Vector2 center = new(0.5f, 0.5f);
         Vector2 buttonSize = new(540f, 105f);
 
-        MenuStyle.AddText(hostJoinPanel.transform, font, "Online Play", 90f, new Vector2(0f, 365f), new Vector2(1000f, 120f), center, TextAlignmentOptions.Center);
+        MenuStyle.AddText(hostJoinPanel.transform, font, "Online Play", 90f, new Vector2(0f, 365f), new Vector2(1000f, 120f), center, TextAlignmentOptions.Center).name = titleName;
 
-        hostPublicButton = MenuStyle.AddPillButton(hostJoinPanel.transform, font, "Host Public Match", MenuStyle.AccentColor, new Vector2(-530f, 220f), buttonSize, 44f);
-        AddClickListener(hostPublicButton, () => HostMatch(true));
-
-        hostPrivateButton = MenuStyle.AddPillButton(hostJoinPanel.transform, font, "Host Private Match", MenuStyle.BlueColor, new Vector2(-530f, 95f), buttonSize, 44f);
-        AddClickListener(hostPrivateButton, () => HostMatch(false));
-
+        MenuStyle.AddPillButton(hostJoinPanel.transform, font, hostPublicName, MenuStyle.PillColor.Yellow, new Vector2(-530f, 220f), buttonSize, 44f);
+        MenuStyle.AddPillButton(hostJoinPanel.transform, font, hostPrivateName, MenuStyle.PillColor.Pink, new Vector2(-530f, 95f), buttonSize, 44f);
         BuildAddressField(new Vector2(-530f, -30f), buttonSize);
-
-        joinCodeButton = MenuStyle.AddPillButton(hostJoinPanel.transform, font, "Join With Code", MenuStyle.PinkColor, new Vector2(-530f, -155f), buttonSize, 44f);
-        AddClickListener(joinCodeButton, () => JoinMatch(addressField.text.Trim()));
+        MenuStyle.AddPillButton(hostJoinPanel.transform, font, joinCodeName, MenuStyle.PillColor.Orange, new Vector2(-530f, -155f), buttonSize, 44f);
 
         BuildMatchList();
 
-        statusText = MenuStyle.AddText(hostJoinPanel.transform, font, string.Empty, 34f, new Vector2(0f, -305f), new Vector2(1700f, 50f), center, TextAlignmentOptions.Center);
+        MenuStyle.AddText(hostJoinPanel.transform, font, string.Empty, 34f, new Vector2(0f, -305f), new Vector2(1700f, 50f), center, TextAlignmentOptions.Center).name = statusTextName;
+    }
+
+    // Finds the screen's parts by name and gives them their behavior
+    private void HookUpConnectionUI()
+    {
+        Transform panel = hostJoinPanel.transform;
+
+        hostPublicButton = panel.Find(hostPublicName).GetComponent<Button>();
+        hostPrivateButton = panel.Find(hostPrivateName).GetComponent<Button>();
+        joinCodeButton = panel.Find(joinCodeName).GetComponent<Button>();
+        addressField = panel.Find(addressFieldName).GetComponent<TMP_InputField>();
+        matchListText = panel.Find(matchListTextName).GetComponent<TMP_Text>();
+        statusText = panel.Find(statusTextName).GetComponent<TMP_Text>();
+
+        // The scene has these on the buttons already (see MenuScreenBuilder), so this is only for one that doesn't
+        foreach (Button button in new[] { hostPublicButton, hostPrivateButton, joinCodeButton })
+        {
+            if (!MenuStyle.HasHighlight(button)) MenuStyle.AddHighlight(button);
+        }
+
+        AddClickListener(hostPublicButton, () => HostMatch(true));
+        AddClickListener(hostPrivateButton, () => HostMatch(false));
+        AddClickListener(joinCodeButton, () => JoinMatch(addressField.text.Trim()));
+        addressField.text = PlayerPrefs.GetString(addressPrefsKey, string.Empty);
+
+        matchRows.Clear();
+        foreach (Transform child in panel)
+        {
+            if (child.name != matchRowName) continue;
+
+            TMP_Text[] texts = child.GetComponentsInChildren<TMP_Text>(true);
+            MatchRow row = new() { button = child.GetComponent<Button>(), nameText = texts[0], countText = texts[1] };
+            AddClickListener(row.button, () => JoinMatch(row.joinCode));
+            child.gameObject.SetActive(false);
+            matchRows.Add(row);
+        }
 
         LinkNavigation();
     }
@@ -371,7 +467,7 @@ public class ConnectUI : MonoBehaviour
     private void BuildAddressField(Vector2 position, Vector2 size)
     {
         GameObject fieldObject = TMP_DefaultControls.CreateInputField(new TMP_DefaultControls.Resources());
-        fieldObject.name = "Host Address";
+        fieldObject.name = addressFieldName;
         fieldObject.transform.SetParent(hostJoinPanel.transform, false);
 
         RectTransform fieldRect = fieldObject.GetComponent<RectTransform>();
@@ -383,9 +479,8 @@ public class ConnectUI : MonoBehaviour
         MenuStyle.MakeRounded(fieldImage, size.y);
         MenuStyle.MakeClickable(fieldImage);
 
-        addressField = fieldObject.GetComponent<TMP_InputField>();
+        TMP_InputField addressField = fieldObject.GetComponent<TMP_InputField>();
         addressField.pointSize = 40f;
-        addressField.text = PlayerPrefs.GetString(addressPrefsKey, string.Empty);
 
         // Keeps what's typed clear of the field's rounded ends
         addressField.textViewport.offsetMin = new Vector2(40f, 0f);
@@ -411,14 +506,14 @@ public class ConnectUI : MonoBehaviour
         Vector2 listCenter = new(330f, -5f);
         Vector2 center = new(0.5f, 0.5f);
 
-        MenuStyle.AddRoundedImage(hostJoinPanel.transform, "Public Matches", new Color(1f, 1f, 1f, 0.4f), listCenter, new Vector2(1060f, 550f), 80f);
-        MenuStyle.AddText(hostJoinPanel.transform, font, "Public Matches", 48f, new Vector2(listCenter.x, 215f), new Vector2(rowWidth, 60f), center, TextAlignmentOptions.Center);
+        MenuStyle.AddRoundedImage(hostJoinPanel.transform, matchListName, new Color(1f, 1f, 1f, 0.4f), listCenter, new Vector2(1060f, 550f), 80f);
+        MenuStyle.AddText(hostJoinPanel.transform, font, "Public Matches", 48f, new Vector2(listCenter.x, 215f), new Vector2(rowWidth, 60f), center, TextAlignmentOptions.Center).name = matchListTitleName;
 
-        matchListText = MenuStyle.AddText(hostJoinPanel.transform, font, "Looking for matches...", 40f, new Vector2(listCenter.x, -20f), new Vector2(rowWidth, 200f), center, TextAlignmentOptions.Center);
+        MenuStyle.AddText(hostJoinPanel.transform, font, "Looking for matches...", 40f, new Vector2(listCenter.x, -20f), new Vector2(rowWidth, 200f), center, TextAlignmentOptions.Center).name = matchListTextName;
 
         for (int i = 0; i < visibleMatches; ++i)
         {
-            GameObject rowObject = new("Public Match", typeof(RectTransform), typeof(Image), typeof(Button));
+            GameObject rowObject = new(matchRowName, typeof(RectTransform), typeof(Image), typeof(Button));
             rowObject.transform.SetParent(hostJoinPanel.transform, false);
 
             // With the pivot on the left, the menu cursor points at the start of the row and not over its name
@@ -441,17 +536,10 @@ public class ConnectUI : MonoBehaviour
             colors.fadeDuration = 0.05f;
             button.colors = colors;
 
+            // The match name, then the player count
             Vector2 left = new(0f, 0.5f);
-            MatchRow row = new()
-            {
-                button = button,
-                nameText = MenuStyle.AddText(rowObject.transform, font, string.Empty, 42f, new Vector2(90f, 0f), new Vector2(680f, rowHeight), left, TextAlignmentOptions.Left),
-                countText = MenuStyle.AddText(rowObject.transform, font, string.Empty, 42f, new Vector2(rowWidth - 170f, 0f), new Vector2(130f, rowHeight), left, TextAlignmentOptions.Right)
-            };
-
-            AddClickListener(button, () => JoinMatch(row.joinCode));
-            rowObject.SetActive(false);
-            matchRows.Add(row);
+            MenuStyle.AddText(rowObject.transform, font, "Match Name", 42f, new Vector2(90f, 0f), new Vector2(680f, rowHeight), left, TextAlignmentOptions.Left);
+            MenuStyle.AddText(rowObject.transform, font, "1/4", 42f, new Vector2(rowWidth - 170f, 0f), new Vector2(130f, rowHeight), left, TextAlignmentOptions.Right);
         }
     }
 

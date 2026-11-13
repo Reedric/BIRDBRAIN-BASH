@@ -66,10 +66,8 @@ public class PauseMenuCursor : MonoBehaviour
         GameObject selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
         if (selected == null || !selected.activeInHierarchy || !selected.TryGetComponent(out RectTransform selectedRect)) return false;
 
-        // The pause menu's buttons are only text, so it goes beside them instead of over the words
-        target = OptionsMenuUI.ActivePanel != null
-            ? selectedRect.position
-            : selectedRect.TransformPoint(new Vector3(selectedRect.rect.xMax, selectedRect.rect.center.y, 0f));
+        // Points at the middle of the button, the same as the cursors in the other menus
+        target = selectedRect.position;
         return true;
     }
 }

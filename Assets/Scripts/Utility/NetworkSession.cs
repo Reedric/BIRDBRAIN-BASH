@@ -21,6 +21,11 @@ public static class NetworkSession
     // Shown on the online menu after being sent back there (e.g. the host left)
     public static string LastDisconnectMessage;
 
+    // Host only: the join code (null when hosting by IP) and, for a public match, the name it's listed under.
+    // Kept so the lobby can show them again when everyone comes back to it after a match.
+    public static string HostJoinCode;
+    public static string HostPublicMatchName;
+
     // Whether this client got as far as connecting, which decides how a disconnect gets explained
     private static bool connectedToHost;
 
@@ -63,6 +68,20 @@ public static class NetworkSession
     {
         NetworkManager.Singleton.SceneManager.OnLoadEventCompleted -= OnMatchSceneLoaded;
         MatchSceneLoaded = true;
+    }
+
+    // Host only. Ends the match (finished or not) and takes everyone back to the online lobby, still connected, so
+    // they can go again. The main menu scene opens straight onto the lobby while a session is going (see MainMenu).
+    public static void ReturnToLobby()
+    {
+        if (!IsServer) return;
+
+        // New players can join again from the lobby
+        MatchStarted = false;
+        MatchSceneLoaded = false;
+        Time.timeScale = 1f;
+
+        NetworkManager.Singleton.SceneManager.LoadScene(mainMenuSceneName, LoadSceneMode.Single);
     }
 
     // Moves an object instantly. Online, this stops clients from interpolating across the court.
@@ -119,6 +138,8 @@ public static class NetworkSession
         LastDisconnectMessage = message;
         MatchSceneLoaded = false;
         MatchStarted = false;
+        HostJoinCode = null;
+        HostPublicMatchName = null;
         connectedToHost = false;
         DataTransferManager.isLocal = true;
         DataTransferManager.onlineRoster = null;

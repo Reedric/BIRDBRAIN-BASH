@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -11,15 +12,17 @@ public struct LobbyPlayer : INetworkSerializable, IEquatable<LobbyPlayer>
     public ulong clientId;
     public BirdType bird;
     public bool ready;
+    public FixedString128Bytes name; // Empty until the player has sent it (see PlayerNames)
 
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
     {
         serializer.SerializeValue(ref clientId);
         serializer.SerializeValue(ref bird);
         serializer.SerializeValue(ref ready);
+        serializer.SerializeValue(ref name);
     }
 
-    public bool Equals(LobbyPlayer other) => clientId == other.clientId && bird == other.bird && ready == other.ready;
+    public bool Equals(LobbyPlayer other) => clientId == other.clientId && bird == other.bird && ready == other.ready && name == other.name;
 }
 
 /// <summary>
@@ -43,6 +46,9 @@ public class StartNetworkedLobbyForNumPlayers : NetworkBehaviour
 
     private bool matchLoading;
 
+    // Host only: each player's name, kept so the next lobby object (the one in character select) has them straight away
+    private static readonly Dictionary<ulong, FixedString128Bytes> knownNames = new();
+
     void Awake()
     {
         Instance = this;
@@ -57,6 +63,11 @@ public class StartNetworkedLobbyForNumPlayers : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        // A new session, so names from an earlier one (whose client ids get reused) are out of date
+        if (IsServer && !NetworkSession.MatchStarted) knownNames.Clear();
+
+        SendLocalName();
+
         if (!IsServer) return;
 
         NetworkManager.OnConnectionEvent += OnConnectionEvent;
@@ -90,7 +101,37 @@ public class StartNetworkedLobbyForNumPlayers : NetworkBehaviour
     private void AddPlayer(ulong clientId)
     {
         if (IndexOf(clientId) >= 0) return;
-        Players.Add(new LobbyPlayer { clientId = clientId, bird = BirdType.PENGUIN, ready = false });
+
+        knownNames.TryGetValue(clientId, out FixedString128Bytes name);
+        Players.Add(new LobbyPlayer { clientId = clientId, bird = BirdType.PENGUIN, ready = false, name = name });
+    }
+
+    // Every player sends the host their name, which may take a moment to look up the first time
+    private async void SendLocalName()
+    {
+        string playerName = await PlayerNames.GetLocalNameAsync();
+        if (IsSpawned && !string.IsNullOrEmpty(playerName)) SetNameRpc(playerName);
+    }
+
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    private void SetNameRpc(string playerName, RpcParams rpcParams = default)
+    {
+        ulong clientId = rpcParams.Receive.SenderClientId;
+        FixedString128Bytes name = new(PlayerNames.Clean(playerName));
+        knownNames[clientId] = name;
+
+        int index = IndexOf(clientId);
+        if (index < 0) return;
+
+        LobbyPlayer player = Players[index];
+        player.name = name;
+        Players[index] = player;
+    }
+
+    // The name to show for the player in this slot
+    public string DisplayName(int slot)
+    {
+        return PlayerNames.Display(slot < Players.Count ? Players[slot].name.ToString() : null, slot);
     }
 
     private int IndexOf(ulong clientId)

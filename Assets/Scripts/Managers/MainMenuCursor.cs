@@ -74,7 +74,8 @@ public class MainMenuCursor : MonoBehaviour
         HostJoin,
         OnlineLobby,
         Credits,
-        Options
+        Options,
+        Controls
     }
 
     private void Start()
@@ -522,6 +523,11 @@ public class MainMenuCursor : MonoBehaviour
             return new List<Selectable>(MainMenu.ActiveCreditsPanel.GetComponentsInChildren<Selectable>(false));
         }
 
+        if (activeMenu == MenuType.Controls)
+        {
+            return new List<Selectable>(ControlsMenuUI.ActivePanel.GetComponentsInChildren<Selectable>(false));
+        }
+
         if (activeMenu == MenuType.Options)
         {
             return new List<Selectable>(OptionsMenuUI.ActivePanel.GetComponentsInChildren<Selectable>(false));
@@ -653,6 +659,7 @@ public class MainMenuCursor : MonoBehaviour
     {
         if (OnlineLobbyUI.ActivePanel != null) return MenuType.OnlineLobby;
         if (MainMenu.ActiveCreditsPanel != null) return MenuType.Credits;
+        if (ControlsMenuUI.ActivePanel != null) return MenuType.Controls;
         if (OptionsMenuUI.ActivePanel != null) return MenuType.Options;
         if (mainMenuPanel != null && mainMenuPanel.activeInHierarchy) return MenuType.Main;
         if (localOnlinePanel != null && localOnlinePanel.activeInHierarchy) return MenuType.LocalOnline;

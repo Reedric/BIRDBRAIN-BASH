@@ -10,7 +10,8 @@ using UnityEngine.UI;
 /// The options screen: volume and display settings. The stick moves up and down between rows the same as any other
 /// menu, and left and right change the selected row. With the mouse, the arrows can be clicked, and so can the volume
 /// bars (or dragged along).
-/// It's built in code and pretty bare bones for now, so it can get swapped out for a proper designed screen later.
+/// Its layout is in the scenes (put there by MenuScreenBuilder), where it can be edited. This finds the parts by name and
+/// makes them work.
 /// </summary>
 public class OptionsMenuUI : MonoBehaviour
 {
@@ -53,7 +54,8 @@ public class OptionsMenuUI : MonoBehaviour
 
     private GameObject panel;
     private Button backButton;
-    private TMP_FontAsset font;
+    private Button controlsButton; // Only the main menu's options have this
+    private int shownFrame = -1;
     private Action onClose;
     private Func<Gamepad> getGamepad;
     private bool closeOnEscape;
@@ -69,19 +71,70 @@ public class OptionsMenuUI : MonoBehaviour
 
     public GameObject Panel => panel;
     public Button FirstButton => rows[0].button;
+    public Button ControlsButton => controlsButton;
 
     // Builds the options on the given canvas, using the menu font.
     // gamepad returns whichever controller is using the menu (null if nobody is on one).
     // inMatch is true when opened from the pause menu instead of the main menu, which already has a background
     // showing behind this. There, Escape is also the pause button, which PauseMenu handles.
-    public void Build(Canvas canvas, TMP_FontAsset fontAsset, Func<Gamepad> gamepad, bool inMatch, Action closeAction)
+    // controlsAction opens the controls screen, for the button to it that the main menu's options have. The pause menu
+    // has its own controls button, so its options don't.
+    public void Build(Canvas canvas, TMP_FontAsset fontAsset, Func<Gamepad> gamepad, bool inMatch, Action closeAction, Action controlsAction = null)
     {
-        font = fontAsset;
         getGamepad = gamepad;
         closeOnEscape = !inMatch;
         onClose = closeAction;
 
-        panel = new GameObject("Options Panel", typeof(RectTransform));
+        // The scenes have the screen in them already (see MenuScreenBuilder). It only gets made here for a scene
+        // that doesn't.
+        Transform existing = canvas.transform.Find(PanelName);
+        panel = existing != null ? existing.gameObject : BuildPanel(canvas, fontAsset, inMatch);
+
+        rows.Clear();
+        BindVolumeRow(masterVolumeRow, () => PlayerOptions.MasterVolume, PlayerOptions.SetMasterVolume);
+        BindVolumeRow(musicVolumeRow, () => PlayerOptions.MusicVolume, PlayerOptions.SetMusicVolume);
+        BindVolumeRow(sfxVolumeRow, () => PlayerOptions.SfxVolume, PlayerOptions.SetSfxVolume);
+        BindChoiceRow(fullscreenRow, ToggleFullscreen, () => isFullscreen ? "On" : "Off");
+        BindChoiceRow(resolutionRow, ChangeResolution, () => $"{resolutions[resolutionIndex].x} x {resolutions[resolutionIndex].y}");
+        BindChoiceRow(vSyncRow, _ => PlayerOptions.SetVSync(!PlayerOptions.VSync), () => PlayerOptions.VSync ? "On" : "Off");
+
+        backButton = panel.transform.Find(backButtonName).GetComponent<Button>();
+        AddClickListener(backButton, () => onClose());
+
+        Transform controls = panel.transform.Find(ControlsButtonName);
+        if (controls == null && controlsAction != null) controls = BuildControlsButton(panel.transform, fontAsset).transform;
+        if (controls != null) controls.gameObject.SetActive(controlsAction != null);
+
+        controlsButton = controls != null && controlsAction != null ? controls.GetComponent<Button>() : null;
+        if (controlsButton != null) AddClickListener(controlsButton, controlsAction);
+
+        LinkNavigation();
+        panel.SetActive(false);
+    }
+
+    public const string PanelName = "Options Panel";
+    public const string ControlsButtonName = "Controls";
+
+    private const string masterVolumeRow = "Master Volume";
+    private const string musicVolumeRow = "Music Volume";
+    private const string sfxVolumeRow = "Sound Effects";
+    private const string fullscreenRow = "Fullscreen";
+    private const string resolutionRow = "Resolution";
+    private const string vSyncRow = "V-Sync";
+
+    private const string backButtonName = "Back";
+    private const string valueName = "Value";
+    private const string leftArrowName = "Left Arrow";
+    private const string rightArrowName = "Right Arrow";
+    private const string barName = "Volume Bar";
+    private const string barFillName = "Fill";
+
+    // Makes the screen's layout on the given canvas, hidden. Also used in the editor to put it into the scenes, where
+    // it can be seen and edited (see MenuScreenBuilder). Build finds its parts by name and makes them work, so they
+    // need to keep their names.
+    public static GameObject BuildPanel(Canvas canvas, TMP_FontAsset font, bool inMatch)
+    {
+        GameObject panel = new(PanelName, typeof(RectTransform));
         panel.transform.SetParent(canvas.transform, false);
         panel.GetComponent<RectTransform>().sizeDelta = new Vector2(2176f, 1224f); // The same size as the credits screen
 
@@ -89,25 +142,44 @@ public class OptionsMenuUI : MonoBehaviour
         {
             // Pausing freezes game time, which would otherwise stop it from swaying
             GameObject background = Instantiate(Resources.Load<GameObject>(matchBackgroundPath), panel.transform);
+            background.name = "Background";
             background.GetComponent<ImageWobble>().useUnscaledTime = true;
         }
 
-        AddText(panel.transform, "Options", 90f, new Vector2(0f, 360f), new Vector2(1000f, 120f), new Vector2(0.5f, 0.5f), TextAlignmentOptions.Center);
+        Vector2 center = new(0.5f, 0.5f);
+        MenuStyle.AddText(panel.transform, font, "Options", 90f, new Vector2(0f, 360f), new Vector2(1000f, 120f), center, TextAlignmentOptions.Center).name = "Title";
 
-        AddVolumeRow("Master Volume", () => PlayerOptions.MasterVolume, PlayerOptions.SetMasterVolume);
-        AddVolumeRow("Music Volume", () => PlayerOptions.MusicVolume, PlayerOptions.SetMusicVolume);
-        AddVolumeRow("Sound Effects", () => PlayerOptions.SfxVolume, PlayerOptions.SetSfxVolume);
-        AddChoiceRow("Fullscreen", ToggleFullscreen, () => isFullscreen ? "On" : "Off");
-        AddChoiceRow("Resolution", ChangeResolution, () => $"{resolutions[resolutionIndex].x} x {resolutions[resolutionIndex].y}");
-        AddChoiceRow("V-Sync", _ => PlayerOptions.SetVSync(!PlayerOptions.VSync), () => PlayerOptions.VSync ? "On" : "Off");
+        int rowIndex = 0;
+        foreach (string label in new[] { masterVolumeRow, musicVolumeRow, sfxVolumeRow })
+        {
+            Transform row = BuildRow(panel.transform, font, label, rowIndex++);
+            MenuStyle.AddText(row, font, "100%", 44f, new Vector2(1192f, 0f), new Vector2(110f, 84f), new Vector2(0f, 0.5f), TextAlignmentOptions.Right).name = valueName;
+            BuildVolumeBar(row);
+        }
+        foreach (string label in new[] { fullscreenRow, resolutionRow, vSyncRow })
+        {
+            Transform row = BuildRow(panel.transform, font, label, rowIndex++);
+            MenuStyle.AddText(row, font, "On", 44f, new Vector2(752f, 0f), new Vector2(370f, 84f), new Vector2(0f, 0.5f), TextAlignmentOptions.Center).name = valueName;
+        }
 
-        AddText(panel.transform, "Left / Right to change", 36f, new Vector2(0f, -295f), new Vector2(1000f, 60f), new Vector2(0.5f, 0.5f), TextAlignmentOptions.Center);
+        MenuStyle.AddText(panel.transform, font, "Left / Right to change", 36f, new Vector2(0f, -295f), new Vector2(1000f, 60f), center, TextAlignmentOptions.Center).name = "Hint";
 
-        backButton = Instantiate(Resources.Load<GameObject>(backButtonPath), panel.transform).GetComponent<Button>();
-        AddClickListener(backButton, () => onClose());
+        Instantiate(Resources.Load<GameObject>(backButtonPath), panel.transform).name = backButtonName;
+        if (!inMatch) BuildControlsButton(panel.transform, font);
 
-        LinkNavigation();
         panel.SetActive(false);
+        return panel;
+    }
+
+    // The button under the rows that opens the controls screen
+    public static Button BuildControlsButton(Transform panel, TMP_FontAsset font)
+    {
+        Button button = MenuStyle.AddPillButton(panel, font, ControlsButtonName, MenuStyle.PillColor.Blue, new Vector2(0f, -410f), new Vector2(380f, 100f), 46f);
+
+        // Stays behind the back button, the same as everything else on the screen
+        Transform back = panel.Find(backButtonName);
+        if (back != null) button.transform.SetSiblingIndex(back.GetSiblingIndex());
+        return button;
     }
 
     public void Show()
@@ -124,6 +196,7 @@ public class OptionsMenuUI : MonoBehaviour
         panel.SetActive(true);
         panel.transform.SetAsLastSibling(); // Things can get added to the canvas during a match
         ActivePanel = panel;
+        shownFrame = Time.frameCount;
     }
 
     public void Hide()
@@ -136,6 +209,9 @@ public class OptionsMenuUI : MonoBehaviour
     void Update()
     {
         if (panel == null || !panel.activeSelf) return;
+
+        // The press of B that came back here from the controls screen would otherwise close this one as well
+        if (Time.frameCount == shownFrame) return;
 
         if (flashedArrow != null && Time.unscaledTime >= arrowFlashEndTime) ResetFlashedArrow();
 
@@ -287,9 +363,11 @@ public class OptionsMenuUI : MonoBehaviour
         for (int i = 0; i < rows.Count; ++i)
         {
             Button up = i > 0 ? rows[i - 1].button : backButton;
-            Button down = i < rows.Count - 1 ? rows[i + 1].button : null;
+            Button down = i < rows.Count - 1 ? rows[i + 1].button : controlsButton;
             SetNavigation(rows[i].button, up, down);
         }
+
+        if (controlsButton != null) SetNavigation(controlsButton, rows[rows.Count - 1].button, null);
     }
 
     private void SetNavigation(Button button, Button up, Button down)
@@ -302,19 +380,18 @@ public class OptionsMenuUI : MonoBehaviour
         };
     }
 
-    private void AddVolumeRow(string label, Func<float> getVolume, Action<float> setVolume)
+    private void BindVolumeRow(string label, Func<float> getVolume, Action<float> setVolume)
     {
-        Row row = AddRow(label);
+        Row row = BindRow(label);
         row.getBarValue = getVolume;
         row.getValue = () => $"{Mathf.RoundToInt(getVolume() * 100f)}%";
         row.change = direction => setVolume(getVolume() + direction * volumeStep);
 
-        row.valueText = AddText(row.button.transform, string.Empty, 44f, new Vector2(1192f, 0f), new Vector2(110f, 84f), new Vector2(0f, 0.5f), TextAlignmentOptions.Right);
-        row.barFill = AddVolumeBar(row.button.transform);
+        Transform bar = row.button.transform.Find(barName);
+        row.barFill = (RectTransform)bar.Find(barFillName);
 
         // Clicking or dragging along the bar sets the volume to that point
-        OptionsBarPointer bar = row.barFill.parent.gameObject.AddComponent<OptionsBarPointer>();
-        bar.onPoint = amount =>
+        bar.GetComponent<OptionsBarPointer>().onPoint = amount =>
         {
             Select(row);
             float before = getVolume();
@@ -326,13 +403,11 @@ public class OptionsMenuUI : MonoBehaviour
         Refresh(row);
     }
 
-    private void AddChoiceRow(string label, Action<int> change, Func<string> getValue)
+    private void BindChoiceRow(string label, Action<int> change, Func<string> getValue)
     {
-        Row row = AddRow(label);
+        Row row = BindRow(label);
         row.getValue = getValue;
         row.change = change;
-
-        row.valueText = AddText(row.button.transform, string.Empty, 44f, new Vector2(752f, 0f), new Vector2(370f, 84f), new Vector2(0f, 0.5f), TextAlignmentOptions.Center);
 
         // A also works on these, since there's only a next thing for it to go to
         AddClickListener(row.button, () =>
@@ -343,18 +418,37 @@ public class OptionsMenuUI : MonoBehaviour
         });
     }
 
-    private Row AddRow(string label)
+    // Finds a row's parts and makes its arrows work
+    private Row BindRow(string label)
+    {
+        Transform rowTransform = panel.transform.Find(label);
+
+        Row row = new()
+        {
+            button = rowTransform.GetComponent<Button>(),
+            valueText = rowTransform.Find(valueName).GetComponent<TMP_Text>(),
+            leftArrow = rowTransform.Find(leftArrowName).GetComponent<Image>(),
+            rightArrow = rowTransform.Find(rightArrowName).GetComponent<Image>()
+        };
+        row.leftArrow.GetComponent<OptionsArrowPointer>().onClick = () => { Select(row); Change(row, -1); };
+        row.rightArrow.GetComponent<OptionsArrowPointer>().onClick = () => { Select(row); Change(row, 1); };
+
+        rows.Add(row);
+        return row;
+    }
+
+    private static Transform BuildRow(Transform panel, TMP_FontAsset font, string label, int index)
     {
         const float rowSpacing = 92f;
 
         GameObject rowObject = new(label, typeof(RectTransform), typeof(Image), typeof(Button));
-        rowObject.transform.SetParent(panel.transform, false);
+        rowObject.transform.SetParent(panel, false);
 
         // With the pivot on the left, the menu cursor points at the start of the row and not over its value
         RectTransform rect = rowObject.GetComponent<RectTransform>();
         rect.pivot = new Vector2(0f, 0.5f);
         rect.sizeDelta = new Vector2(1320f, 84f);
-        rect.anchoredPosition = new Vector2(-660f, 250f - rows.Count * rowSpacing);
+        rect.anchoredPosition = new Vector2(-660f, 250f - index * rowSpacing);
 
         Button button = rowObject.GetComponent<Button>();
         button.targetGraphic = rowObject.GetComponent<Image>();
@@ -368,20 +462,18 @@ public class OptionsMenuUI : MonoBehaviour
         colors.fadeDuration = 0.05f;
         button.colors = colors;
 
-        AddText(rowObject.transform, label, 44f, new Vector2(90f, 0f), new Vector2(570f, 84f), new Vector2(0f, 0.5f), TextAlignmentOptions.Left);
+        MenuStyle.AddText(rowObject.transform, font, label, 44f, new Vector2(90f, 0f), new Vector2(570f, 84f), new Vector2(0f, 0.5f), TextAlignmentOptions.Left).name = "Label";
 
-        Row row = new() { button = button };
-        row.leftArrow = AddArrow(rowObject.transform, "<", 680f, () => { Select(row); Change(row, -1); });
-        row.rightArrow = AddArrow(rowObject.transform, ">", 1134f, () => { Select(row); Change(row, 1); });
-        rows.Add(row);
-        return row;
+        BuildArrow(rowObject.transform, font, "<", 680f);
+        BuildArrow(rowObject.transform, font, ">", 1134f);
+        return rowObject.transform;
     }
 
     // These show what left and right do, and press in when they get used. The mouse can click them, but they aren't
     // selectable, since stopping on them would get in the way of moving up and down between rows.
-    private Image AddArrow(Transform parent, string symbol, float x, Action onClick)
+    private static void BuildArrow(Transform parent, TMP_FontAsset font, string symbol, float x)
     {
-        GameObject arrow = new(symbol == "<" ? "Left Arrow" : "Right Arrow", typeof(RectTransform), typeof(Image));
+        GameObject arrow = new(symbol == "<" ? leftArrowName : rightArrowName, typeof(RectTransform), typeof(Image), typeof(OptionsArrowPointer));
         arrow.transform.SetParent(parent, false);
 
         // The pivot stays in the middle so that it presses in evenly, which is why half of its size gets added back on
@@ -394,18 +486,16 @@ public class OptionsMenuUI : MonoBehaviour
         image.color = accentColor;
         MenuStyle.MakeRounded(image, arrowSize);
         MenuStyle.MakeClickable(image);
-        arrow.AddComponent<OptionsArrowPointer>().onClick = onClick;
 
-        TMP_Text text = AddText(arrow.transform, symbol, 44f, Vector2.zero, rect.sizeDelta, new Vector2(0.5f, 0.5f), TextAlignmentOptions.Center);
+        TMP_Text text = MenuStyle.AddText(arrow.transform, font, symbol, 44f, Vector2.zero, rect.sizeDelta, new Vector2(0.5f, 0.5f), TextAlignmentOptions.Center);
         text.color = Color.white;
-        return image;
     }
 
-    private RectTransform AddVolumeBar(Transform parent)
+    private static void BuildVolumeBar(Transform parent)
     {
         const float barHeight = 28f;
 
-        GameObject bar = new("Volume Bar", typeof(RectTransform), typeof(Image));
+        GameObject bar = new(barName, typeof(RectTransform), typeof(Image), typeof(OptionsBarPointer));
         bar.transform.SetParent(parent, false);
         bar.GetComponent<Image>().color = new Color(textColor.r, textColor.g, textColor.b, 0.3f);
         MenuStyle.MakeRounded(bar.GetComponent<Image>(), barHeight);
@@ -417,7 +507,7 @@ public class OptionsMenuUI : MonoBehaviour
         barRect.anchoredPosition = new Vector2(752f, 0f);
         barRect.sizeDelta = new Vector2(370f, barHeight);
 
-        GameObject fill = new("Fill", typeof(RectTransform), typeof(Image));
+        GameObject fill = new(barFillName, typeof(RectTransform), typeof(Image));
         fill.transform.SetParent(bar.transform, false);
         fill.GetComponent<Image>().color = accentColor;
         MenuStyle.MakeRounded(fill.GetComponent<Image>(), barHeight);
@@ -427,7 +517,6 @@ public class OptionsMenuUI : MonoBehaviour
         fillRect.anchorMin = Vector2.zero;
         fillRect.anchorMax = Vector2.one;
         fillRect.offsetMin = fillRect.offsetMax = Vector2.zero;
-        return fillRect;
     }
 
     private void AddClickListener(Button button, Action onClick)
@@ -439,49 +528,5 @@ public class OptionsMenuUI : MonoBehaviour
             lastClickFrame = Time.frameCount;
             onClick();
         });
-    }
-
-    private TMP_Text AddText(Transform parent, string message, float fontSize, Vector2 position, Vector2 size, Vector2 anchor, TextAlignmentOptions alignment)
-    {
-        return MenuStyle.AddText(parent, font, message, fontSize, position, size, anchor, alignment);
-    }
-}
-
-// Lets the mouse click one of the arrows on an options row
-public class OptionsArrowPointer : MonoBehaviour, IPointerDownHandler, IPointerClickHandler
-{
-    public Action onClick;
-
-    // Taking the press keeps the row underneath from getting the click too
-    public void OnPointerDown(PointerEventData eventData) { }
-
-    public void OnPointerClick(PointerEventData eventData)
-    {
-        if (eventData.button == PointerEventData.InputButton.Left) onClick?.Invoke();
-    }
-}
-
-// Lets the mouse set a volume by clicking or dragging along its bar. onPoint gets how far along the bar that is, from 0 to 1.
-public class OptionsBarPointer : MonoBehaviour, IPointerDownHandler, IInitializePotentialDragHandler, IDragHandler, IPointerClickHandler
-{
-    public Action<float> onPoint;
-
-    public void OnPointerDown(PointerEventData eventData) => Point(eventData);
-
-    // Follows the mouse from the moment it's pressed, rather than once it has moved a few pixels
-    public void OnInitializePotentialDrag(PointerEventData eventData) => eventData.useDragThreshold = false;
-
-    public void OnDrag(PointerEventData eventData) => Point(eventData);
-
-    // Taking the click keeps the row underneath from getting it too
-    public void OnPointerClick(PointerEventData eventData) { }
-
-    private void Point(PointerEventData eventData)
-    {
-        if (eventData.button != PointerEventData.InputButton.Left) return;
-
-        RectTransform rect = (RectTransform)transform;
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(rect, eventData.position, eventData.pressEventCamera, out Vector2 local))
-            onPoint?.Invoke(Mathf.InverseLerp(rect.rect.xMin, rect.rect.xMax, local.x));
     }
 }
