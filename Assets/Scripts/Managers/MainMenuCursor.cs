@@ -132,12 +132,12 @@ public class MainMenuCursor : MonoBehaviour
         }
 
         // On the NumPlayers panel, B confirms and proceeds to CharSelect.
-        if (lastMenuActive == MenuType.NumPlayers && pad != null && pad.bButton.wasPressedThisFrame)
-        {
-            AudioManager.PlayButtonSelectSound();
-            NavigateToPlay();
-            return;
-        }
+        // if (lastMenuActive == MenuType.NumPlayers && pad != null && pad.bButton.wasPressedThisFrame)
+        // {
+        //     AudioManager.PlayButtonSelectSound();
+        //     NavigateToPlay();
+        //     return;
+        // }
 
         bool typing = IsTyping();
         bool usedMouse = UpdateMouseInput(typing);
